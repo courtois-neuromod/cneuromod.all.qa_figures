@@ -117,7 +117,7 @@ def run_qc_measures(c, dataset=None, smoke=False, strict=False):
     """
     Extract per-run MRIQC QC metrics for each dataset of cneuromod.all.
 
-    Writes one tidy table per dataset to output_data/qc_measures/{dataset}.tsv.
+    Writes one tidy table per dataset to output_data/tables/{dataset}.tsv.
     Datasets whose output already exists are skipped — except in ``strict`` mode,
     where a stale table must not mask a retrieval failure, so it is re-run.
     """
@@ -129,7 +129,7 @@ def run_qc_measures(c, dataset=None, smoke=False, strict=False):
     names = _select_datasets(dataset, list_datasets(cneuromod_dir, "mriqc"), smoke)
 
     for dataset in names:
-        out = output_dir / "qc_measures" / f"{dataset}.tsv"
+        out = output_dir / "tables" / f"{dataset}.tsv"
         if out.exists() and not strict:
             print(f"🫧 Skipping {dataset} qc_measures (output exists)")
             continue
@@ -156,7 +156,7 @@ def run_notebooks(c):
     ensure_dir_exist(c, "output_data_dir")
     # Each notebook writes into figures_base/<stem>/, which airoh also treats as
     # the per-notebook "already ran" sentinel — kept separate from the data dir
-    # output_data/qc_measures/.
+    # output_data/tables/.
     airoh_run_notebooks(
         c, notebooks_dir, figures_base, keys=["source_data_dir", "output_data_dir"]
     )
@@ -202,7 +202,7 @@ def run(c, dataset=None, smoke=False, strict=False):
     output_dir = Path(c.config.get("output_data_dir"))
     targets = [name.strip() for name in dataset.split(",") if name.strip()]
     for target in targets:
-        out = output_dir / "qc_measures" / f"{target}.tsv"
+        out = output_dir / "tables" / f"{target}.tsv"
         if not out.exists() or pd.read_csv(out, sep="\t").empty:
             raise Exit(
                 f"❌ Smoke test FAILED: no QC rows extracted for {target}", code=1
@@ -217,7 +217,7 @@ def run(c, dataset=None, smoke=False, strict=False):
 def clean_qc_measures(c):
     """Remove QC-metric outputs."""
     from airoh.utils import clean_folder
-    clean_folder(c, "output_data_dir", "qc_measures/*.tsv")
+    clean_folder(c, "output_data_dir", "tables/*.tsv")
 
 
 @task

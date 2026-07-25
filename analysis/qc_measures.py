@@ -3,7 +3,7 @@
 MRIQC writes one small JSON of image-quality metrics (IQMs) per functional run.
 We read only those JSONs — never the preprocessed ``.nii.gz`` — so the data
 footprint stays tiny. One tidy TSV per dataset is written to
-``output_data/qc_measures/{dataset}.tsv``, one row per run.
+``output_data/tables/{dataset}.tsv``, one row per run.
 """
 
 import json
@@ -97,7 +97,7 @@ def extract_qc_measures(dataset, cneuromod_dir, output_dir, smoke=False,
             f"(content not retrieved or unreadable)"
         )
 
-    output_path = Path(output_dir) / "qc_measures" / f"{dataset}.tsv"
+    output_path = Path(output_dir) / "tables" / f"{dataset}.tsv"
     output_path.parent.mkdir(parents=True, exist_ok=True)
     table.to_csv(output_path, sep="\t", index=False)
     print(f"✅ {dataset}: {len(table)} run(s) → {output_path}")

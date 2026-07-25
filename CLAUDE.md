@@ -59,7 +59,7 @@ compatibility). Linter: **ruff** (`uv run ruff check .`). No test framework.
     read **from MRIQC BOLD JSONs only** (`{dataset}/mriqc/**/*_bold.json`) — a
     deliberate choice to avoid installing/fetching the large fMRIPrep derivatives.
     Metrics: `fd_mean`, `tsnr`, `snr`, `gsr_*`, `dvars_*`, `size_t`, … →
-    `output_data/qc_measures/{dataset}.tsv`.
+    `output_data/tables/{dataset}.tsv`.
 - **Derivative folders are nested Datalad subdatasets.** Every `{dataset}/{marker}`
   (`bids`, `mriqc`, `fmriprep`, `tsnr`, …) is a Datalad subdataset nested *inside*
   the per-`{dataset}` subdataset of `cneuromod.all`, present on disk as an empty
@@ -82,7 +82,7 @@ compatibility). Linter: **ruff** (`uv run ruff check .`). No test framework.
 - **Notebook figures live in `output_data/figures/{notebook_stem}/`** (set via
   `figures_dir` in `invoke.yaml`). This folder doubles as airoh's per-notebook
   "already ran" sentinel, so it must NOT collide with a data dir name — keep the
-  metric tables under `output_data/qc_measures/`, distinct from the notebook stems.
+  metric tables under `output_data/tables/`, distinct from the notebook stems.
 
 ## Persona
 

@@ -4,7 +4,7 @@ Once the pipeline is run, this folder contains:
 
 ## Metric tables (from `invoke run-qc-measures`)
 
-- `qc_measures/{dataset}.tsv` — one row per functional run, with MRIQC
+- `tables/{dataset}.tsv` — one row per functional run, with MRIQC
   image-quality metrics: `fd_mean`, `fd_num`, `fd_perc`, `tsnr`, `snr`,
   `gsr_x`, `gsr_y`, `dvars_std`, `dvars_vstd`, `aor`, `aqi`, `gcor`, `size_t`,
   plus entities `dataset`, `subject`, `session`, `task`, `run`, `task_grouped`.
