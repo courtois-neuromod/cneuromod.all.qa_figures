@@ -1,2 +1,6 @@
+qc_measures/
+scans/
+figures/
 *.csv
 *.png
+*.tsv

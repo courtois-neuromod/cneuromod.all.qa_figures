@@ -4,7 +4,54 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Overview
 
-This is the `airoh-mini` template — a starting point for structuring a reproducible data analysis. It is built on the [`invoke`](https://www.pyinvoke.org/) task runner. The `airoh` pip package provides reusable invoke tasks; this repo customizes them via `tasks.py` and `invoke.yaml`.
+**CNeuroMod QA Figures** generates quality-control (QC/QA) figures summarizing
+data quality across the [CNeuroMod](https://www.cneuromod.ca/) datasets. It reads
+from the `cneuromod.all` Datalad superdataset, extracts per-run QC metrics, and
+renders summary figures. The logic is adapted from Basile Pinsard's
+[`cneuromod_qc`](https://github.com/courtois-neuromod/cneuromod_qc), ported to the
+new nested `cneuromod.all` structure and generalized to all functional datasets.
+
+It is built on the [`invoke`](https://www.pyinvoke.org/) task runner (structured
+from the `airoh-mini` template). The `airoh` pip package provides reusable invoke
+tasks; this repo customizes them via `tasks.py` and `invoke.yaml`. Package
+manager: **uv** (Python pinned to 3.12 via `.python-version` for pybids/ptitprince
+compatibility). Linter: **ruff** (`uv run ruff check .`). No test framework.
+
+### Project-specific conventions
+
+- **Sole data source: the `cneuromod.all` Datalad superdataset.** The `fetch`
+  task in `tasks.py` makes it available under `source_data/cneuromod.all` — by
+  default a **symlink** to an existing local checkout (`../cneuromod.all`, set via
+  `source:` under `datasets:` in `invoke.yaml`, overridable with
+  `invoke fetch --source /path`), or a **clone** of the remote when no local
+  checkout exists. This is a deliberate, project-specific `fetch` (not the
+  generic `fetch_data` template task): file content is pulled **on demand** by the
+  analysis steps via `datalad get`, never all at once. The new structure nests
+  derivatives per dataset: `{dataset}/bids`, `{dataset}/mriqc`, `{dataset}/fmriprep`,
+  `{dataset}/tsnr`, …
+- **Chunk unit: `dataset`.** Each `run-{name}` task processes one CNeuroMod
+  dataset at a time (writing one TSV per dataset), auto-discovering datasets from
+  `cneuromod.all` (`analysis/datasets.py`), exposing a `datasets=` selector and a
+  `smoke` flag (first dataset only), and skipping datasets whose output exists.
+- **Two analysis paths** (both in `analysis/`, mirroring `cneuromod_qc`):
+  - `run-qc-measures` → `analysis/qc_measures.py`: per-run image-quality metrics
+    read **from MRIQC BOLD JSONs only** (`{dataset}/mriqc/**/*_bold.json`) — a
+    deliberate choice to avoid installing/fetching the large fMRIPrep derivatives.
+    Metrics: `fd_mean`, `tsnr`, `snr`, `gsr_*`, `dvars_*`, `size_t`, … →
+    `output_data/qc_measures/{dataset}.tsv`.
+  - `run-scans` → `analysis/scans.py`: aggregate BIDS `*_scans.tsv` →
+    `output_data/scans/{dataset}.tsv`.
+- **Tolerant `datalad get`** (`analysis/datalad_utils.py`): CNeuroMod data is only
+  partly public and content lives on credentialed special remotes, so `datalad get`
+  can partially fail (e.g. participants without a public-data agreement, or an
+  environment without the right auth). The helper only fetches the small text
+  files it needs (JSONs, scans.tsv — never `.nii.gz`), never raises, retries once
+  over HTTPS, and lets each step proceed with whatever content is present.
+- **Notebook figures live in `output_data/figures/{notebook_stem}/`** (set via
+  `figures_dir` in `invoke.yaml`). This folder doubles as airoh's per-notebook
+  "already ran" sentinel, so it must NOT collide with a data dir name — keep the
+  metric tables under `output_data/qc_measures/` and `output_data/scans/`, distinct
+  from the notebook stems.
 
 ## Persona
 

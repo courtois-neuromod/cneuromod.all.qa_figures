@@ -1,8 +1,16 @@
-After `invoke fetch` is complete, expect the following content:
- * `YNIMG_BrainParcellation_summary.tsv` - a spreadsheet with some data on a series of articles.
+# Source Data
 
-📝 Note: tsv files are **ignored by Git** (see `.gitignore`), so data assets won't be tracked by default.
+After `invoke fetch`, this folder contains:
 
-📝 Note: assets here may be **symlinks** to data that already lives elsewhere on disk, rather than local copies — this happens when a fetch task is run with `--source` (e.g. `invoke fetch-papers --source /path`, or `invoke fetch --papers-source /path`), or a `source:` key is set in `invoke.yaml`.
+* `cneuromod.all/` — the [CNeuroMod](https://www.cneuromod.ca/) `cneuromod.all`
+  Datalad superdataset. It is either a **symlink** to an existing local checkout
+  (default: `../cneuromod.all`, set via `source:` in `invoke.yaml` or
+  `invoke fetch --source /path`) or a fresh **clone** of
+  `https://github.com/courtois-neuromod/cneuromod.all` when no local checkout is
+  available.
 
+📝 File **content** inside the superdataset is retrieved on demand by the
+analysis steps (`datalad get`), not all at once — the superdataset is large.
 
+📝 `cneuromod.all/` is **ignored by Git** here (see `.gitignore`), since it is an
+external dataset with its own version control.

@@ -1,26 +1,26 @@
-# Airoh Template: Reproducible Pipelines Made Simple
+# CNeuroMod QA Figures
 
 _why don't you have a cup of relaxing jasmine tea?_
 
-This repository is a template for structuring a reproducible data analysis. Built on the [`invoke`](https://www.pyinvoke.org/) task runner, it lets you go from clean clone to output figures with just a few commands.
+This project generates quality-control (QC/QA) figures summarizing data quality
+across the [CNeuroMod](https://www.cneuromod.ca/) datasets. It reads from the
+`cneuromod.all` Datalad superdataset, computes QA metrics, and renders summary
+figures.
 
-The logic is powered by [`airoh`](https://pypi.org/project/airoh/), a lightweight, pip-installable Python package of reusable `invoke` tasks. This repository runs a small demo analysis to show how the template works. It should be easy to adapt to a variety of projects.
-
-**This template is designed to be used with [Claude Code](https://claude.ai/code).** Claude reads the project's `CLAUDE.md` at the start of every session and knows the pipeline conventions — task naming, idempotency, smoke tests — out of the box. To initialize a new project from this template, open Claude Code and run `/init-airoh-project`. The skill will walk you through project setup, fetch/run/clean task implementation, and a smoke test end-to-end.
-
-⚠️ **Status**: This template is in its early days. Expect rapid iteration and changes.
+It is built on the [`invoke`](https://www.pyinvoke.org/) task runner, with
+reusable tasks provided by the [`airoh`](https://pypi.org/project/airoh/)
+package. The pipeline goes from a clone of the data to output figures with a few
+commands.
 
 ---
 
-## ✨ TL;DR:
+## ✨ TL;DR
 
-This repository is a [GitHub template](https://github.com/airoh-pipeline/airoh-template/generate). Click **"Use this template"** to create your own analysis project.
 ```bash
 uv sync
-uv run invoke fetch
-uv run invoke run
+uv run invoke fetch    # symlink ../cneuromod.all (or clone the remote)
+uv run invoke run      # metrics → figures
 ```
-Voilà — from clone to full reproduction.
 
 ---
 
@@ -28,153 +28,132 @@ Voilà — from clone to full reproduction.
 
 ### **Step 1**: Install dependencies
 
-Using `uv` (recommended):
+Using [`uv`](https://docs.astral.sh/uv/) (the package manager for this project):
+
 ```bash
 uv sync
 ```
-This creates a `.venv` and installs all dependencies from `pyproject.toml`.
 
-Using `pip` (e.g. in a virtual environment):
-```bash
-pip install -r requirements.txt
-```
-
-Using `conda`:
-```bash
-conda env create -n airoh_env -f environment.yml
-conda activate airoh_env
-```
-
----
+This creates a `.venv` and installs all dependencies from `pyproject.toml`,
+including the [`datalad`](https://www.datalad.org/) CLI used to retrieve data.
 
 ### **Step 2**: Fetch the source data
 
 ```bash
-invoke fetch
+uv run invoke fetch
 ```
 
-Downloads the configured file(s) listed under `files:` in `invoke.yaml`. Every asset also has its own `fetch-{name}` task (here, `fetch-papers`), and the umbrella `fetch` calls them all.
+The sole data source is the `cneuromod.all` Datalad **superdataset**. `fetch`
+makes it available under `source_data/cneuromod.all`:
 
-Already have the data on disk? Point a fetch task at it and it creates a **symlink** instead of downloading. Each `fetch-{name}` takes a plain `--source`; the umbrella `fetch` routes a per-asset `--{name}-source` to the matching one:
+- **Primary use case — an existing local checkout.** By default `fetch`
+  symlinks `../cneuromod.all` (configured via `source:` under `datasets:` in
+  `invoke.yaml`). Point it elsewhere with:
 
-```bash
-invoke fetch-papers --source /path/to/existing/data   # symlink to existing data
-invoke fetch-papers --source /path/to/existing/data --copy  # make a real copy instead
-invoke fetch --papers-source /path/to/existing/data   # same, via the umbrella task
-```
+  ```bash
+  uv run invoke fetch --source /path/to/cneuromod.all
+  ```
 
-You can also set a per-asset `source:` under `files:` in `invoke.yaml` to make this the default for that asset. Files *and* whole directories are supported, and the operation is idempotent.
+- **No local checkout?** `fetch` clones the remote superdataset
+  (`https://github.com/courtois-neuromod/cneuromod.all`) instead.
 
-Want to see it work? This little walkthrough stands in a `/tmp` copy for a dataset that already lives on your disk:
-
-```bash
-invoke fetch                                         # downloads the tsv
-cp source_data/*.tsv /tmp/shared_papers.tsv          # pretend it's a shared dataset
-rm source_data/*.tsv                                 # clear the local copy
-invoke fetch --papers-source /tmp/shared_papers.tsv  # symlinks instead of downloading
-ls -l source_data/                                   # -> /tmp/shared_papers.tsv
-```
-
-The `rm` step matters: fetch will never overwrite a real file sitting at the destination, and asks you to `invoke clean` first. Only a symlink gets repointed. And running that last command a second time changes nothing — fetch notices the link already points where you asked, and moves on.
-
-Each `--source` names one path for one asset — there's deliberately no single flag that points every asset at one place, since that only ever means "link them all to the same file." As you add assets, give each one its own `fetch-{name}` task and its own `--{name}-source` on the umbrella `fetch`.
-
-> **Datalad datasets are different.** `--source` symlinks or copies a plain file or folder; it does **not** run `datalad get`, so a symlinked datalad dataset exposes only whatever content is already present (un-fetched files show up as broken symlinks), and `--copy` errors on those un-fetched files. For a datalad dataset, use `airoh.datalad.get_data` with a `datasets:` entry in `invoke.yaml` instead.
-
----
+Either way, **file content is retrieved on demand** by the analysis steps
+(`datalad get`) — the whole superdataset is never downloaded at once.
 
 ### **Step 3**: Run the full pipeline
 
 ```bash
-invoke run
+uv run invoke run
 ```
 
-Runs the full analysis pipeline in order. Steps that have already produced output are skipped automatically — only missing outputs are recomputed. To force a full rerun from scratch:
+Runs the analysis in order (`fetch → run-qc-measures → run-scans →
+run-notebooks`). Steps that already produced output are skipped, so re-running
+only recomputes what is missing. To force a full rerun:
 
 ```bash
-invoke clean
-invoke run
+uv run invoke clean
+uv run invoke run
 ```
 
----
-
-### **Step 4**: Clean outputs
+For a fast end-to-end check that exercises the whole pipeline on a single chunk:
 
 ```bash
-invoke clean          # remove all outputs
-invoke clean-{name}   # remove outputs of one specific step
+uv run invoke run-smoke
 ```
 
----
+### **Step 4**: Clean
 
-## 🧠 Design principles
-
-Airoh projects follow a few conventions that keep analyses fast, reproducible, and easy to pick up:
-
-- **Analysis in code, visualization in notebooks.** Heavy computation lives in `analysis/` Python modules and is run by `invoke` tasks. Notebooks only read results and produce figures — so they stay fast.
-- **Idempotent steps.** Each `run-{name}` task checks whether its outputs already exist and skips if they do. You can call `invoke run` repeatedly while working on a later step without re-running earlier ones.
-- **Mirrored clean tasks.** Every `run-{name}` has a matching `clean-{name}` that removes only its outputs. The top-level `clean` calls them all.
-- **Smoke test.** Tasks support a `--smoke` flag for a fast minimal run to verify the pipeline end-to-end.
+```bash
+uv run invoke clean              # remove all computed outputs
+uv run invoke clean-qc-measures  # remove one step's outputs
+uv run invoke clean-source       # remove the fetched cneuromod.all (symlink)
+```
 
 ---
 
 ## 🧰 Task Overview
 
-| Task             | Description                                              |
-| ---------------- | -------------------------------------------------------- |
-| `fetch`          | Gets all source data; routes a per-asset `--{name}-source` to each `fetch-{name}` |
-| `fetch-{name}`   | Gets one asset: downloads from `invoke.yaml`, or symlinks/copies existing data via `--source` |
-| `run`            | Runs the full pipeline (all `run-{name}` steps in order) |
-| `run-{name}`     | Runs one analysis step; skips if outputs already exist   |
-| `run-notebooks`  | Executes notebooks and saves figures to `output_data/`   |
-| `clean`          | Removes all generated outputs                            |
-| `clean-{name}`   | Removes outputs of one specific step                     |
+The list below should match `invoke --list`.
 
-Use `invoke --list` or `invoke --help <task>` for descriptions and usage.
+| Task                | Description                                                        |
+| ------------------- | ------------------------------------------------------------------ |
+| `fetch`             | Make `cneuromod.all` available (symlink local checkout, or clone)  |
+| `run-qc-measures`   | Extract per-run MRIQC metrics per dataset; skips datasets already done |
+| `run-scans`         | Aggregate BIDS `*_scans.tsv` per dataset; skips datasets already done |
+| `run-notebooks`     | Execute notebooks, saving QA figures to `output_data/figures/`     |
+| `run`               | Full pipeline (all steps in order)                                 |
+| `run-smoke`         | Minimal end-to-end pass (`--smoke`, first dataset only)            |
+| `clean`             | Remove all computed outputs                                        |
+| `clean-qc-measures` | Remove QC-metric tables                                            |
+| `clean-scans`       | Remove aggregated scans tables                                     |
+| `clean-figures`     | Remove generated figures and notebook sentinels                   |
+| `clean-source`      | Remove all fetched source data                                     |
+| `clean-cneuromod`   | Remove the fetched `cneuromod.all` superdataset (symlink or clone) |
+
+Use `invoke --list` or `invoke --help <task>` for full descriptions.
+
+---
+
+## 🧠 Design principles
+
+- **Analysis in code, visualization in notebooks.** Heavy computation lives in
+  `analysis/` Python modules run by `invoke` tasks; notebooks only read results
+  from `output_data/` and produce figures.
+- **Idempotent steps.** Each `run-{name}` task skips chunks whose output already
+  exists, so `invoke run` can be re-run cheaply while developing a later step.
+- **Mirrored clean tasks.** Every `run-{name}` has a matching `clean-{name}`.
+- **Smoke test.** `run-smoke` runs a minimal end-to-end pass (`--smoke`).
+- **Data retrieved on demand.** `cneuromod.all` is huge; only the files each step
+  needs are pulled with `datalad get`.
 
 ---
 
 ## 📁 Folder Structure
 
-| Folder / File  | Description                              |
-| -------------- | ---------------------------------------- |
-| `analysis/`    | Pure Python analysis logic, called by invoke tasks |
-| `notebooks/`   | Jupyter notebooks for visualization (one per figure) |
-| `source_data/` | Raw source datasets — see [`source_data/CONTENT.md`](source_data/CONTENT.md) |
-| `output_data/` | Generated results and figures — see [`output_data/CONTENT.md`](output_data/CONTENT.md) |
-| `tasks.py`     | Project-specific invoke tasks            |
-| `invoke.yaml`  | Config: paths, data sources, parameters  |
+| Folder / File  | Description                                                                   |
+| -------------- | ---------------------------------------------------------------------------- |
+| `analysis/`    | Pure Python analysis logic, called by invoke tasks                           |
+| `notebooks/`   | Jupyter notebooks for visualization (one per figure)                         |
+| `source_data/` | The `cneuromod.all` superdataset — see [`source_data/CONTENT.md`](source_data/CONTENT.md) |
+| `output_data/` | Generated metrics and figures — see [`output_data/CONTENT.md`](output_data/CONTENT.md) |
+| `tasks.py`     | Project-specific invoke tasks                                                |
+| `invoke.yaml`  | Config: paths and the `cneuromod.all` dataset source                         |
 
 ---
 
-## 🧭 Tips
+## 🧹 Linting
 
-* Use `invoke --complete` for tab-completion support
-* Configure paths and data sources in `invoke.yaml`
-* To use this template for a new project, start from [`airoh-template`](https://github.com/airoh-pipeline/airoh-template) and customize `tasks.py` + `invoke.yaml`
+This project uses [`ruff`](https://docs.astral.sh/ruff/). Run it before
+committing:
 
----
-
-## 🔁 Want to contribute?
-
-Submit an issue or PR on [`airoh`](https://github.com/SIMEXP/airoh).
-
----
-
-## Philosophy
-
-Inspired by Uncle Iroh from *Avatar: The Last Airbender*, `airoh` aims to bring simplicity, reusability, and clarity to research infrastructure — one well-structured task at a time.
-
-**Core principles:**
-
-- **Reproducibility first.** A pipeline is only useful if someone else — or future you — can run it from scratch and get the same result. Every step is scripted, every dependency declared.
-- **Simple by default, extensible by need.** Three tasks (`fetch`, `run`, `clean`) cover most projects. Add complexity only when the analysis demands it.
-- **Code for analysis, notebooks for figures.** Heavy computation belongs in `analysis/` Python modules. Notebooks are for reading results and producing plots — they should be fast and focused.
-- **Idempotent steps.** Re-running `invoke run` never wastes time. Each step checks whether its outputs exist and skips if they do.
-- **AI-native.** This template is built to be initialized and extended with Claude Code. The `CLAUDE.md` file gives Claude the context it needs to help with the pipeline without needing to re-explain conventions every session.
+```bash
+uv run ruff check .
+```
 
 ---
 
 ### Uncle Airoh
 
-When working in this project, Claude Code responds as **Uncle Airoh**: patient, warm, and wise. Errors are explained gently, tradeoffs are framed as learning opportunities, and a calming cup of jasmine tea is always on offer when things get heated.
+When working in this project, Claude Code responds as **Uncle Airoh**: patient,
+warm, and wise. Errors are explained gently, tradeoffs are framed as learning
+opportunities, and a calming cup of jasmine tea is always on offer.

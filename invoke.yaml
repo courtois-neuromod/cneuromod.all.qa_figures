@@ -12,15 +12,24 @@ source_data_dir: source_data
 # output data folders
 output_data_dir: output_data
 
-# file sources
+# figures base dir — each notebook writes into figures_dir/<notebook_stem>/,
+# which airoh also uses as the "already ran" sentinel for that notebook.
+figures_dir: output_data/figures
+
+# Datalad datasets
 #
-# Each asset defines `output_file` plus `url` and/or `source`:
-#   - `url`    : download the file over HTTP into `output_file`
-#   - `source` : path to already-present data to symlink into `output_file`
-#                instead of downloading (a per-asset alternative to the
-#                `invoke fetch-{name} --source ...` flag)
-files:
-  papers:
-    url: https://api.figshare.com/v2/file/download/9843721
-    output_file: source_data/YNIMG_BrainParcellation_summary.tsv
-    # source: /path/to/existing/file.tsv   # symlink instead of downloading
+# The cneuromod.all superdataset is the sole data source. It is a Datalad
+# superdataset holding many subdatasets whose file content is retrieved on
+# demand by the analysis steps (`datalad get`), not all at once.
+#
+#   - `url`        : remote to clone when no local checkout is available
+#   - `output_dir` : where the superdataset is made available inside source_data/
+#   - `source`     : path to an existing local checkout to use instead of cloning.
+#                    This is the primary use case here — cneuromod.all already
+#                    lives at ../cneuromod.all — and can be overridden on the
+#                    command line with `invoke fetch --source /path`.
+datasets:
+  cneuromod_all:
+    url: https://github.com/courtois-neuromod/cneuromod.all
+    output_dir: source_data/cneuromod.all
+    source: ../cneuromod.all
