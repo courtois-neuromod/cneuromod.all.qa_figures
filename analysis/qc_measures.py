@@ -57,8 +57,14 @@ def _row_from_json(path, dataset):
     return row
 
 
-def extract_qc_measures(dataset, cneuromod_dir, output_dir, smoke=False):
-    """Write one QC-metrics TSV for ``dataset``; return the output path."""
+def extract_qc_measures(dataset, cneuromod_dir, output_dir, smoke=False,
+                        strict=False):
+    """Write one QC-metrics TSV for ``dataset``; return the output path.
+
+    With ``strict=True`` (used by the smoke test) an empty result is a hard
+    failure: it raises ``RuntimeError`` when no ``*_bold.json`` is found or when
+    no row could be extracted, instead of quietly writing an empty table.
+    """
     root = Path(cneuromod_dir)
     mriqc_dir = root / dataset / "mriqc"
 
@@ -67,15 +73,29 @@ def extract_qc_measures(dataset, cneuromod_dir, output_dir, smoke=False):
     # preprocessed image content is ever retrieved.
     json_files = sorted(mriqc_dir.rglob("*_bold.json"))
     if not json_files:
+        if strict:
+            raise RuntimeError(
+                f"{dataset}: no *_bold.json found under {mriqc_dir} "
+                f"(mriqc submodule empty or not initialized)"
+            )
         print(f"⚠️  {dataset}: no *_bold.json found (mriqc submodule empty or "
               f"not initialized) — writing empty table")
     if smoke:
         json_files = json_files[:1]
     if json_files:
+        # Best-effort even in strict mode: the JSONs may already be present on
+        # disk (a fresh `datalad get` can fail on a stale git-annex while the
+        # content is readable). The real strict gate is the empty-table check
+        # below — what matters is whether we ultimately extract any rows.
         datalad_get([p.relative_to(root) for p in json_files], root)
 
     rows = [row for p in json_files if (row := _row_from_json(p, dataset))]
     table = pd.DataFrame(rows)
+    if strict and table.empty:
+        raise RuntimeError(
+            f"{dataset}: found {len(json_files)} JSON(s) but extracted 0 rows "
+            f"(content not retrieved or unreadable)"
+        )
 
     output_path = Path(output_dir) / "qc_measures" / f"{dataset}.tsv"
     output_path.parent.mkdir(parents=True, exist_ok=True)

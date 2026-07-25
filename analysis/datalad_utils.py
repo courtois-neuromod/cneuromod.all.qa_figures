@@ -29,16 +29,21 @@ def _run(extra_config, args, cwd):
     return subprocess.run(cmd, cwd=str(cwd), capture_output=True, text=True)
 
 
-def datalad_get(paths, dataset_root, recursive=False, get_content=True):
+def datalad_get(paths, dataset_root, recursive=False, get_content=True,
+                strict=False):
     """Run ``datalad get`` for ``paths`` (relative to ``dataset_root``).
 
     With ``get_content=False`` only the subdataset tree (filenames) is
-    installed, not the annexed content. Never raises: on failure it retries once
-    over HTTPS and, if that also fails, prints a warning and returns so the
-    caller can proceed with whatever content is present.
+    installed, not the annexed content. On failure it retries once over HTTPS.
+    If that also fails: by default (tolerant) it prints a warning and returns so
+    the caller can proceed with whatever content is present; with ``strict=True``
+    it raises ``RuntimeError`` instead — used by the smoke test, which must fail
+    loudly when retrieval does not work.
     """
     root = Path(dataset_root)
     if not _is_datalad_dataset(root):
+        if strict:
+            raise RuntimeError(f"{root} is not a Datalad dataset")
         return
     if isinstance(paths, (str, Path)):
         paths = [paths]
@@ -54,10 +59,14 @@ def datalad_get(paths, dataset_root, recursive=False, get_content=True):
         result = _run(_HTTPS_OVERRIDE, args, root)
     if result.returncode != 0:
         preview = ", ".join(str(p) for p in paths[:2])
+        if strict:
+            raise RuntimeError(
+                f"datalad get failed for {preview} ...\n{result.stderr.strip()}"
+            )
         print(f"⚠️  datalad get returned errors (continuing without): {preview} ...")
 
 
-def install_subdataset(path, dataset_root):
+def install_subdataset(path, dataset_root, strict=False):
     """Install the subdataset at ``path`` (relative to ``dataset_root``), no content.
 
     Runs ``datalad get -n`` rather than plain ``git submodule update --init``:
@@ -66,7 +75,14 @@ def install_subdataset(path, dataset_root):
     ``git submodule`` cannot reach a submodule nested inside another submodule.
     Datalad installs the intermediate ``{dataset}`` subdataset and the nested
     ``{marker}`` in one call, leaving large sibling subdatasets like ``stimuli``
-    untouched (non-recursive). Tolerant like ``datalad_get``: never raises, so an
-    inaccessible derivative only warns and one dataset never aborts the whole run.
+    untouched (non-recursive). By default tolerant like ``datalad_get`` (only
+    warns), so an inaccessible derivative never aborts the whole run. With
+    ``strict=True`` it raises if the subdataset is not actually installed
+    afterwards (no ``.git`` at ``path``) — used by the smoke test.
     """
-    datalad_get(path, dataset_root, get_content=False)
+    datalad_get(path, dataset_root, get_content=False, strict=strict)
+    if strict and not (Path(dataset_root) / path / ".git").exists():
+        raise RuntimeError(
+            f"subdataset {path} was not installed (no .git at "
+            f"{Path(dataset_root) / path})"
+        )

@@ -36,6 +36,20 @@ compatibility). Linter: **ruff** (`uv run ruff check .`). No test framework.
   dataset at a time (writing one TSV per dataset), auto-discovering datasets from
   `cneuromod.all` (`analysis/datasets.py`), exposing a `datasets=` selector and a
   `smoke` flag (first dataset only), and skipping datasets whose output exists.
+- **`run-smoke` is a real test — strict, not tolerant.** The production pipeline
+  (`run`, `run-qc-measures`) is deliberately *tolerant* of partly-public data:
+  inaccessible participants only warn, and an empty result writes an empty table.
+  `run-smoke` is the opposite: it threads a `strict=True` flag through
+  `_ensure_marker_submodule` → `install_subdataset` → `extract_qc_measures`, so a
+  failed submodule install or a zero-row extraction **raises** (non-zero exit).
+  It runs on a single dataset that genuinely has functional MRIQC data
+  (`smoke_dataset` in `invoke.yaml`, default `hcptrt`, overridable with
+  `--dataset`) — never blindly the first dataset alphabetically, which is `anat`
+  (anatomical-only, no BOLD → empty by nature). In strict mode `run-qc-measures`
+  also re-runs a dataset whose TSV already exists, so a stale file can't mask a
+  retrieval failure. Note: the per-file content `datalad get` stays best-effort
+  even under strict (JSONs may already be on disk while a fresh `get` fails on a
+  stale git-annex); the strict gate is the final row count, not the fetch.
 - **One analysis path** (in `analysis/`, mirroring `cneuromod_qc`):
   - `run-qc-measures` → `analysis/qc_measures.py`: per-run image-quality metrics
     read **from MRIQC BOLD JSONs only** (`{dataset}/mriqc/**/*_bold.json`) — a

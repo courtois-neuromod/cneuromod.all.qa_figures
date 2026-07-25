@@ -16,6 +16,12 @@ output_data_dir: output_data
 # which airoh also uses as the "already ran" sentinel for that notebook.
 figures_dir: output_data/figures
 
+# Canonical target for `invoke run-smoke` (overridable with --dataset). Must be
+# a dataset that genuinely has functional MRIQC data, so an empty result in the
+# strict smoke test unambiguously signals broken retrieval, not an anatomical-
+# only dataset. hcptrt has the largest installed MRIQC set.
+smoke_dataset: hcptrt
+
 # Datalad datasets
 #
 # The cneuromod.all superdataset is the sole data source. It is a Datalad

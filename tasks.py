@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from invoke import task
+from invoke import Exit, task
 
 
 # --------------------------------------------------------------------------- #
@@ -19,7 +19,7 @@ def _select_datasets(requested, available, smoke):
     return available
 
 
-def _ensure_marker_submodule(cneuromod_dir, dataset, marker):
+def _ensure_marker_submodule(cneuromod_dir, dataset, marker, strict=False):
     """Install the ``{dataset}/{marker}`` Datalad subdataset inside cneuromod.all.
 
     Each derivative folder of cneuromod.all is a Datalad subdataset nested inside
@@ -28,12 +28,15 @@ def _ensure_marker_submodule(cneuromod_dir, dataset, marker):
     than plain ``git submodule``: datalad installs the intermediate ``{dataset}``
     subdataset and the nested ``{marker}`` in one call — plain git cannot reach a
     submodule nested inside another submodule — while leaving large sibling
-    subdatasets like ``stimuli`` alone. Tolerant: an inaccessible derivative
-    (credentialed remote, no auth) only warns so one dataset never aborts the run.
+    subdatasets like ``stimuli`` alone. Tolerant by default: an inaccessible
+    derivative (credentialed remote, no auth) only warns so one dataset never
+    aborts the run. With ``strict=True`` (smoke test) a failed install raises.
     """
     from analysis.datalad_utils import install_subdataset
 
-    install_subdataset(f"{dataset}/{marker}", Path(cneuromod_dir).resolve())
+    install_subdataset(
+        f"{dataset}/{marker}", Path(cneuromod_dir).resolve(), strict=strict
+    )
 
 
 # --------------------------------------------------------------------------- #
@@ -107,13 +110,16 @@ def fetch(c, source=None, dataset=None, subject=None, session=None):
     "datasets": "Comma-separated dataset names to process (default: all with an "
                 "mriqc subdataset).",
     "smoke": "Process only the first dataset (fast end-to-end check).",
+    "strict": "Raise on any retrieval/extraction failure instead of warning "
+              "(used by run-smoke; also re-runs datasets whose output exists).",
 })
-def run_qc_measures(c, datasets=None, smoke=False):
+def run_qc_measures(c, datasets=None, smoke=False, strict=False):
     """
     Extract per-run MRIQC QC metrics for each dataset of cneuromod.all.
 
     Writes one tidy table per dataset to output_data/qc_measures/{dataset}.tsv.
-    Datasets whose output already exists are skipped.
+    Datasets whose output already exists are skipped — except in ``strict`` mode,
+    where a stale table must not mask a retrieval failure, so it is re-run.
     """
     from analysis.datasets import list_datasets
     from analysis.qc_measures import extract_qc_measures
@@ -124,11 +130,13 @@ def run_qc_measures(c, datasets=None, smoke=False):
 
     for dataset in names:
         out = output_dir / "qc_measures" / f"{dataset}.tsv"
-        if out.exists():
+        if out.exists() and not strict:
             print(f"🫧 Skipping {dataset} qc_measures (output exists)")
             continue
-        _ensure_marker_submodule(cneuromod_dir, dataset, "mriqc")
-        extract_qc_measures(dataset, cneuromod_dir, output_dir, smoke=smoke)
+        _ensure_marker_submodule(cneuromod_dir, dataset, "mriqc", strict=strict)
+        extract_qc_measures(
+            dataset, cneuromod_dir, output_dir, smoke=smoke, strict=strict
+        )
 
 
 # --------------------------------------------------------------------------- #
@@ -163,12 +171,32 @@ def run(c):
     print("all analyses completed")
 
 
-@task
-def run_smoke(c):
-    """Smoke test: minimal end-to-end pass (first dataset only)."""
+@task(help={
+    "dataset": "Dataset to smoke-test (default: `smoke_dataset` in invoke.yaml, "
+               "i.e. hcptrt). Must be one with functional MRIQC data.",
+})
+def run_smoke(c, dataset=None):
+    """Smoke test: strict minimal end-to-end pass on a known functional dataset.
+
+    Unlike the tolerant production pipeline, this FAILS LOUDLY (non-zero exit) if
+    nothing is retrieved or extracted, so it actually tests the plumbing. It runs
+    on a single dataset that genuinely has functional MRIQC data (default
+    `hcptrt`) — an empty result then unambiguously means retrieval is broken,
+    not that the dataset simply has no BOLD runs (e.g. anat).
+    """
+    target = dataset or c.config.get("smoke_dataset", "hcptrt")
+    output_dir = Path(c.config.get("output_data_dir"))
+
     fetch(c)
-    run_qc_measures(c, smoke=True)
+    run_qc_measures(c, datasets=target, smoke=True, strict=True)
     run_notebooks(c)
+
+    import pandas as pd
+
+    out = output_dir / "qc_measures" / f"{target}.tsv"
+    if not out.exists() or pd.read_csv(out, sep="\t").empty:
+        raise Exit(f"❌ Smoke test FAILED: no QC rows extracted for {target}", code=1)
+    print(f"✅ Smoke test passed: {target} produced QC rows at {out}")
 
 
 # --------------------------------------------------------------------------- #

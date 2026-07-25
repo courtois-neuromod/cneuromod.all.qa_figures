@@ -85,11 +85,18 @@ uv run invoke clean
 uv run invoke run
 ```
 
-For a fast end-to-end check that exercises the whole pipeline on a single chunk:
+For a fast end-to-end check that exercises the whole pipeline on a single
+dataset known to have functional MRIQC data (default `hcptrt`, configurable via
+`smoke_dataset` in `invoke.yaml`, overridable with `--dataset`):
 
 ```bash
-uv run invoke run-smoke
+uv run invoke run-smoke                 # strict check on hcptrt
+uv run invoke run-smoke --dataset floc  # a different functional dataset
 ```
+
+Unlike the full `run`, the smoke test is **strict**: it exits non-zero if
+nothing is retrieved or extracted, so it genuinely tests the plumbing rather
+than quietly producing an empty table.
 
 ### **Step 4**: Clean
 
@@ -111,7 +118,7 @@ The list below should match `invoke --list`.
 | `run-qc-measures`   | Extract per-run MRIQC metrics per dataset; skips datasets already done |
 | `run-notebooks`     | Execute notebooks, saving QA figures to `output_data/figures/`     |
 | `run`               | Full pipeline (`fetch → run-qc-measures → run-notebooks`)          |
-| `run-smoke`         | Minimal end-to-end pass (`--smoke`, first dataset only)            |
+| `run-smoke`         | Strict minimal end-to-end pass on a functional dataset (`--dataset`, default `hcptrt`); fails non-zero if nothing is extracted |
 | `clean`             | Remove all computed outputs                                        |
 | `clean-qc-measures` | Remove QC-metric tables                                            |
 | `clean-figures`     | Remove generated figures and notebook sentinels                   |
@@ -130,7 +137,9 @@ Use `invoke --list` or `invoke --help <task>` for full descriptions.
 - **Idempotent steps.** Each `run-{name}` task skips chunks whose output already
   exists, so `invoke run` can be re-run cheaply while developing a later step.
 - **Mirrored clean tasks.** Every `run-{name}` has a matching `clean-{name}`.
-- **Smoke test.** `run-smoke` runs a minimal end-to-end pass (`--smoke`).
+- **Smoke test.** `run-smoke` runs a strict minimal end-to-end pass on a known
+  functional dataset and fails loudly (non-zero) if nothing is extracted, while
+  the full `run` stays tolerant of partly-public data.
 - **Data retrieved on demand.** `cneuromod.all` is huge; only the files each step
   needs are pulled with `datalad get`.
 
