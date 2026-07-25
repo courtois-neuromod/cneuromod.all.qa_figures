@@ -43,7 +43,7 @@ def _ensure_marker_submodule(cneuromod_dir, dataset, marker):
     "source": "Path to an existing local cneuromod.all checkout to use instead "
               "of cloning (defaults to the `source:` key in invoke.yaml, "
               "i.e. ../cneuromod.all).",
-    "dataset": "Comma-separated dataset names to prefetch text files for "
+    "dataset": "Comma-separated dataset names to prefetch MRIQC JSONs for "
                "(default: all). Prefetch runs only when one of "
                "--dataset/--subject/--session is given.",
     "subject": "Comma-separated subject labels (e.g. 01,03) to restrict the "
@@ -59,12 +59,11 @@ def fetch(c, source=None, dataset=None, subject=None, session=None):
     default) so its content can be retrieved on demand by the analysis steps.
     When no local checkout exists, clone the remote superdataset instead. File
     content is NOT fetched here by default — the analysis steps `datalad get`
-    only the small text files (MRIQC JSONs, scans.tsv) they need.
+    only the small MRIQC BOLD JSONs they need.
 
     Passing --dataset/--subject/--session additionally prefetches those same
-    small text files (MRIQC *_bold.json, BIDS *_scans.tsv) for the selected
-    slice, warming the cache so later steps run offline. No *.nii.gz is ever
-    retrieved.
+    small text files (MRIQC *_bold.json) for the selected slice, warming the
+    cache so later steps run offline. No *.nii.gz is ever retrieved.
     """
     cfg = c.config.get("datasets", {}).get("cneuromod_all", {})
     dest = Path(cfg["output_dir"])
@@ -132,34 +131,6 @@ def run_qc_measures(c, datasets=None, smoke=False):
         extract_qc_measures(dataset, cneuromod_dir, output_dir, smoke=smoke)
 
 
-@task(help={
-    "datasets": "Comma-separated dataset names to process (default: all with a "
-                "bids subdataset).",
-    "smoke": "Process only the first dataset (fast end-to-end check).",
-})
-def run_scans(c, datasets=None, smoke=False):
-    """
-    Aggregate BIDS *_scans.tsv into a scanning table for each dataset.
-
-    Writes one table per dataset to output_data/scans/{dataset}.tsv. Datasets
-    whose output already exists are skipped.
-    """
-    from analysis.datasets import list_datasets
-    from analysis.scans import aggregate_scans
-
-    cneuromod_dir = _cneuromod_dir(c)
-    output_dir = Path(c.config.get("output_data_dir"))
-    names = _select_datasets(datasets, list_datasets(cneuromod_dir, "bids"), smoke)
-
-    for dataset in names:
-        out = output_dir / "scans" / f"{dataset}.tsv"
-        if out.exists():
-            print(f"🫧 Skipping {dataset} scans (output exists)")
-            continue
-        _ensure_marker_submodule(cneuromod_dir, dataset, "bids")
-        aggregate_scans(dataset, cneuromod_dir, output_dir, smoke=smoke)
-
-
 # --------------------------------------------------------------------------- #
 # Notebooks
 # --------------------------------------------------------------------------- #
@@ -176,8 +147,8 @@ def run_notebooks(c):
 
     ensure_dir_exist(c, "output_data_dir")
     # Each notebook writes into figures_base/<stem>/, which airoh also treats as
-    # the per-notebook "already ran" sentinel — kept separate from the data dirs
-    # output_data/qc_measures/ and output_data/scans/.
+    # the per-notebook "already ran" sentinel — kept separate from the data dir
+    # output_data/qc_measures/.
     airoh_run_notebooks(
         c, notebooks_dir, figures_base, keys=["source_data_dir", "output_data_dir"]
     )
@@ -186,15 +157,9 @@ def run_notebooks(c):
 # --------------------------------------------------------------------------- #
 # Pipeline
 # --------------------------------------------------------------------------- #
-# NOTE: run_scans is temporarily disabled in the automatic pipeline. Its input
-# (BIDS *_scans.tsv) lives in the credentialed `.sensitive` S3 bucket, which is
-# not enabled in the local checkout, so it only produces empty tables + warnings
-# here. Re-enable by restoring `run_scans` in the pre= chain below and the call
-# in run_smoke once the sensitive remote is sorted out. The task itself and
-# clean_scans remain available to invoke manually: `uv run invoke run-scans`.
-@task(pre=[fetch, run_qc_measures, run_notebooks])  # run_scans temporarily disabled
+@task(pre=[fetch, run_qc_measures, run_notebooks])
 def run(c):
-    """Full pipeline: fetch → qc-measures → figures. (scans temporarily disabled)"""
+    """Full pipeline: fetch → qc-measures → figures."""
     print("all analyses completed")
 
 
@@ -203,7 +168,6 @@ def run_smoke(c):
     """Smoke test: minimal end-to-end pass (first dataset only)."""
     fetch(c)
     run_qc_measures(c, smoke=True)
-    # run_scans(c, smoke=True)  # temporarily disabled — see note on `run`
     run_notebooks(c)
 
 
@@ -218,20 +182,13 @@ def clean_qc_measures(c):
 
 
 @task
-def clean_scans(c):
-    """Remove aggregated scans outputs."""
-    from airoh.utils import clean_folder
-    clean_folder(c, "output_data_dir", "scans/*.tsv")
-
-
-@task
 def clean_figures(c):
     """Remove generated figures and notebook sentinels."""
     from airoh.utils import clean_folder
     clean_folder(c, "figures_dir")
 
 
-@task(pre=[clean_qc_measures, clean_scans, clean_figures])
+@task(pre=[clean_qc_measures, clean_figures])
 def clean(c):
     """Remove all computed outputs."""
     pass

@@ -9,9 +9,8 @@ def list_datasets(cneuromod_dir, marker):
     A "dataset" is a top-level directory of the cneuromod.all superdataset
     (e.g. ``hcptrt``, ``friends``). ``marker`` is the derivative subdataset that
     must be present for the step to have anything to do — ``"mriqc"`` for the QC
-    metrics, ``"bids"`` for the scanning timeline. The marker directory only has
-    to exist (it may be an un-installed Datalad mountpoint); content is fetched
-    on demand by the analysis step.
+    metrics. The marker directory only has to exist (it may be an un-installed
+    Datalad mountpoint); content is fetched on demand by the analysis step.
     """
     cneuromod_dir = Path(cneuromod_dir)
     names = []

@@ -55,3 +55,18 @@ def datalad_get(paths, dataset_root, recursive=False, get_content=True):
     if result.returncode != 0:
         preview = ", ".join(str(p) for p in paths[:2])
         print(f"⚠️  datalad get returned errors (continuing without): {preview} ...")
+
+
+def install_subdataset(path, dataset_root):
+    """Install the subdataset at ``path`` (relative to ``dataset_root``), no content.
+
+    Runs ``datalad get -n`` rather than plain ``git submodule update --init``:
+    each derivative of cneuromod.all (``{dataset}/{marker}``) is a Datalad
+    subdataset nested *inside* the per-``{dataset}`` subdataset, and a plain
+    ``git submodule`` cannot reach a submodule nested inside another submodule.
+    Datalad installs the intermediate ``{dataset}`` subdataset and the nested
+    ``{marker}`` in one call, leaving large sibling subdatasets like ``stimuli``
+    untouched (non-recursive). Tolerant like ``datalad_get``: never raises, so an
+    inaccessible derivative only warns and one dataset never aborts the whole run.
+    """
+    datalad_get(path, dataset_root, get_content=False)

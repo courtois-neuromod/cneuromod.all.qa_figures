@@ -30,27 +30,18 @@ compatibility). Linter: **ruff** (`uv run ruff check .`). No test framework.
   derivatives per dataset: `{dataset}/bids`, `{dataset}/mriqc`, `{dataset}/fmriprep`,
   `{dataset}/tsnr`, … Optionally, `fetch --dataset/--subject/--session` (each a
   comma-separated list) prefetches the same small text files (MRIQC
-  `*_bold.json`, BIDS `*_scans.tsv`) for a chosen slice up front — see
+  `*_bold.json`) for a chosen slice up front — see
   `analysis/prefetch.py`; still never `.nii.gz`.
 - **Chunk unit: `dataset`.** Each `run-{name}` task processes one CNeuroMod
   dataset at a time (writing one TSV per dataset), auto-discovering datasets from
   `cneuromod.all` (`analysis/datasets.py`), exposing a `datasets=` selector and a
   `smoke` flag (first dataset only), and skipping datasets whose output exists.
-- **Two analysis paths** (both in `analysis/`, mirroring `cneuromod_qc`):
+- **One analysis path** (in `analysis/`, mirroring `cneuromod_qc`):
   - `run-qc-measures` → `analysis/qc_measures.py`: per-run image-quality metrics
     read **from MRIQC BOLD JSONs only** (`{dataset}/mriqc/**/*_bold.json`) — a
     deliberate choice to avoid installing/fetching the large fMRIPrep derivatives.
     Metrics: `fd_mean`, `tsnr`, `snr`, `gsr_*`, `dvars_*`, `size_t`, … →
     `output_data/qc_measures/{dataset}.tsv`.
-  - `run-scans` → `analysis/scans.py`: aggregate BIDS `*_scans.tsv` →
-    `output_data/scans/{dataset}.tsv`. **Temporarily disabled in the default
-    `run`/`run-smoke` pipeline** (still invocable directly with
-    `invoke run-scans`): `*_scans.tsv` holds acquisition timestamps and lives in
-    the credentialed `.sensitive` S3 bucket (`autoenable=false`), which is not
-    enabled in the local checkout, so it only yields empty tables + warnings
-    here. Re-enable by restoring `run_scans` in the `pre=` chain of `run` and the
-    call in `run_smoke` (see the note above `run` in `tasks.py`) once the
-    sensitive remote is enabled.
 - **Derivative folders are nested Datalad subdatasets.** Every `{dataset}/{marker}`
   (`bids`, `mriqc`, `fmriprep`, `tsnr`, …) is a Datalad subdataset nested *inside*
   the per-`{dataset}` subdataset of `cneuromod.all`, present on disk as an empty
@@ -68,13 +59,12 @@ compatibility). Linter: **ruff** (`uv run ruff check .`). No test framework.
   partly public and content lives on credentialed special remotes, so `datalad get`
   can partially fail (e.g. participants without a public-data agreement, or an
   environment without the right auth). The helper only fetches the small text
-  files it needs (JSONs, scans.tsv — never `.nii.gz`), never raises, retries once
+  files it needs (MRIQC JSONs — never `.nii.gz`), never raises, retries once
   over HTTPS, and lets each step proceed with whatever content is present.
 - **Notebook figures live in `output_data/figures/{notebook_stem}/`** (set via
   `figures_dir` in `invoke.yaml`). This folder doubles as airoh's per-notebook
   "already ran" sentinel, so it must NOT collide with a data dir name — keep the
-  metric tables under `output_data/qc_measures/` and `output_data/scans/`, distinct
-  from the notebook stems.
+  metric tables under `output_data/qc_measures/`, distinct from the notebook stems.
 
 ## Persona
 

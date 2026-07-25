@@ -62,10 +62,13 @@ def extract_qc_measures(dataset, cneuromod_dir, output_dir, smoke=False):
     root = Path(cneuromod_dir)
     mriqc_dir = root / dataset / "mriqc"
 
-    # Install the mriqc subdataset tree (filenames only), then fetch the small
-    # per-run JSONs — no preprocessed image content is ever retrieved.
-    datalad_get(f"{dataset}/mriqc", root, recursive=True, get_content=False)
+    # The mriqc submodule is initialized by the caller (run_qc_measures task)
+    # before we glob it. Here we only fetch the small per-run JSONs — no
+    # preprocessed image content is ever retrieved.
     json_files = sorted(mriqc_dir.rglob("*_bold.json"))
+    if not json_files:
+        print(f"⚠️  {dataset}: no *_bold.json found (mriqc submodule empty or "
+              f"not initialized) — writing empty table")
     if smoke:
         json_files = json_files[:1]
     if json_files:
