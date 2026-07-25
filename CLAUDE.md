@@ -28,7 +28,10 @@ compatibility). Linter: **ruff** (`uv run ruff check .`). No test framework.
   generic `fetch_data` template task): file content is pulled **on demand** by the
   analysis steps via `datalad get`, never all at once. The new structure nests
   derivatives per dataset: `{dataset}/bids`, `{dataset}/mriqc`, `{dataset}/fmriprep`,
-  `{dataset}/tsnr`, …
+  `{dataset}/tsnr`, … Optionally, `fetch --dataset/--subject/--session` (each a
+  comma-separated list) prefetches the same small text files (MRIQC
+  `*_bold.json`, BIDS `*_scans.tsv`) for a chosen slice up front — see
+  `analysis/prefetch.py`; still never `.nii.gz`.
 - **Chunk unit: `dataset`.** Each `run-{name}` task processes one CNeuroMod
   dataset at a time (writing one TSV per dataset), auto-discovering datasets from
   `cneuromod.all` (`analysis/datasets.py`), exposing a `datasets=` selector and a
@@ -40,7 +43,27 @@ compatibility). Linter: **ruff** (`uv run ruff check .`). No test framework.
     Metrics: `fd_mean`, `tsnr`, `snr`, `gsr_*`, `dvars_*`, `size_t`, … →
     `output_data/qc_measures/{dataset}.tsv`.
   - `run-scans` → `analysis/scans.py`: aggregate BIDS `*_scans.tsv` →
-    `output_data/scans/{dataset}.tsv`.
+    `output_data/scans/{dataset}.tsv`. **Temporarily disabled in the default
+    `run`/`run-smoke` pipeline** (still invocable directly with
+    `invoke run-scans`): `*_scans.tsv` holds acquisition timestamps and lives in
+    the credentialed `.sensitive` S3 bucket (`autoenable=false`), which is not
+    enabled in the local checkout, so it only yields empty tables + warnings
+    here. Re-enable by restoring `run_scans` in the `pre=` chain of `run` and the
+    call in `run_smoke` (see the note above `run` in `tasks.py`) once the
+    sensitive remote is enabled.
+- **Derivative folders are nested Datalad subdatasets.** Every `{dataset}/{marker}`
+  (`bids`, `mriqc`, `fmriprep`, `tsnr`, …) is a Datalad subdataset nested *inside*
+  the per-`{dataset}` subdataset of `cneuromod.all`, present on disk as an empty
+  mountpoint until installed. Each `run-{name}` task first installs the subdataset
+  it needs via `install_subdataset` (`analysis/datalad_utils.py`), called at the
+  **task layer** in `tasks.py` (`_ensure_marker_submodule`). This runs
+  `datalad get -n` (no content): datalad installs the intermediate `{dataset}`
+  subdataset and the nested `{marker}` in one call — plain `git submodule` cannot
+  reach a submodule nested inside another submodule — while leaving large sibling
+  subdatasets like `stimuli` alone (non-recursive). Tolerant like `datalad_get`
+  (never raises). Then the `analysis/` step globs the installed tree and
+  `datalad get`s the small text content. Skipping this install is why a fresh
+  checkout would silently produce empty metric tables.
 - **Tolerant `datalad get`** (`analysis/datalad_utils.py`): CNeuroMod data is only
   partly public and content lives on credentialed special remotes, so `datalad get`
   can partially fail (e.g. participants without a public-data agreement, or an

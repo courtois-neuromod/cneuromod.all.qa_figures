@@ -60,15 +60,25 @@ makes it available under `source_data/cneuromod.all`:
 Either way, **file content is retrieved on demand** by the analysis steps
 (`datalad get`) — the whole superdataset is never downloaded at once.
 
+- **Prefetch a slice (optional).** Passing `--dataset`, `--subject`, and/or
+  `--session` (each a comma-separated list) additionally pulls just the small
+  text files — MRIQC `*_bold.json` and BIDS `*_scans.tsv` — for that slice, so
+  later steps run offline. No `*.nii.gz` is ever retrieved.
+
+  ```bash
+  uv run invoke fetch --dataset hcptrt --subject 01 --session 001
+  uv run invoke fetch --dataset hcptrt,friends --subject 01,03
+  ```
+
 ### **Step 3**: Run the full pipeline
 
 ```bash
 uv run invoke run
 ```
 
-Runs the analysis in order (`fetch → run-qc-measures → run-scans →
-run-notebooks`). Steps that already produced output are skipped, so re-running
-only recomputes what is missing. To force a full rerun:
+Runs the analysis in order (`fetch → run-qc-measures → run-notebooks`).
+Steps that already produced output are skipped, so re-running only recomputes
+what is missing. To force a full rerun:
 
 ```bash
 uv run invoke clean
@@ -97,11 +107,11 @@ The list below should match `invoke --list`.
 
 | Task                | Description                                                        |
 | ------------------- | ------------------------------------------------------------------ |
-| `fetch`             | Make `cneuromod.all` available (symlink local checkout, or clone)  |
+| `fetch`             | Make `cneuromod.all` available; optionally prefetch a `--dataset`/`--subject`/`--session` text-file slice |
 | `run-qc-measures`   | Extract per-run MRIQC metrics per dataset; skips datasets already done |
-| `run-scans`         | Aggregate BIDS `*_scans.tsv` per dataset; skips datasets already done |
+| `run-scans`         | Aggregate BIDS `*_scans.tsv` per dataset; **not in default `run`** (needs the credentialed `.sensitive` S3 remote — see note below); invoke directly |
 | `run-notebooks`     | Execute notebooks, saving QA figures to `output_data/figures/`     |
-| `run`               | Full pipeline (all steps in order)                                 |
+| `run`               | Full pipeline (`fetch → run-qc-measures → run-notebooks`; `run-scans` currently excluded) |
 | `run-smoke`         | Minimal end-to-end pass (`--smoke`, first dataset only)            |
 | `clean`             | Remove all computed outputs                                        |
 | `clean-qc-measures` | Remove QC-metric tables                                            |
@@ -111,6 +121,13 @@ The list below should match `invoke --list`.
 | `clean-cneuromod`   | Remove the fetched `cneuromod.all` superdataset (symlink or clone) |
 
 Use `invoke --list` or `invoke --help <task>` for full descriptions.
+
+> **Note — `run-scans` temporarily excluded from `run`.** BIDS `*_scans.tsv`
+> (acquisition timestamps) lives in the credentialed `.sensitive` S3 bucket,
+> which is not enabled in the local checkout, so the step only yields empty
+> tables here. It stays available to invoke directly (`uv run invoke run-scans`);
+> re-enable it in the default pipeline by restoring `run_scans` in the `pre=`
+> chain of `run` and the call in `run_smoke` (see the note in `tasks.py`).
 
 ---
 
