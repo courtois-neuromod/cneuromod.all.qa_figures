@@ -56,10 +56,13 @@ compatibility). Linter: **ruff** (`uv run ruff check .`). No test framework.
   stale git-annex); the strict gate is the final row count, not the fetch.
 - **One analysis path** (in `analysis/`, mirroring `cneuromod_qc`):
   - `run-qc-measures` → `analysis/qc_measures.py`: per-run image-quality metrics
-    read **from MRIQC BOLD JSONs only** (`{dataset}/mriqc/**/*_bold.json`) — a
-    deliberate choice to avoid installing/fetching the large fMRIPrep derivatives.
-    Metrics: `fd_mean`, `tsnr`, `snr`, `gsr_*`, `dvars_*`, `size_t`, … →
-    `output_data/tables/{dataset}.tsv`.
+    read **from MRIQC only** (`{dataset}/mriqc/**/*_bold.json` plus the sibling
+    `*_timeseries.tsv`) — a deliberate choice to avoid installing/fetching the
+    large fMRIPrep derivatives. Metrics: `fd_mean`, `tsnr`, `snr`, `gsr_*`,
+    `dvars_*`, `size_t`, … plus `fd_prop_gt02`/`fd_prop_gt05` (proportion of
+    volumes with FD > 0.2 / 0.5 mm, computed from the `framewise_displacement`
+    column of the MRIQC `*_timeseries.tsv` — *not* the BIDS sidecar, which holds
+    no FD data) → `output_data/tables/{dataset}.tsv`.
 - **Derivative folders are nested Datalad subdatasets.** Every `{dataset}/{marker}`
   (`bids`, `mriqc`, `fmriprep`, `tsnr`, …) is a Datalad subdataset nested *inside*
   the per-`{dataset}` subdataset of `cneuromod.all`, present on disk as an empty

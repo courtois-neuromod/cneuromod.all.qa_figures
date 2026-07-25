@@ -7,7 +7,9 @@ Once the pipeline is run, this folder contains:
 - `tables/{dataset}.tsv` — one row per functional run, with MRIQC
   image-quality metrics: `fd_mean`, `fd_num`, `fd_perc`, `tsnr`, `snr`,
   `gsr_x`, `gsr_y`, `dvars_std`, `dvars_vstd`, `aor`, `aqi`, `gcor`, `size_t`,
-  plus entities `dataset`, `subject`, `session`, `task`, `run`, `task_grouped`.
+  plus `fd_prop_gt02` / `fd_prop_gt05` (proportion of volumes with FD > 0.2 / 0.5
+  mm, from the MRIQC `*_timeseries.tsv` `framewise_displacement` column), and
+  entities `dataset`, `subject`, `session`, `task`, `run`, `task_grouped`.
 
 ## Figures (from `invoke run-notebooks`)
 

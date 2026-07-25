@@ -2,8 +2,9 @@
 
 ``invoke fetch`` normally only makes the superdataset available; the ``run-*``
 steps then ``datalad get`` the small text files they need on demand. This module
-lets ``fetch`` optionally pull those same text files — MRIQC ``*_bold.json`` —
-up front for a chosen dataset/subject/session, so later steps can run offline.
+lets ``fetch`` optionally pull those same text files — MRIQC ``*_bold.json`` and
+``*_timeseries.tsv`` — up front for a chosen dataset/subject/session, so later
+steps can run offline.
 No preprocessed ``.nii.gz`` is ever retrieved.
 """
 
@@ -16,7 +17,7 @@ from analysis.datasets import list_datasets
 
 # (subdataset marker, text-file glob) pairs to prefetch — the small metadata
 # files the analysis steps read, never the annexed image content.
-_TEXT_TARGETS = [("mriqc", "*_bold.json")]
+_TEXT_TARGETS = [("mriqc", "*_bold.json"), ("mriqc", "*_timeseries.tsv")]
 
 
 def parse_labels(value):

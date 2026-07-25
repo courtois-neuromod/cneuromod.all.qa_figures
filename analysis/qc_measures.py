@@ -26,12 +26,42 @@ IQM_KEYS = [
     "aor", "aqi", "gcor", "size_t",    # artifacts / n volumes
 ]
 
+# Per-run motion-outlier proportions computed from the MRIQC *_timeseries.tsv
+# ``framewise_displacement`` column: fraction of volumes whose FD (mm) exceeds
+# each threshold. Named ``fd_prop_*`` (proportions in 0–1) to stay distinct from
+# MRIQC's own percentage-valued ``fd_perc``.
+FD_THRESHOLDS = {"fd_prop_gt02": 0.2, "fd_prop_gt05": 0.5}
+
 
 def _task_grouped(task):
     """Strip a trailing run/segment index so e.g. 'life1'/'life2' group as 'life'."""
     if not task:
         return task
     return re.sub(r"\d+[abcd]?$", "", task)
+
+
+def _fd_proportions(bold_json_path):
+    """Proportion of volumes with FD over each threshold, from the sibling
+    MRIQC ``*_timeseries.tsv``. NaN for each key if the TSV is missing/unreadable.
+
+    Denominator is the total number of volumes (the first ``n/a`` row counts but
+    never exceeds a threshold), matching MRIQC's own ``fd_perc`` convention so
+    that ``fd_prop_gt02 * 100 ≈ fd_perc`` as a cross-check.
+    """
+    ts_path = bold_json_path.with_name(
+        bold_json_path.name.replace("_bold.json", "_timeseries.tsv"))
+    nan_result = {key: np.nan for key in FD_THRESHOLDS}
+    if not ts_path.is_file():
+        return nan_result
+    try:
+        fd = pd.read_csv(ts_path, sep="\t")["framewise_displacement"]
+    except (OSError, KeyError, pd.errors.ParserError, pd.errors.EmptyDataError):
+        return nan_result
+    n_volumes = len(fd)
+    if n_volumes == 0:
+        return nan_result
+    return {key: float((fd > thr).sum()) / n_volumes
+            for key, thr in FD_THRESHOLDS.items()}
 
 
 def _row_from_json(path, dataset):
@@ -54,6 +84,7 @@ def _row_from_json(path, dataset):
         "task_grouped": _task_grouped(task),
     }
     row.update({key: iqms.get(key, np.nan) for key in IQM_KEYS})
+    row.update(_fd_proportions(path))
     return row
 
 
@@ -86,8 +117,13 @@ def extract_qc_measures(dataset, cneuromod_dir, output_dir, smoke=False,
         # Best-effort even in strict mode: the JSONs may already be present on
         # disk (a fresh `datalad get` can fail on a stale git-annex while the
         # content is readable). The real strict gate is the empty-table check
-        # below — what matters is whether we ultimately extract any rows.
-        datalad_get([p.relative_to(root) for p in json_files], root)
+        # below — what matters is whether we ultimately extract any rows. We also
+        # fetch the sibling *_timeseries.tsv (per-volume FD) — plain files on the
+        # datasets checked, but this future-proofs any where they are annexed.
+        text_files = [p for j in json_files
+                      for p in (j, j.with_name(
+                          j.name.replace("_bold.json", "_timeseries.tsv")))]
+        datalad_get([p.relative_to(root) for p in text_files], root)
 
     rows = [row for p in json_files if (row := _row_from_json(p, dataset))]
     table = pd.DataFrame(rows)
