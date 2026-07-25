@@ -107,13 +107,13 @@ def fetch(c, source=None, dataset=None, subject=None, session=None):
 # Analysis steps (chunk = dataset)
 # --------------------------------------------------------------------------- #
 @task(help={
-    "datasets": "Comma-separated dataset names to process (default: all with an "
-                "mriqc subdataset).",
+    "dataset": "Comma-separated dataset names to process (default: all with an "
+               "mriqc subdataset).",
     "smoke": "Process only the first dataset (fast end-to-end check).",
     "strict": "Raise on any retrieval/extraction failure instead of warning "
-              "(used by run-smoke; also re-runs datasets whose output exists).",
+              "(implied by run --smoke; also re-runs datasets whose output exists).",
 })
-def run_qc_measures(c, datasets=None, smoke=False, strict=False):
+def run_qc_measures(c, dataset=None, smoke=False, strict=False):
     """
     Extract per-run MRIQC QC metrics for each dataset of cneuromod.all.
 
@@ -126,7 +126,7 @@ def run_qc_measures(c, datasets=None, smoke=False, strict=False):
 
     cneuromod_dir = _cneuromod_dir(c)
     output_dir = Path(c.config.get("output_data_dir"))
-    names = _select_datasets(datasets, list_datasets(cneuromod_dir, "mriqc"), smoke)
+    names = _select_datasets(dataset, list_datasets(cneuromod_dir, "mriqc"), smoke)
 
     for dataset in names:
         out = output_dir / "qc_measures" / f"{dataset}.tsv"
@@ -165,38 +165,49 @@ def run_notebooks(c):
 # --------------------------------------------------------------------------- #
 # Pipeline
 # --------------------------------------------------------------------------- #
-@task(pre=[fetch, run_qc_measures, run_notebooks])
-def run(c):
-    """Full pipeline: fetch → qc-measures → figures."""
-    print("all analyses completed")
-
-
 @task(help={
-    "dataset": "Dataset to smoke-test (default: `smoke_dataset` in invoke.yaml, "
-               "i.e. hcptrt). Must be one with functional MRIQC data.",
+    "dataset": "Comma-separated dataset names to process (default: all with an "
+               "mriqc subdataset). In --smoke mode, defaults to `smoke_dataset` "
+               "in invoke.yaml (i.e. hcptrt).",
+    "smoke": "Strict minimal end-to-end test on one functional dataset: implies "
+             "--strict, re-runs stale TSVs, and asserts non-empty output at the "
+             "end (non-zero exit if nothing is extracted). Defaults --dataset to "
+             "`smoke_dataset`.",
+    "strict": "Raise on any retrieval/extraction failure instead of warning.",
 })
-def run_smoke(c, dataset=None):
-    """Smoke test: strict minimal end-to-end pass on a known functional dataset.
+def run(c, dataset=None, smoke=False, strict=False):
+    """Full pipeline: fetch → qc-measures → figures.
 
-    Unlike the tolerant production pipeline, this FAILS LOUDLY (non-zero exit) if
-    nothing is retrieved or extracted, so it actually tests the plumbing. It runs
-    on a single dataset that genuinely has functional MRIQC data (default
-    `hcptrt`) — an empty result then unambiguously means retrieval is broken,
-    not that the dataset simply has no BOLD runs (e.g. anat).
+    ``--smoke`` turns this into a strict end-to-end test: unlike the tolerant
+    production run, it FAILS LOUDLY (non-zero exit) if nothing is retrieved or
+    extracted, so it actually tests the plumbing. It runs on a single dataset
+    that genuinely has functional MRIQC data (default `smoke_dataset`, i.e.
+    hcptrt) — an empty result then unambiguously means retrieval is broken, not
+    that the dataset simply has no BOLD runs (e.g. anat).
     """
-    target = dataset or c.config.get("smoke_dataset", "hcptrt")
-    output_dir = Path(c.config.get("output_data_dir"))
+    strict = strict or smoke
+    if smoke and not dataset:
+        dataset = c.config.get("smoke_dataset", "hcptrt")
 
     fetch(c)
-    run_qc_measures(c, datasets=target, smoke=True, strict=True)
+    run_qc_measures(c, dataset=dataset, smoke=smoke, strict=strict)
     run_notebooks(c)
+
+    if not smoke:
+        print("all analyses completed")
+        return
 
     import pandas as pd
 
-    out = output_dir / "qc_measures" / f"{target}.tsv"
-    if not out.exists() or pd.read_csv(out, sep="\t").empty:
-        raise Exit(f"❌ Smoke test FAILED: no QC rows extracted for {target}", code=1)
-    print(f"✅ Smoke test passed: {target} produced QC rows at {out}")
+    output_dir = Path(c.config.get("output_data_dir"))
+    targets = [name.strip() for name in dataset.split(",") if name.strip()]
+    for target in targets:
+        out = output_dir / "qc_measures" / f"{target}.tsv"
+        if not out.exists() or pd.read_csv(out, sep="\t").empty:
+            raise Exit(
+                f"❌ Smoke test FAILED: no QC rows extracted for {target}", code=1
+            )
+        print(f"✅ Smoke test passed: {target} produced QC rows at {out}")
 
 
 # --------------------------------------------------------------------------- #

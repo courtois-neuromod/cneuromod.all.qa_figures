@@ -34,20 +34,24 @@ compatibility). Linter: **ruff** (`uv run ruff check .`). No test framework.
   `analysis/prefetch.py`; still never `.nii.gz`.
 - **Chunk unit: `dataset`.** Each `run-{name}` task processes one CNeuroMod
   dataset at a time (writing one TSV per dataset), auto-discovering datasets from
-  `cneuromod.all` (`analysis/datasets.py`), exposing a `datasets=` selector and a
-  `smoke` flag (first dataset only), and skipping datasets whose output exists.
-- **`run-smoke` is a real test — strict, not tolerant.** The production pipeline
-  (`run`, `run-qc-measures`) is deliberately *tolerant* of partly-public data:
-  inaccessible participants only warn, and an empty result writes an empty table.
-  `run-smoke` is the opposite: it threads a `strict=True` flag through
+  `cneuromod.all` (`analysis/datasets.py`), exposing a `--dataset` selector
+  (comma-separated) and a `smoke` flag (first dataset only), and skipping
+  datasets whose output exists. `run` itself also takes `--dataset`, forwarding
+  it to `run-qc-measures`.
+- **`run --smoke` is a real test — strict, not tolerant.** The production pipeline
+  (plain `run`, `run-qc-measures`) is deliberately *tolerant* of partly-public
+  data: inaccessible participants only warn, and an empty result writes an empty
+  table. `run --smoke` is the opposite: `--smoke` implies `--strict`, threading a
+  `strict=True` flag through
   `_ensure_marker_submodule` → `install_subdataset` → `extract_qc_measures`, so a
-  failed submodule install or a zero-row extraction **raises** (non-zero exit).
-  It runs on a single dataset that genuinely has functional MRIQC data
-  (`smoke_dataset` in `invoke.yaml`, default `hcptrt`, overridable with
-  `--dataset`) — never blindly the first dataset alphabetically, which is `anat`
-  (anatomical-only, no BOLD → empty by nature). In strict mode `run-qc-measures`
-  also re-runs a dataset whose TSV already exists, so a stale file can't mask a
-  retrieval failure. Note: the per-file content `datalad get` stays best-effort
+  failed submodule install or a zero-row extraction **raises** (non-zero exit),
+  and `run` asserts a non-empty TSV at the end. It runs on a single dataset that
+  genuinely has functional MRIQC data (`smoke_dataset` in `invoke.yaml`, default
+  `hcptrt`, the `--dataset` default under `--smoke`) — never blindly the first
+  dataset alphabetically, which is `anat` (anatomical-only, no BOLD → empty by
+  nature). In strict mode `run-qc-measures` also re-runs a dataset whose TSV
+  already exists, so a stale file can't mask a retrieval failure. Note: the
+  per-file content `datalad get` stays best-effort
   even under strict (JSONs may already be on disk while a fresh `get` fails on a
   stale git-annex); the strict gate is the final row count, not the fetch.
 - **One analysis path** (in `analysis/`, mirroring `cneuromod_qc`):
@@ -156,7 +160,7 @@ invoke --list             # Show all available tasks
 
 **Linting:** The project linter and its configuration are chosen during `init` and stored in `pyproject.toml`. Run it before committing. Never disable a lint rule without a comment explaining why.
 
-**Testing:** The smoke test (`invoke run-smoke`) is the baseline end-to-end check. Add unit tests in `tests/` using the project's chosen test framework when a function contains non-trivial logic, has edge cases the smoke test won't catch, or is shared across multiple steps. Unit tests are optional for simple glue/orchestration code but encouraged for any pure transformation or computation logic in `analysis/`. The test framework and directory are configured during `init`.
+**Testing:** The smoke test (`invoke run --smoke`) is the baseline end-to-end check. Add unit tests in `tests/` using the project's chosen test framework when a function contains non-trivial logic, has edge cases the smoke test won't catch, or is shared across multiple steps. Unit tests are optional for simple glue/orchestration code but encouraged for any pure transformation or computation logic in `analysis/`. The test framework and directory are configured during `init`.
 
 **Template cleanup:** When starting a new project from this template, remove the demo code before adding project-specific work:
 - Delete `run_simulation` from `tasks.py` and remove it from the `pre=` chains on `run_notebooks` and `run`
