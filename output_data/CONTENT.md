@@ -14,7 +14,12 @@ Once the pipeline is run, this folder contains:
 ## Figures (from `invoke run-notebooks`)
 
 - `figures/qc_measures/` — FD and tSNR raincloud distributions by subject and by
-  task, and an FD-vs-tSNR scatter.
+  dataset, and an FD-vs-tSNR scatter.
+- `figures/motion_bands/` — stacked bars of the per-run motion budget (% low
+  FD ≤ 0.2, moderate 0.2–0.5, high > 0.5 mm), averaged over runs:
+  `motion_bands_by_dataset_subject.png` (one panel per dataset, one bar per
+  subject) and `motion_bands_grand_average.png` (one bar per subject, averaged
+  across all datasets with each dataset weighted equally).
 
 Each `figures/{notebook}/` folder also doubles as the notebook's "already ran"
 sentinel used by `invoke run-notebooks`.
