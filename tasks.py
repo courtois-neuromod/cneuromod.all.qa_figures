@@ -39,34 +39,15 @@ def _ensure_marker_submodule(cneuromod_dir, dataset, marker, strict=False):
     )
 
 
-# --------------------------------------------------------------------------- #
-# Fetch
-# --------------------------------------------------------------------------- #
-@task(help={
-    "source": "Path to an existing local cneuromod.all checkout to use instead "
-              "of cloning (defaults to the `source:` key in invoke.yaml, "
-              "i.e. ../cneuromod.all).",
-    "dataset": "Comma-separated dataset names to prefetch MRIQC JSONs for "
-               "(default: all). Prefetch runs only when one of "
-               "--dataset/--subject/--session is given.",
-    "subject": "Comma-separated subject labels (e.g. 01,03) to restrict the "
-               "prefetch to.",
-    "session": "Comma-separated session labels (e.g. 001,002) to restrict the "
-               "prefetch to.",
-})
-def fetch(c, source=None, dataset=None, subject=None, session=None):
-    """
-    Make the cneuromod.all Datalad superdataset available under source_data/.
+def _ensure_superdataset_available(c, source=None):
+    """Make the cneuromod.all superdataset present under source_data/ (no content).
 
-    Primary use case: symlink an existing local checkout (../cneuromod.all by
-    default) so its content can be retrieved on demand by the analysis steps.
-    When no local checkout exists, clone the remote superdataset instead. File
-    content is NOT fetched here by default — the analysis steps `datalad get`
-    only the small MRIQC BOLD JSONs they need.
-
-    Passing --dataset/--subject/--session additionally prefetches those same
-    small text files (MRIQC *_bold.json) for the selected slice, warming the
-    cache so later steps run offline. No *.nii.gz is ever retrieved.
+    Symlinks an existing local checkout (``source`` or the ``source:`` key in
+    invoke.yaml, i.e. ../cneuromod.all) or clones the remote when none exists.
+    This is the cheap "make available" half of ``fetch`` — no ``datalad get`` of
+    file content. Both ``fetch`` (before its bulk prefetch) and ``run`` (which
+    then relies on each ``run-*`` step's own on-demand get) call it, so
+    reproduction never re-triggers bulk asset gathering.
     """
     cfg = c.config.get("datasets", {}).get("cneuromod_all", {})
     dest = Path(cfg["output_dir"])
@@ -75,30 +56,62 @@ def fetch(c, source=None, dataset=None, subject=None, session=None):
 
     if dest.exists() or dest.is_symlink():
         print(f"🫧 cneuromod.all already present at {dest}")
+        return
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    if source and Path(source).exists():
+        target = Path(source).resolve()
+        print(f"🔗 Linking existing checkout {target} -> {dest}")
+        dest.symlink_to(target, target_is_directory=True)
     else:
-        dest.parent.mkdir(parents=True, exist_ok=True)
-        if source and Path(source).exists():
-            target = Path(source).resolve()
-            print(f"🔗 Linking existing checkout {target} -> {dest}")
-            dest.symlink_to(target, target_is_directory=True)
-        else:
-            if source:
-                print(f"⚠️  Source '{source}' not found — cloning remote instead.")
-            print(f"📥 Cloning {url} -> {dest} (content retrieved on demand)")
-            c.run(f"datalad clone {url} {dest}")
+        if source:
+            print(f"⚠️  Source '{source}' not found — cloning remote instead.")
+        print(f"📥 Cloning {url} -> {dest} (content retrieved on demand)")
+        c.run(f"datalad clone {url} {dest}")
 
-    if dataset or subject or session:
-        from analysis.prefetch import parse_labels, prefetch_slice
-        cneuromod_dir = _cneuromod_dir(c)
-        prefetch_slice(
-            cneuromod_dir,
-            parse_labels(dataset),
-            parse_labels(subject),
-            parse_labels(session),
-            ensure_submodule=lambda ds, marker: _ensure_marker_submodule(
-                cneuromod_dir, ds, marker
-            ),
-        )
+
+# --------------------------------------------------------------------------- #
+# Fetch
+# --------------------------------------------------------------------------- #
+@task(help={
+    "source": "Path to an existing local cneuromod.all checkout to use instead "
+              "of cloning (defaults to the `source:` key in invoke.yaml, "
+              "i.e. ../cneuromod.all).",
+    "dataset": "Comma-separated dataset names to restrict the fetch to "
+               "(default: all datasets with an mriqc subdataset).",
+    "subject": "Comma-separated subject labels (e.g. 01,03) to restrict the "
+               "fetch to.",
+    "session": "Comma-separated session labels (e.g. 001,002) to restrict the "
+               "fetch to.",
+})
+def fetch(c, source=None, dataset=None, subject=None, session=None):
+    """
+    Make the cneuromod.all Datalad superdataset available under source_data/,
+    then retrieve the small MRIQC text files the analysis steps read.
+
+    First, make the superdataset available: symlink an existing local checkout
+    (../cneuromod.all by default), or clone the remote when no local checkout
+    exists.
+
+    Then, by default, install every dataset's mriqc subdataset and `datalad get`
+    only the small text files the pipeline needs — MRIQC *_bold.json and
+    *_timeseries.tsv — so a fresh clone is ready for `run` offline. No *.nii.gz
+    is ever retrieved. Pass --dataset/--subject/--session to narrow that
+    retrieval to a slice. Tolerant of partly-public data: inaccessible content
+    only warns, never aborts (the run steps re-`datalad get` on demand anyway).
+    """
+    _ensure_superdataset_available(c, source)
+
+    from analysis.prefetch import parse_labels, prefetch_slice
+    cneuromod_dir = _cneuromod_dir(c)
+    prefetch_slice(
+        cneuromod_dir,
+        parse_labels(dataset),
+        parse_labels(subject),
+        parse_labels(session),
+        ensure_submodule=lambda ds, marker: _ensure_marker_submodule(
+            cneuromod_dir, ds, marker
+        ),
+    )
 
     print("✅ fetch complete.")
 
@@ -176,7 +189,13 @@ def run_notebooks(c):
     "strict": "Raise on any retrieval/extraction failure instead of warning.",
 })
 def run(c, dataset=None, smoke=False, strict=False):
-    """Full pipeline: fetch → qc-measures → figures.
+    """Full pipeline: ensure cneuromod.all available → qc-measures → figures.
+
+    Unlike ``fetch``, ``run`` does NOT bulk-prefetch: it only makes the
+    superdataset available, then each ``run-qc-measures`` step installs and
+    ``datalad get``s only its own dataset's files on demand. Run ``invoke fetch``
+    first to gather all assets up front; ``run`` alone still works on a fresh
+    clone via that per-step on-demand retrieval.
 
     ``--smoke`` turns this into a strict end-to-end test: unlike the tolerant
     production run, it FAILS LOUDLY (non-zero exit) if nothing is retrieved or
@@ -189,7 +208,11 @@ def run(c, dataset=None, smoke=False, strict=False):
     if smoke and not dataset:
         dataset = c.config.get("smoke_dataset", "hcptrt")
 
-    fetch(c)
+    # Reproduction only ensures the superdataset is *available*; it does NOT
+    # re-run fetch's bulk prefetch. Each run-qc-measures step installs and
+    # `datalad get`s only its own dataset's files on demand (see qc_measures.py),
+    # keeping asset gathering (`fetch`) separate from reproduction (`run`).
+    _ensure_superdataset_available(c)
     run_qc_measures(c, dataset=dataset, smoke=smoke, strict=strict)
     run_notebooks(c)
 

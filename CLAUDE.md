@@ -25,13 +25,25 @@ compatibility). Linter: **ruff** (`uv run ruff check .`). No test framework.
   `source:` under `datasets:` in `invoke.yaml`, overridable with
   `invoke fetch --source /path`), or a **clone** of the remote when no local
   checkout exists. This is a deliberate, project-specific `fetch` (not the
-  generic `fetch_data` template task): file content is pulled **on demand** by the
-  analysis steps via `datalad get`, never all at once. The new structure nests
-  derivatives per dataset: `{dataset}/bids`, `{dataset}/mriqc`, `{dataset}/fmriprep`,
-  `{dataset}/tsnr`, … Optionally, `fetch --dataset/--subject/--session` (each a
-  comma-separated list) prefetches the same small text files (MRIQC
-  `*_bold.json`) for a chosen slice up front — see
-  `analysis/prefetch.py`; still never `.nii.gz`.
+  generic `fetch_data` template task). The new structure nests derivatives per
+  dataset: `{dataset}/bids`, `{dataset}/mriqc`, `{dataset}/fmriprep`,
+  `{dataset}/tsnr`, … After making the superdataset available, `fetch`
+  **retrieves the small MRIQC text files the pipeline reads** (MRIQC
+  `*_bold.json` and `*_timeseries.tsv`) — installing each dataset's `mriqc`
+  subdataset and `datalad get`-ing those files, so a fresh clone is ready to
+  `run` offline. It **never** pulls `.nii.gz` and never the large fMRIPrep/bids
+  content. `fetch --dataset/--subject/--session` (each a comma-separated list)
+  narrows this retrieval to a chosen slice; with no filter it covers every
+  dataset — see `analysis/prefetch.py`. The retrieval is tolerant (inaccessible
+  content only warns), and the `run-*` steps re-`datalad get` on demand as a
+  safety net, so skipping `fetch` still works.
+- **Asset gathering (`fetch`) is separate from reproduction (`run`).** `run`
+  does **not** call the full `fetch` — it only ensures the superdataset is
+  *available* via `_ensure_superdataset_available` (the cheap symlink/clone half,
+  factored out of `fetch`), then each `run-qc-measures` step installs and
+  `datalad get`s only its own dataset's files on demand (`qc_measures.py`). So
+  `invoke run` never re-walks/re-prefetches all datasets; `invoke fetch` is the
+  do-it-once bulk gather. Do not reintroduce a `fetch(c)` call inside `run`.
 - **Chunk unit: `dataset`.** Each `run-{name}` task processes one CNeuroMod
   dataset at a time (writing one TSV per dataset), auto-discovering datasets from
   `cneuromod.all` (`analysis/datasets.py`), exposing a `--dataset` selector

@@ -18,7 +18,7 @@ commands.
 
 ```bash
 uv sync
-uv run invoke fetch    # symlink ../cneuromod.all (or clone the remote)
+uv run invoke fetch    # symlink/clone cneuromod.all + get MRIQC text files
 uv run invoke run      # metrics → figures
 ```
 
@@ -57,13 +57,16 @@ makes it available under `source_data/cneuromod.all`:
 - **No local checkout?** `fetch` clones the remote superdataset
   (`https://github.com/courtois-neuromod/cneuromod.all`) instead.
 
-Either way, **file content is retrieved on demand** by the analysis steps
-(`datalad get`) — the whole superdataset is never downloaded at once.
+Once available, `fetch` then **retrieves the small MRIQC text files the pipeline
+reads** — MRIQC `*_bold.json` and `*_timeseries.tsv` — installing each dataset's
+`mriqc` subdataset and `datalad get`-ing just those files, so a fresh clone is
+ready to `run` offline. It **never** downloads `*.nii.gz` or the large
+fMRIPrep/bids content; the whole superdataset is never pulled at once. The
+retrieval is tolerant — inaccessible (credentialed) content only warns.
 
-- **Prefetch a slice (optional).** Passing `--dataset`, `--subject`, and/or
-  `--session` (each a comma-separated list) additionally pulls just the small
-  text files — MRIQC `*_bold.json` — for that slice, so later steps run offline.
-  No `*.nii.gz` is ever retrieved.
+- **Narrow to a slice (optional).** Passing `--dataset`, `--subject`, and/or
+  `--session` (each a comma-separated list) restricts the retrieval to that
+  slice instead of all datasets:
 
   ```bash
   uv run invoke fetch --dataset hcptrt --subject 01 --session 001
@@ -76,9 +79,13 @@ Either way, **file content is retrieved on demand** by the analysis steps
 uv run invoke run
 ```
 
-Runs the analysis in order (`fetch → run-qc-measures → run-notebooks`).
-Steps that already produced output are skipped, so re-running only recomputes
-what is missing. To force a full rerun:
+Runs the analysis in order (ensure `cneuromod.all` available → `run-qc-measures`
+→ `run-notebooks`). Unlike `fetch`, `run` does **not** bulk-prefetch — it only
+makes the superdataset available, then each step `datalad get`s just its own
+dataset's files on demand. Run `invoke fetch` first to gather everything up
+front; `run` alone still works on a fresh clone. Steps that already produced
+output are skipped, so re-running only recomputes what is missing. To force a
+full rerun:
 
 ```bash
 uv run invoke clean
@@ -115,10 +122,10 @@ The list below should match `invoke --list`.
 
 | Task                | Description                                                        |
 | ------------------- | ------------------------------------------------------------------ |
-| `fetch`             | Make `cneuromod.all` available; optionally prefetch a `--dataset`/`--subject`/`--session` text-file slice |
+| `fetch`             | Make `cneuromod.all` available, then retrieve the small MRIQC text files (`*_bold.json`, `*_timeseries.tsv`); narrow with `--dataset`/`--subject`/`--session` |
 | `run-qc-measures`   | Extract per-run MRIQC metrics per dataset (`--dataset`); skips datasets already done |
 | `run-notebooks`     | Execute notebooks, saving QA figures to `output_data/figures/`     |
-| `run`               | Full pipeline (`fetch → run-qc-measures → run-notebooks`); scope with `--dataset`, or `--smoke` for a strict minimal end-to-end test (default `hcptrt`, fails non-zero if nothing is extracted) |
+| `run`               | Full pipeline (ensure `cneuromod.all` available → `run-qc-measures` → `run-notebooks`); no bulk prefetch — each step gets its own files on demand; scope with `--dataset`, or `--smoke` for a strict minimal end-to-end test (default `hcptrt`, fails non-zero if nothing is extracted) |
 | `clean`             | Remove all computed outputs                                        |
 | `clean-qc-measures` | Remove QC-metric tables                                            |
 | `clean-figures`     | Remove generated figures and notebook sentinels                   |

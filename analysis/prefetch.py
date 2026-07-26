@@ -1,10 +1,11 @@
-"""Warm the Datalad cache for a narrow slice of cneuromod.all.
+"""Retrieve the small MRIQC text files cneuromod.all analysis needs.
 
-``invoke fetch`` normally only makes the superdataset available; the ``run-*``
-steps then ``datalad get`` the small text files they need on demand. This module
-lets ``fetch`` optionally pull those same text files — MRIQC ``*_bold.json`` and
-``*_timeseries.tsv`` — up front for a chosen dataset/subject/session, so later
-steps can run offline.
+``invoke fetch`` calls this after making the superdataset available: it installs
+each dataset's mriqc subdataset and ``datalad get``s the small text files the
+``run-*`` steps read — MRIQC ``*_bold.json`` and ``*_timeseries.tsv`` — so a
+fresh clone is ready to ``run`` offline. Passing a dataset/subject/session
+narrows it to that slice; with no filter it covers every dataset. The ``run-*``
+steps still ``datalad get`` on demand as a safety net.
 No preprocessed ``.nii.gz`` is ever retrieved.
 """
 
