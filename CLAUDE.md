@@ -135,6 +135,36 @@ compatibility). Linter: **ruff** (`uv run ruff check .`). No test framework.
       PyPI package bundles a recent standalone binary into the venv, so `uv run`
       guarantees a v10 on `PATH`. Running outside `uv run` with only an old
       system git-annex is a real environment signal, not a code bug.
+    - **Coverage panels** (`{dataset}_coverage.png`, `all_datasets_coverage.png`)
+      complement the continuous tSNR panels above with a binary QA signal:
+      each subject's map is thresholded at raw `tsnr > 30` (dimensionless
+      scale, ~0–150 in practice — a fraction like 0.2/0.3 is meaningless
+      here and left the panel showing solid "covered" almost everywhere) before
+      averaging, turning "how good is signal" into "fraction of subjects with
+      any usable signal at this voxel" — a clearer view of total-dropout
+      regions (e.g. ventral/orbitofrontal, ventral putamen) than a dim
+      continuous value. **The threshold alone is not enough**: background/
+      skull voxels can still clear even a real tSNR threshold from residual
+      structure/noise, so the averaged fraction is also zeroed outside the
+      **ICBM152 whole-brain mask** (nearest-neighbor resampled to each map's
+      grid) before plotting. Computed the same
+      light-v1/in-memory/anchor-cut-coords way as the tSNR panels (same
+      `dataset_cut_coords`/`grand_average_cut_coords`), but plotted on an
+      explicit **ICBM152 2009 MNI template** background (`nilearn.datasets.
+      fetch_icbm152_2009` — nilearn's asymmetrical ICBM152 2009 release a,
+      *not* the exact `MNI152NLin2009cAsym`/release-c template fMRIPrep uses;
+      close enough for a visual coverage overlay, not a claim of voxel-exact
+      alignment) rather than `plot_stat_map`'s implicit default, so
+      coverage/dropout regions are anatomically legible. The T1 template and
+      brain mask are fetched together (one `fetch_icbm152_2009` call) once
+      into `source_data/nilearn/` by the new `fetch-mni152` invoke task
+      (`analysis/mni152.py`'s `fetch_mni152_templates`, wired into the
+      umbrella `fetch`, never re-downloaded by `run`); the notebook
+      duplicates the same `fetch_icbm152_2009` call locally rather than
+      importing `analysis/mni152.py` (nbconvert runs with `notebooks/` as the
+      cwd, so `analysis` is not importable there — the same reason `SPACE`/
+      `SUBJECT_AVG_GLOB` are duplicated rather than imported) and skips the
+      coverage cells with a warning if the template isn't cached yet.
 - **Derivative folders are nested Datalad subdatasets — installed by `fetch`.**
   Every `{dataset}/{marker}` (`bids`, `mriqc`, `fmriprep`, `tsnr`, …) is a Datalad
   subdataset nested *inside* the per-`{dataset}` subdataset of `cneuromod.all`,

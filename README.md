@@ -77,6 +77,15 @@ it never downloads run-level, `T1w`, or fMRIPrep content, and the whole
 superdataset is never pulled at once. The retrieval is tolerant — inaccessible
 (credentialed) content only warns.
 
+`fetch` also downloads (or reuses the cached) ICBM152 2009 MNI template and
+whole-brain mask under `source_data/nilearn/`, used as the tSNR coverage
+montages' anatomical background and brain restriction. Run it standalone
+with:
+
+```bash
+uv run invoke fetch-mni152
+```
+
 - **Narrow to a slice (optional).** Passing `--dataset`, `--subject`, and/or
   `--session` (each a comma-separated list) restricts the retrieval to that
   slice instead of all datasets:
@@ -135,7 +144,8 @@ The list below should match `invoke --list`.
 
 | Task                | Description                                                        |
 | ------------------- | ------------------------------------------------------------------ |
-| `fetch`             | Make `cneuromod.all` available, then retrieve all input files: MRIQC text (`*_bold.json`, `*_timeseries.tsv`) + the small avgtsnr MNI `.nii.gz`; narrow with `--dataset`/`--subject`/`--session` |
+| `fetch`             | Make `cneuromod.all` available, then retrieve all input files: MRIQC text (`*_bold.json`, `*_timeseries.tsv`) + the small avgtsnr MNI `.nii.gz`, plus the MNI152 template (`fetch-mni152`); narrow with `--dataset`/`--subject`/`--session` |
+| `fetch-mni152`      | Download (or reuse the cached) ICBM152 2009 MNI template + brain mask under `source_data/nilearn/`, used as the tSNR coverage montages' anatomical background/brain restriction |
 | `run-qc-measures`   | Extract per-run MRIQC metrics per dataset (`--dataset`) from files already fetched; skips datasets already done |
 | `run-notebooks`     | Execute notebooks, saving QA figures to `output_data/figures/`     |
 | `run`               | Full pipeline (ensure `cneuromod.all` available → `run-qc-measures` → `run-notebooks`); **never pulls data** — reads only what `fetch` retrieved; scope with `--dataset`, or `--smoke` for a strict minimal end-to-end test (default `floc`; fetches its one dataset then fails non-zero if nothing is extracted) |

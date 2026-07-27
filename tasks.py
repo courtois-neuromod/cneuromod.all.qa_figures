@@ -10,6 +10,10 @@ def _cneuromod_dir(c):
     return Path(c.config.get("datasets", {}).get("cneuromod_all", {})["output_dir"])
 
 
+def _nilearn_dir(c):
+    return Path(c.config.get("datasets", {}).get("nilearn", {})["output_dir"])
+
+
 def _select_datasets(requested, available, smoke):
     """Resolve which datasets a run task should process."""
     if requested:
@@ -72,6 +76,19 @@ def _ensure_superdataset_available(c, source=None):
 # --------------------------------------------------------------------------- #
 # Fetch
 # --------------------------------------------------------------------------- #
+@task
+def fetch_mni152(c):
+    """Fetch (or reuse the cached) ICBM152 2009 MNI template and brain mask
+    used by the tSNR coverage montages (anatomical background + brain
+    restriction)."""
+    from analysis.mni152 import fetch_mni152_templates
+
+    nilearn_dir = _nilearn_dir(c)
+    nilearn_dir.mkdir(parents=True, exist_ok=True)
+    t1_path, mask_path = fetch_mni152_templates(nilearn_dir)
+    print(f"🧠 MNI152 template available at {t1_path} (brain mask: {mask_path})")
+
+
 @task(help={
     "source": "Path to an existing local cneuromod.all checkout to use instead "
               "of cloning (defaults to the `source:` key in invoke.yaml, "
@@ -98,6 +115,9 @@ def fetch(c, source=None, dataset=None, subject=None, session=None):
     is ever retrieved. Pass --dataset/--subject/--session to narrow that
     retrieval to a slice. Tolerant of partly-public data: inaccessible content
     only warns, never aborts (the run steps re-`datalad get` on demand anyway).
+
+    Also fetches (or reuses the cached) ICBM152 2009c MNI template used as the
+    anatomical background for the tSNR coverage montages (see `fetch-mni152`).
     """
     _ensure_superdataset_available(c, source)
 
@@ -112,6 +132,8 @@ def fetch(c, source=None, dataset=None, subject=None, session=None):
             cneuromod_dir, ds, marker
         ),
     )
+
+    fetch_mni152(c)
 
     print("✅ fetch complete.")
 

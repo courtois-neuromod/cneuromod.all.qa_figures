@@ -18,3 +18,10 @@ demand as a safety net.
 
 📝 `cneuromod.all/` is **ignored by Git** here (see `.gitignore`), since it is an
 external dataset with its own version control.
+
+* `nilearn/` — the ICBM152 2009 MNI template + whole-brain mask
+  (`nilearn.datasets.fetch_icbm152_2009`), used as the anatomical background
+  and brain restriction for the tSNR coverage montages in
+  `notebooks/tsnr_maps.ipynb`. `invoke fetch` downloads it once; the download
+  is cache-aware, so re-running `fetch` is a no-op. Ignored by Git (see
+  `.gitignore`).

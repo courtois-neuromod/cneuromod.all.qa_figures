@@ -41,3 +41,8 @@ datasets:
     url: https://github.com/courtois-neuromod/cneuromod.all
     output_dir: source_data/cneuromod.all
     source: ../cneuromod.all
+  # ICBM152 2009c MNI template (nilearn.datasets.fetch_icbm152_2009), used only
+  # as the anatomical background for the tSNR coverage montages. A plain cached
+  # download — no url/source symlink semantics, unlike cneuromod_all above.
+  nilearn:
+    output_dir: source_data/nilearn
