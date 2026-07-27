@@ -1,6 +1,9 @@
 qc_measures/
 scans/
 figures/
+tables/
+tsnr_maps/
 *.csv
 *.png
 *.tsv
+*.nii.gz

@@ -37,6 +37,13 @@ uv sync
 This creates a `.venv` and installs all dependencies from `pyproject.toml`,
 including the [`datalad`](https://www.datalad.org/) CLI used to retrieve data.
 
+> ⚠️ **git-annex ≥ 10.20230126 is required** on your `PATH`. The `cneuromod.all`
+> subdatasets use the annex v10 repository format; an older system `git-annex`
+> (e.g. 8.x) makes `datalad get` refuse to fetch content, so image-based steps
+> like `run-tsnr-maps` produce empty output and `run --smoke` fails. Install a
+> recent one via conda-forge (`conda install -c conda-forge git-annex`) and make
+> sure it comes first on `PATH`.
+
 ### **Step 2**: Fetch the source data
 
 ```bash
@@ -80,7 +87,7 @@ uv run invoke run
 ```
 
 Runs the analysis in order (ensure `cneuromod.all` available → `run-qc-measures`
-→ `run-notebooks`). Unlike `fetch`, `run` does **not** bulk-prefetch — it only
+→ `run-tsnr-maps` → `run-notebooks`). Unlike `fetch`, `run` does **not** bulk-prefetch — it only
 makes the superdataset available, then each step `datalad get`s just its own
 dataset's files on demand. Run `invoke fetch` first to gather everything up
 front; `run` alone still works on a fresh clone. Steps that already produced
@@ -124,10 +131,12 @@ The list below should match `invoke --list`.
 | ------------------- | ------------------------------------------------------------------ |
 | `fetch`             | Make `cneuromod.all` available, then retrieve the small MRIQC text files (`*_bold.json`, `*_timeseries.tsv`); narrow with `--dataset`/`--subject`/`--session` |
 | `run-qc-measures`   | Extract per-run MRIQC metrics per dataset (`--dataset`); skips datasets already done |
+| `run-tsnr-maps`     | Assemble average tSNR brain maps per subject and per dataset (`--dataset`); fetches only the small avgtsnr MNI `.nii.gz`; skips datasets already done |
 | `run-notebooks`     | Execute notebooks, saving QA figures to `output_data/figures/`     |
-| `run`               | Full pipeline (ensure `cneuromod.all` available → `run-qc-measures` → `run-notebooks`); no bulk prefetch — each step gets its own files on demand; scope with `--dataset`, or `--smoke` for a strict minimal end-to-end test (default `hcptrt`, fails non-zero if nothing is extracted) |
+| `run`               | Full pipeline (ensure `cneuromod.all` available → `run-qc-measures` → `run-tsnr-maps` → `run-notebooks`); no bulk prefetch — each step gets its own files on demand; scope with `--dataset`, or `--smoke` for a strict minimal end-to-end test (default `hcptrt`, fails non-zero if nothing is extracted) |
 | `clean`             | Remove all computed outputs                                        |
 | `clean-qc-measures` | Remove QC-metric tables                                            |
+| `clean-tsnr-maps`   | Remove tSNR brain-map outputs                                      |
 | `clean-figures`     | Remove generated figures and notebook sentinels                   |
 | `clean-source`      | Remove all fetched source data                                     |
 | `clean-cneuromod`   | Remove the fetched `cneuromod.all` superdataset (symlink or clone) |

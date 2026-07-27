@@ -152,6 +152,42 @@ def run_qc_measures(c, dataset=None, smoke=False, strict=False):
         )
 
 
+@task(help={
+    "dataset": "Comma-separated dataset names to process (default: all with a "
+               "tsnr subdataset).",
+    "smoke": "Process only the first subject of the first dataset (fast check).",
+    "strict": "Raise on any retrieval/extraction failure instead of warning "
+              "(implied by run --smoke; also re-runs datasets whose output exists).",
+})
+def run_tsnr_maps(c, dataset=None, smoke=False, strict=False):
+    """
+    Assemble average tSNR brain maps per subject and per dataset from cneuromod.all.
+
+    Reuses the upstream per-subject ``stat-avgtsnr`` MNI maps in each dataset's
+    tsnr derivative: copies them into output_data/tsnr_maps/{dataset}/ and writes
+    the across-subject mean map beside them. This is the one step that fetches
+    ``.nii.gz`` — only the small avgtsnr MNI maps, one per subject. Datasets whose
+    dataset-average output already exists are skipped, except in ``strict`` mode.
+    """
+    from analysis.datasets import list_datasets
+    from analysis.tsnr_maps import SPACE, compute_tsnr_maps
+
+    cneuromod_dir = _cneuromod_dir(c)
+    output_dir = Path(c.config.get("output_data_dir"))
+    names = _select_datasets(dataset, list_datasets(cneuromod_dir, "tsnr"), smoke)
+
+    for dataset in names:
+        out = (output_dir / "tsnr_maps" / dataset
+               / f"{dataset}_space-{SPACE}_stat-avgtsnr_statmap.nii.gz")
+        if out.exists() and not strict:
+            print(f"🫧 Skipping {dataset} tsnr_maps (output exists)")
+            continue
+        _ensure_marker_submodule(cneuromod_dir, dataset, "tsnr", strict=strict)
+        compute_tsnr_maps(
+            dataset, cneuromod_dir, output_dir, smoke=smoke, strict=strict
+        )
+
+
 # --------------------------------------------------------------------------- #
 # Notebooks
 # --------------------------------------------------------------------------- #
@@ -214,6 +250,7 @@ def run(c, dataset=None, smoke=False, strict=False):
     # keeping asset gathering (`fetch`) separate from reproduction (`run`).
     _ensure_superdataset_available(c)
     run_qc_measures(c, dataset=dataset, smoke=smoke, strict=strict)
+    run_tsnr_maps(c, dataset=dataset, smoke=smoke, strict=strict)
     run_notebooks(c)
 
     if not smoke:
@@ -221,6 +258,8 @@ def run(c, dataset=None, smoke=False, strict=False):
         return
 
     import pandas as pd
+
+    from analysis.tsnr_maps import SPACE
 
     output_dir = Path(c.config.get("output_data_dir"))
     targets = [name.strip() for name in dataset.split(",") if name.strip()]
@@ -230,7 +269,14 @@ def run(c, dataset=None, smoke=False, strict=False):
             raise Exit(
                 f"❌ Smoke test FAILED: no QC rows extracted for {target}", code=1
             )
-        print(f"✅ Smoke test passed: {target} produced QC rows at {out}")
+        tsnr_map = (output_dir / "tsnr_maps" / target
+                    / f"{target}_space-{SPACE}_stat-avgtsnr_statmap.nii.gz")
+        if not tsnr_map.exists() or tsnr_map.stat().st_size == 0:
+            raise Exit(
+                f"❌ Smoke test FAILED: no tSNR map produced for {target}", code=1
+            )
+        print(f"✅ Smoke test passed: {target} produced QC rows at {out} "
+              f"and a tSNR map at {tsnr_map}")
 
 
 # --------------------------------------------------------------------------- #
@@ -244,13 +290,20 @@ def clean_qc_measures(c):
 
 
 @task
+def clean_tsnr_maps(c):
+    """Remove tSNR brain-map outputs."""
+    from airoh.utils import clean_folder
+    clean_folder(c, "output_data_dir", "tsnr_maps/*")
+
+
+@task
 def clean_figures(c):
     """Remove generated figures and notebook sentinels."""
     from airoh.utils import clean_folder
     clean_folder(c, "figures_dir")
 
 
-@task(pre=[clean_qc_measures, clean_figures])
+@task(pre=[clean_qc_measures, clean_tsnr_maps, clean_figures])
 def clean(c):
     """Remove all computed outputs."""
     pass

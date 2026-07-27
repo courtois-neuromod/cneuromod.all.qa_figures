@@ -57,16 +57,18 @@ compatibility). Linter: **ruff** (`uv run ruff check .`). No test framework.
   `strict=True` flag through
   `_ensure_marker_submodule` → `install_subdataset` → `extract_qc_measures`, so a
   failed submodule install or a zero-row extraction **raises** (non-zero exit),
-  and `run` asserts a non-empty TSV at the end. It runs on a single dataset that
-  genuinely has functional MRIQC data (`smoke_dataset` in `invoke.yaml`, default
-  `hcptrt`, the `--dataset` default under `--smoke`) — never blindly the first
-  dataset alphabetically, which is `anat` (anatomical-only, no BOLD → empty by
-  nature). In strict mode `run-qc-measures` also re-runs a dataset whose TSV
-  already exists, so a stale file can't mask a retrieval failure. Note: the
+  and `run` asserts a non-empty TSV **and** a non-empty tSNR map at the end. It
+  runs on a single dataset that both has functional MRIQC data and ships an
+  upstream `stat-avgtsnr` map (`smoke_dataset` in `invoke.yaml`, default `floc`,
+  the `--dataset` default under `--smoke`) — never blindly the first dataset
+  alphabetically, which is `anat` (anatomical-only, no BOLD → empty by nature),
+  and **not** `hcptrt` (functional MRIQC but no `avgtsnr`, so it cannot smoke-test
+  `run-tsnr-maps`). In strict mode `run-qc-measures`/`run-tsnr-maps` also re-run a
+  dataset whose output exists, so a stale file can't mask a retrieval failure. Note: the
   per-file content `datalad get` stays best-effort
   even under strict (JSONs may already be on disk while a fresh `get` fails on a
   stale git-annex); the strict gate is the final row count, not the fetch.
-- **One analysis path** (in `analysis/`, mirroring `cneuromod_qc`):
+- **Two analysis paths** (in `analysis/`, mirroring `cneuromod_qc`):
   - `run-qc-measures` → `analysis/qc_measures.py`: per-run image-quality metrics
     read **from MRIQC only** (`{dataset}/mriqc/**/*_bold.json` plus the sibling
     `*_timeseries.tsv`) — a deliberate choice to avoid installing/fetching the
@@ -75,6 +77,33 @@ compatibility). Linter: **ruff** (`uv run ruff check .`). No test framework.
     volumes with FD > 0.2 / 0.5 mm, computed from the `framewise_displacement`
     column of the MRIQC `*_timeseries.tsv` — *not* the BIDS sidecar, which holds
     no FD data) → `output_data/tables/{dataset}.tsv`.
+  - `run-tsnr-maps` → `analysis/tsnr_maps.py`: average tSNR **brain maps** per
+    subject and per dataset. It reuses the **upstream per-subject `stat-avgtsnr`
+    map** each `{dataset}/tsnr` derivative already ships (never recomputed from
+    run-level maps), copies it into `output_data/tsnr_maps/{dataset}/`, and writes
+    the across-subject mean map beside it (subjects resampled to a common grid via
+    `nilearn.image.resample_to_img`, `np.nanmean`). The notebook renders these as
+    volumetric montages (nilearn) — *not* a cortical surface, which would discard
+    subcortex/cerebellum and smooth the ventral/orbitofrontal dropout tSNR QA must
+    show. The `tsnr` scalar column in `qc_measures` (an MRIQC IQM) is a different,
+    unrelated thing from these voxelwise statmaps.
+    - **Light v1 — only datasets that ship an upstream `stat-avgtsnr`** (floc,
+      retinotopy, things at the time of writing). Datasets with only run-level
+      `stat-tsnr` maps (hcptrt, friends, …) are **skipped with a warning**:
+      computing their subject-average from run-level maps means fetching many
+      full-res `.nii.gz` (a large footprint), deliberately deferred to a future
+      step. So a plain `run` installs every `tsnr` tree but only writes maps for
+      the avgtsnr datasets; the rest warn-and-skip (tolerant path, no output).
+    - **Scoped `.nii.gz` exception.** This is the *only* step that fetches image
+      content. It stays tight: it globs and `datalad get`s **only**
+      `sub-*_space-MNI152NLin2009cAsym_stat-avgtsnr_statmap.nii.gz` (one small map
+      per subject) — never run-level, never `T1w`, never fMRIPrep. Every other
+      step still pulls text files only. Do not widen this glob without cause.
+    - **Requires git-annex ≥ 10.20230126** on `PATH` (the cneuromod.all
+      subdatasets are annex v10 format). This is the first step that fetches fresh
+      annexed content, so an old system git-annex (e.g. 8.x) makes `datalad get`
+      refuse and every map come back empty. `run --smoke` then fails at the tSNR
+      assertion — a real environment signal, not a code bug.
 - **Derivative folders are nested Datalad subdatasets.** Every `{dataset}/{marker}`
   (`bids`, `mriqc`, `fmriprep`, `tsnr`, …) is a Datalad subdataset nested *inside*
   the per-`{dataset}` subdataset of `cneuromod.all`, present on disk as an empty

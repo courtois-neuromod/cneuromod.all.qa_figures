@@ -17,10 +17,12 @@ output_data_dir: output_data
 figures_dir: output_data/figures
 
 # Canonical target for `invoke run --smoke` (overridable with --dataset). Must be
-# a dataset that genuinely has functional MRIQC data, so an empty result in the
-# strict smoke test unambiguously signals broken retrieval, not an anatomical-
-# only dataset. hcptrt has the largest installed MRIQC set.
-smoke_dataset: hcptrt
+# a dataset that genuinely has functional MRIQC data AND ships an upstream
+# per-subject `stat-avgtsnr` map, so the strict smoke test exercises both the
+# qc-measures and the tsnr-maps steps end-to-end. floc is the smallest dataset
+# satisfying both (fLoc task MRIQC + a stat-avgtsnr map for 3 subjects); hcptrt
+# has functional MRIQC but NO avgtsnr, so it cannot smoke-test tsnr-maps.
+smoke_dataset: floc
 
 # Datalad datasets
 #
