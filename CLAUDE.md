@@ -92,7 +92,13 @@ compatibility). Linter: **ruff** (`uv run ruff check .`). No test framework.
     maps, never copied into `output_data/`) and averages subjects **in memory**
     for the dataset-level panel (resampled to a common grid via
     `nilearn.image.resample_to_img`, `np.nanmean`) — nothing is written except
-    the rendered PNG montages. `analysis/tsnr_maps.py` now holds only the
+    the rendered PNG montages. A **grand-average panel**
+    (`all_datasets_avgtsnr.png`) pools every subject from every light-v1
+    dataset into one further mean, each subject weighted equally regardless of
+    how many subjects its dataset contributes (not an average-of-dataset-
+    averages, which would instead weight each dataset equally). It shares the
+    same `robust_vmax` ceiling and the same anchor-cut-coords-on-the-average
+    approach as the per-dataset panels. `analysis/tsnr_maps.py` now holds only the
     `SPACE`/`SUBJECT_AVG_GLOB` constants shared between the notebook and
     `analysis/prefetch.py`. Montages are volumetric (nilearn) — *not* a cortical
     surface, which would discard subcortex/cerebellum and smooth the
