@@ -1,12 +1,17 @@
-"""Retrieve the small MRIQC text files cneuromod.all analysis needs.
+"""Retrieve, up front, every small file the cneuromod.all analysis reads.
 
-``invoke fetch`` calls this after making the superdataset available: it installs
-each dataset's mriqc subdataset and ``datalad get``s the small text files the
-``run-*`` steps read — MRIQC ``*_bold.json`` and ``*_timeseries.tsv`` — so a
-fresh clone is ready to ``run`` offline. Passing a dataset/subject/session
-narrows it to that slice; with no filter it covers every dataset. The ``run-*``
-steps still ``datalad get`` on demand as a safety net.
-No preprocessed ``.nii.gz`` is ever retrieved.
+``invoke fetch`` calls this after making the superdataset available. It installs
+each dataset's derivative subdatasets and ``datalad get``s exactly the files the
+``run-*`` steps read, so that ``run`` works purely offline — checking presence,
+never pulling:
+
+  - MRIQC ``*_bold.json`` and ``*_timeseries.tsv`` (small text metadata), and
+  - the per-subject ``stat-avgtsnr`` MNI maps under each ``tsnr`` derivative
+    (small ``.nii.gz``, one per subject — the only image content ever fetched).
+
+Passing a dataset/subject/session narrows this to that slice; with no filter it
+covers every dataset. No other ``.nii.gz`` (run-level, T1w, fMRIPrep) is
+retrieved.
 """
 
 from pathlib import Path
@@ -15,10 +20,16 @@ from bids.layout import parse_file_entities
 
 from analysis.datalad_utils import datalad_get
 from analysis.datasets import list_datasets
+from analysis.tsnr_maps import SUBJECT_AVG_GLOB
 
-# (subdataset marker, text-file glob) pairs to prefetch — the small metadata
-# files the analysis steps read, never the annexed image content.
-_TEXT_TARGETS = [("mriqc", "*_bold.json"), ("mriqc", "*_timeseries.tsv")]
+# (subdataset marker, [file globs]) to prefetch — the small files the analysis
+# steps read: MRIQC text metadata, plus the per-subject avgtsnr MNI maps, the one
+# narrow slice of annexed image content the pipeline needs. Everything ``run``
+# later reads must be retrieved here, since ``run`` no longer fetches on demand.
+_TARGETS = [
+    ("mriqc", ["*_bold.json", "*_timeseries.tsv"]),
+    ("tsnr", [SUBJECT_AVG_GLOB]),
+]
 
 
 def parse_labels(value):
@@ -47,31 +58,31 @@ def _matches(path, subjects, sessions):
 
 
 def prefetch_slice(cneuromod_dir, datasets, subjects, sessions, ensure_submodule=None):
-    """Fetch MRIQC/BIDS text files for the given dataset/subject/session slice.
+    """Fetch the analysis input files for the given dataset/subject/session slice.
 
-    ``datasets``/``subjects``/``sessions`` are lists of labels or ``None`` (no
-    filter). ``ensure_submodule`` is an optional ``(dataset, marker) -> None``
-    callback the caller supplies to initialize each derivative git submodule
-    before it is globbed (the invoke task provides it; see ``tasks.py``). Kept as
-    a callback so this module stays free of the invoke ``Context``. Best-effort
-    throughout — inaccessible content only warns (see ``analysis.datalad_utils``).
+    For each ``(marker, patterns)`` in ``_TARGETS`` (MRIQC text, then the avgtsnr
+    maps), install the derivative subdataset and ``datalad get`` the matching
+    files. ``datasets``/``subjects``/``sessions`` are lists of labels or ``None``
+    (no filter); with no dataset filter each marker's own dataset list is used.
+    ``ensure_submodule`` is an optional ``(dataset, marker) -> None`` callback the
+    caller supplies to initialize each derivative git submodule before it is
+    globbed (the invoke task provides it; see ``tasks.py``). Kept as a callback so
+    this module stays free of the invoke ``Context``. Best-effort throughout —
+    inaccessible content only warns (see ``analysis.datalad_utils``).
     """
     root = Path(cneuromod_dir)
-    names = datasets or _all_dataset_names(root)
 
-    for dataset in names:
-        counts = []
-        for marker, pattern in _TEXT_TARGETS:
+    for marker, patterns in _TARGETS:
+        names = datasets or list_datasets(root, marker)
+        for dataset in names:
             if ensure_submodule is not None:
                 ensure_submodule(dataset, marker)
-            fetched = _prefetch_target(root, dataset, marker, pattern, subjects, sessions)
-            counts.append(f"{fetched} {pattern}")
-        print(f"📦 {dataset}: prefetched " + ", ".join(counts))
-
-
-def _all_dataset_names(root):
-    """All datasets exposing an mriqc subdataset (sorted)."""
-    return list_datasets(root, "mriqc")
+            counts = []
+            for pattern in patterns:
+                fetched = _prefetch_target(
+                    root, dataset, marker, pattern, subjects, sessions)
+                counts.append(f"{fetched} {pattern}")
+            print(f"📦 {dataset}/{marker}: prefetched " + ", ".join(counts))
 
 
 def _prefetch_target(root, dataset, marker, pattern, subjects, sessions):

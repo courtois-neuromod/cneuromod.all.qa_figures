@@ -14,8 +14,6 @@ import numpy as np
 import pandas as pd
 from bids.layout import parse_file_entities
 
-from analysis.datalad_utils import datalad_get
-
 # Curated MRIQC BOLD IQMs to surface (missing keys become NaN). See
 # https://mriqc.readthedocs.io/ for the full list of image-quality metrics.
 IQM_KEYS = [
@@ -92,45 +90,35 @@ def extract_qc_measures(dataset, cneuromod_dir, output_dir, smoke=False,
                         strict=False):
     """Write one QC-metrics TSV for ``dataset``; return the output path.
 
-    With ``strict=True`` (used by the smoke test) an empty result is a hard
-    failure: it raises ``RuntimeError`` when no ``*_bold.json`` is found or when
-    no row could be extracted, instead of quietly writing an empty table.
+    Reads only the MRIQC files already present on disk — retrieval is
+    ``invoke fetch``'s job, not this step's. With ``strict=True`` (used by the
+    smoke test) an empty result is a hard failure: it raises ``RuntimeError`` when
+    no ``*_bold.json`` is present or when no row could be extracted, instead of
+    quietly writing an empty table.
     """
     root = Path(cneuromod_dir)
     mriqc_dir = root / dataset / "mriqc"
 
-    # The mriqc submodule is initialized by the caller (run_qc_measures task)
-    # before we glob it. Here we only fetch the small per-run JSONs — no
-    # preprocessed image content is ever retrieved.
+    # We only read what `invoke fetch` already retrieved (the small per-run JSONs
+    # and their sibling *_timeseries.tsv). This step never calls `datalad get`.
     json_files = sorted(mriqc_dir.rglob("*_bold.json"))
     if not json_files:
         if strict:
             raise RuntimeError(
-                f"{dataset}: no *_bold.json found under {mriqc_dir} "
-                f"(mriqc submodule empty or not initialized)"
+                f"{dataset}: no *_bold.json present under {mriqc_dir} "
+                f"— run `invoke fetch` (for this dataset) first"
             )
-        print(f"⚠️  {dataset}: no *_bold.json found (mriqc submodule empty or "
-              f"not initialized) — writing empty table")
+        print(f"⚠️  {dataset}: no *_bold.json present (run `invoke fetch` first) "
+              f"— writing empty table")
     if smoke:
         json_files = json_files[:1]
-    if json_files:
-        # Best-effort even in strict mode: the JSONs may already be present on
-        # disk (a fresh `datalad get` can fail on a stale git-annex while the
-        # content is readable). The real strict gate is the empty-table check
-        # below — what matters is whether we ultimately extract any rows. We also
-        # fetch the sibling *_timeseries.tsv (per-volume FD) — plain files on the
-        # datasets checked, but this future-proofs any where they are annexed.
-        text_files = [p for j in json_files
-                      for p in (j, j.with_name(
-                          j.name.replace("_bold.json", "_timeseries.tsv")))]
-        datalad_get([p.relative_to(root) for p in text_files], root)
 
     rows = [row for p in json_files if (row := _row_from_json(p, dataset))]
     table = pd.DataFrame(rows)
     if strict and table.empty:
         raise RuntimeError(
             f"{dataset}: found {len(json_files)} JSON(s) but extracted 0 rows "
-            f"(content not retrieved or unreadable)"
+            f"(content not present — run `invoke fetch` first)"
         )
 
     output_path = Path(output_dir) / "tables" / f"{dataset}.tsv"

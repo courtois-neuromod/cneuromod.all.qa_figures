@@ -18,8 +18,8 @@ commands.
 
 ```bash
 uv sync
-uv run invoke fetch    # symlink/clone cneuromod.all + get MRIQC text files
-uv run invoke run      # metrics → figures
+uv run invoke fetch    # symlink/clone cneuromod.all + get all input files
+uv run invoke run      # metrics → figures (reads fetched files; never pulls)
 ```
 
 ---
@@ -35,14 +35,18 @@ uv sync
 ```
 
 This creates a `.venv` and installs all dependencies from `pyproject.toml`,
-including the [`datalad`](https://www.datalad.org/) CLI used to retrieve data.
+including the [`datalad`](https://www.datalad.org/) CLI used to retrieve data and
+a bundled **git-annex ≥ 10** (the `git-annex` PyPI package).
 
-> ⚠️ **git-annex ≥ 10.20230126 is required** on your `PATH`. The `cneuromod.all`
-> subdatasets use the annex v10 repository format; an older system `git-annex`
-> (e.g. 8.x) makes `datalad get` refuse to fetch content, so image-based steps
-> like `run-tsnr-maps` produce empty output and `run --smoke` fails. Install a
-> recent one via conda-forge (`conda install -c conda-forge git-annex`) and make
-> sure it comes first on `PATH`.
+> ℹ️ **git-annex ≥ 10.20230126 is required** because the `cneuromod.all`
+> subdatasets use the annex v10 repository format; an older `git-annex` (e.g.
+> Ubuntu's apt 8.x) makes `datalad get` refuse to fetch content, so `fetch`
+> cannot retrieve the avgtsnr maps and `run --smoke` fails. This
+> is now handled for you: the `git-annex` PyPI package ships a recent standalone
+> binary, so `uv sync` (or `pip install -r requirements.txt`) puts a compatible
+> version on the environment's `PATH`. Just run pipeline commands through
+> `uv run` so that binary is found first. (A conda-forge or system git-annex ≥ 10
+> already on `PATH` also works.)
 
 ### **Step 2**: Fetch the source data
 
@@ -64,12 +68,14 @@ makes it available under `source_data/cneuromod.all`:
 - **No local checkout?** `fetch` clones the remote superdataset
   (`https://github.com/courtois-neuromod/cneuromod.all`) instead.
 
-Once available, `fetch` then **retrieves the small MRIQC text files the pipeline
-reads** — MRIQC `*_bold.json` and `*_timeseries.tsv` — installing each dataset's
-`mriqc` subdataset and `datalad get`-ing just those files, so a fresh clone is
-ready to `run` offline. It **never** downloads `*.nii.gz` or the large
-fMRIPrep/bids content; the whole superdataset is never pulled at once. The
-retrieval is tolerant — inaccessible (credentialed) content only warns.
+Once available, `fetch` then **retrieves every small file the pipeline reads** —
+the MRIQC `*_bold.json` and `*_timeseries.tsv` text files, plus the per-subject
+`stat-avgtsnr` MNI maps — by installing each dataset's `mriqc` and `tsnr`
+subdatasets and `datalad get`-ing just those files, so a fresh clone is fully
+ready to `run` offline. Those avgtsnr maps are the **only** `*.nii.gz` it pulls;
+it never downloads run-level, `T1w`, or fMRIPrep content, and the whole
+superdataset is never pulled at once. The retrieval is tolerant — inaccessible
+(credentialed) content only warns.
 
 - **Narrow to a slice (optional).** Passing `--dataset`, `--subject`, and/or
   `--session` (each a comma-separated list) restricts the retrieval to that
@@ -87,12 +93,12 @@ uv run invoke run
 ```
 
 Runs the analysis in order (ensure `cneuromod.all` available → `run-qc-measures`
-→ `run-tsnr-maps` → `run-notebooks`). Unlike `fetch`, `run` does **not** bulk-prefetch — it only
-makes the superdataset available, then each step `datalad get`s just its own
-dataset's files on demand. Run `invoke fetch` first to gather everything up
-front; `run` alone still works on a fresh clone. Steps that already produced
-output are skipped, so re-running only recomputes what is missing. To force a
-full rerun:
+→ `run-notebooks`). **`run` never pulls data** — it reads only
+the files `fetch` already retrieved and calls no `datalad get`, so it is fast and
+offline. **Run `invoke fetch` first**: any dataset whose input is missing is
+warned-and-skipped (an empty table), pointing you back at `fetch`. Steps that
+already produced output are skipped, so re-running only recomputes what is
+missing. To force a full rerun:
 
 ```bash
 uv run invoke clean
@@ -129,14 +135,12 @@ The list below should match `invoke --list`.
 
 | Task                | Description                                                        |
 | ------------------- | ------------------------------------------------------------------ |
-| `fetch`             | Make `cneuromod.all` available, then retrieve the small MRIQC text files (`*_bold.json`, `*_timeseries.tsv`); narrow with `--dataset`/`--subject`/`--session` |
-| `run-qc-measures`   | Extract per-run MRIQC metrics per dataset (`--dataset`); skips datasets already done |
-| `run-tsnr-maps`     | Assemble average tSNR brain maps per subject and per dataset (`--dataset`); fetches only the small avgtsnr MNI `.nii.gz`; skips datasets already done |
+| `fetch`             | Make `cneuromod.all` available, then retrieve all input files: MRIQC text (`*_bold.json`, `*_timeseries.tsv`) + the small avgtsnr MNI `.nii.gz`; narrow with `--dataset`/`--subject`/`--session` |
+| `run-qc-measures`   | Extract per-run MRIQC metrics per dataset (`--dataset`) from files already fetched; skips datasets already done |
 | `run-notebooks`     | Execute notebooks, saving QA figures to `output_data/figures/`     |
-| `run`               | Full pipeline (ensure `cneuromod.all` available → `run-qc-measures` → `run-tsnr-maps` → `run-notebooks`); no bulk prefetch — each step gets its own files on demand; scope with `--dataset`, or `--smoke` for a strict minimal end-to-end test (default `hcptrt`, fails non-zero if nothing is extracted) |
+| `run`               | Full pipeline (ensure `cneuromod.all` available → `run-qc-measures` → `run-notebooks`); **never pulls data** — reads only what `fetch` retrieved; scope with `--dataset`, or `--smoke` for a strict minimal end-to-end test (default `floc`; fetches its one dataset then fails non-zero if nothing is extracted) |
 | `clean`             | Remove all computed outputs                                        |
 | `clean-qc-measures` | Remove QC-metric tables                                            |
-| `clean-tsnr-maps`   | Remove tSNR brain-map outputs                                      |
 | `clean-figures`     | Remove generated figures and notebook sentinels                   |
 | `clean-source`      | Remove all fetched source data                                     |
 | `clean-cneuromod`   | Remove the fetched `cneuromod.all` superdataset (symlink or clone) |
@@ -153,11 +157,12 @@ Use `invoke --list` or `invoke --help <task>` for full descriptions.
 - **Idempotent steps.** Each `run-{name}` task skips chunks whose output already
   exists, so `invoke run` can be re-run cheaply while developing a later step.
 - **Mirrored clean tasks.** Every `run-{name}` has a matching `clean-{name}`.
-- **Smoke test.** `run --smoke` runs a strict minimal end-to-end pass on a known
-  functional dataset and fails loudly (non-zero) if nothing is extracted, while
-  the plain `run` stays tolerant of partly-public data.
-- **Data retrieved on demand.** `cneuromod.all` is huge; only the files each step
-  needs are pulled with `datalad get`.
+- **Smoke test.** `run --smoke` fetches its one known-functional dataset, runs a
+  strict end-to-end pass, and fails loudly (non-zero) if nothing is extracted,
+  while the plain `run` stays tolerant of partly-public / not-yet-fetched data.
+- **Fetch pulls, run reads.** `cneuromod.all` is huge, so `fetch` pulls just the
+  small files the pipeline needs (MRIQC text + avgtsnr maps) with `datalad get`;
+  `run` never pulls — it reads what `fetch` retrieved, staying fast and offline.
 
 ---
 

@@ -1,5 +1,6 @@
 airoh>=0.3.2
 datalad
+git-annex>=10.20230126
 invoke
 requests
 jupyter>=1.0

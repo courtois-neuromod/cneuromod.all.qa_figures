@@ -1,0 +1,237 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="208.92685mm"
+   height="130.98477mm"
+   viewBox="0 0 208.92685 130.98477"
+   version="1.1"
+   id="svg5"
+   inkscape:version="1.1.2 (0a00cf5339, 2022-02-04)"
+   sodipodi:docname="qa_figure.svg"
+   inkscape:export-filename="/home/pbellec/git/cneuromod.all.qa_figures/output_data/qa_figure.png"
+   inkscape:export-xdpi="218.83258"
+   inkscape:export-ydpi="218.83258"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview7"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageshadow="2"
+     inkscape:pageopacity="1"
+     inkscape:pagecheckerboard="0"
+     inkscape:document-units="mm"
+     showgrid="false"
+     inkscape:zoom="1.4788159"
+     inkscape:cx="318.49806"
+     inkscape:cy="246.81909"
+     inkscape:window-width="2560"
+     inkscape:window-height="1008"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1"
+     fit-margin-top="0"
+     fit-margin-left="0"
+     fit-margin-right="0"
+     fit-margin-bottom="0" />
+  <defs
+     id="defs2" />
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(-0.08114331,-126.66459)">
+    <image
+       width="98.985741"
+       height="56.481777"
+       preserveAspectRatio="none"
+       xlink:href="figures/qc_measures/fd_mean_by_dataset.png"
+       id="image884"
+       x="1.5206782"
+       y="129.48581"
+       style="stroke-width:2.96804" />
+    <image
+       width="205.97749"
+       height="29.727207"
+       preserveAspectRatio="none"
+       xlink:href="figures/qc_measures/fd_vs_tsnr.png"
+       id="image932"
+       x="1.8557849"
+       y="227.92216"
+       style="stroke-width:2.90508" />
+    <image
+       width="51.745506"
+       height="31.628393"
+       preserveAspectRatio="none"
+       xlink:href="figures/qc_measures/fd_mean_by_subject.png"
+       id="image896"
+       x="1.8557849"
+       y="191.67552"
+       style="stroke-width:4.89771" />
+    <image
+       width="52.031006"
+       height="31.628395"
+       preserveAspectRatio="none"
+       xlink:href="figures/qc_measures/fd_prop_gt02_by_subject.png"
+       id="image908"
+       x="53.601292"
+       y="191.67552"
+       style="stroke-width:4.87084" />
+    <image
+       width="52.031006"
+       height="31.341574"
+       preserveAspectRatio="none"
+       xlink:href="figures/qc_measures/fd_prop_gt05_by_subject.png"
+       id="image920"
+       x="105.63229"
+       y="191.96234"
+       style="stroke-width:4.91541" />
+    <image
+       width="51.344696"
+       height="31.341578"
+       preserveAspectRatio="none"
+       xlink:href="figures/qc_measures/tsnr_by_subject.png"
+       id="image944"
+       x="157.6633"
+       y="191.96234"
+       style="stroke-width:4.91541" />
+    <text
+       xml:space="preserve"
+       style="font-size:3.52778px;line-height:1.25;font-family:sans-serif;white-space:pre;inline-size:0;stroke-width:0.264583"
+       x="7.1474514"
+       y="135.19376"
+       id="text3552"
+       transform="translate(-7.2781816,-5.8488712)"><tspan
+         id="tspan3550"
+         style="font-size:3.52778px;stroke-width:0.264583"
+         x="7.1474514"
+         y="135.19376">a</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:3.52778px;line-height:1.25;font-family:sans-serif;white-space:pre;inline-size:0;stroke-width:0.264583"
+       x="7.1474514"
+       y="135.19376"
+       id="text3552-3"
+       transform="translate(-7.0515955,56.516222)"><tspan
+         id="tspan3550-6"
+         style="font-size:3.52778px;stroke-width:0.264583"
+         x="7.1474514"
+         y="135.19376">b</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:3.52778px;line-height:1.25;font-family:sans-serif;white-space:pre;inline-size:0;stroke-width:0.264583"
+       x="7.1474514"
+       y="135.19376"
+       id="text3552-3-7"
+       transform="translate(46.306664,56.516222)"><tspan
+         id="tspan3550-6-5"
+         style="font-size:3.52778px;stroke-width:0.264583"
+         x="7.1474514"
+         y="135.19376">c</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:4.23333px;line-height:1.25;font-family:sans-serif;stroke-width:0.264583"
+       x="104.6374"
+       y="191.70998"
+       id="text15121"><tspan
+         sodipodi:role="line"
+         id="tspan15119"
+         style="stroke-width:0.264583"
+         x="104.6374"
+         y="191.70998">d</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:4.23333px;line-height:1.25;font-family:sans-serif;stroke-width:0.264583"
+       x="156.60529"
+       y="191.70998"
+       id="text16775"><tspan
+         sodipodi:role="line"
+         id="tspan16773"
+         style="stroke-width:0.264583"
+         x="156.60529"
+         y="191.70998">e</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:4.23333px;line-height:1.25;font-family:sans-serif;stroke-width:0.264583"
+       x="0.54915249"
+       y="227.46629"
+       id="text21401"><tspan
+         sodipodi:role="line"
+         id="tspan21399"
+         style="stroke-width:0.264583"
+         x="0.54915249"
+         y="227.46629">f</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:3.52778px;line-height:1.25;font-family:sans-serif;stroke-width:0.264583"
+       x="5.4877262"
+       y="191.70998"
+       id="text24351"><tspan
+         sodipodi:role="line"
+         id="tspan24349"
+         style="font-size:3.52778px;stroke-width:0.264583"
+         x="5.4877262"
+         y="191.70998">avg run FD per subject</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:3.52778px;line-height:1.25;font-family:sans-serif;stroke-width:0.264583"
+       x="4.4888163"
+       y="227.46629"
+       id="text24351-0"><tspan
+         sodipodi:role="line"
+         id="tspan24349-62"
+         style="font-size:3.52778px;stroke-width:0.264583"
+         x="4.4888163"
+         y="227.46629">avg run FD vs tSNR per subject</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:3.52778px;line-height:1.25;font-family:sans-serif;stroke-width:0.264583"
+       x="4.5195985"
+       y="129.34488"
+       id="text24351-3"><tspan
+         sodipodi:role="line"
+         id="tspan24349-6"
+         style="font-size:3.52778px;stroke-width:0.264583"
+         x="4.5195985"
+         y="129.34488">avg run FD per dataset</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:3.52778px;line-height:1.25;font-family:sans-serif;stroke-width:0.264583"
+       x="56.956566"
+       y="191.70998"
+       id="text24351-9"><tspan
+         sodipodi:role="line"
+         id="tspan24349-1"
+         style="font-size:3.52778px;stroke-width:0.264583"
+         x="56.956566"
+         y="191.70998">%run mild/severe motion</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:3.52778px;line-height:1.25;font-family:sans-serif;stroke-width:0.264583"
+       x="109.04196"
+       y="191.70998"
+       id="text24351-9-2"><tspan
+         sodipodi:role="line"
+         id="tspan24349-1-7"
+         style="font-size:3.52778px;stroke-width:0.264583"
+         x="109.04196"
+         y="191.70998">%run severe motion</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:3.52778px;line-height:1.25;font-family:sans-serif;stroke-width:0.264583"
+       x="160.98088"
+       y="191.70998"
+       id="text24351-9-2-0"><tspan
+         sodipodi:role="line"
+         id="tspan24349-1-7-9"
+         style="font-size:3.52778px;stroke-width:0.264583"
+         x="160.98088"
+         y="191.70998">tSNR per run and subject</tspan></text>
+  </g>
+</svg>

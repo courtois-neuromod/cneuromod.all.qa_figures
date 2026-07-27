@@ -363,6 +363,7 @@ source = { virtual = "." }
 dependencies = [
     { name = "airoh" },
     { name = "datalad" },
+    { name = "git-annex" },
     { name = "invoke" },
     { name = "jupyter" },
     { name = "matplotlib" },
@@ -382,6 +383,7 @@ dependencies = [
 requires-dist = [
     { name = "airoh", specifier = ">=0.3.2" },
     { name = "datalad" },
+    { name = "git-annex", specifier = ">=10.20230126" },
     { name = "invoke" },
     { name = "jupyter", specifier = ">=1.0" },
     { name = "matplotlib", specifier = ">=3.5" },
@@ -675,6 +677,18 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/10/a1/ae4e3e5003468d6391d2c77b6fa1cd73bd5d13511d81c642d7b28ac90ed4/fsspec-2026.6.0.tar.gz", hash = "sha256:f5bac145310fe30e16e1471bd6840b2d990d609e872251d7e674241822abf01a", size = 313646, upload-time = "2026-06-16T01:57:28.105Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/e5/22/4222d7ddf3da30f363edaa98e329c2bce6c65497c9cb2810931c8b2c0fbc/fsspec-2026.6.0-py3-none-any.whl", hash = "sha256:02e0b71817df9b2169dc30a16832045764def1191b43dcff5bb85bdee212d2a1", size = 203949, upload-time = "2026-06-16T01:57:26.358Z" },
+]
+
+[[package]]
+name = "git-annex"
+version = "10.20260624"
+source = { registry = "https://pypi.org/simple" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/00/12/cdeeb8dc493ab94d2e5d6ca51f25910d6ce4b54916b4ec00c6ff2696bdaa/git_annex-10.20260624-py3-none-macosx_14_0_arm64.whl", hash = "sha256:6403ad89445d4b44e171b84b83ac9fd142f28ce504e1fd2c0397451ff0679f2b", size = 36229745, upload-time = "2026-07-20T06:03:33.053Z" },
+    { url = "https://files.pythonhosted.org/packages/5f/f5/fcc5f7bfa592e7828feed8f42aa27667050cb2d37302274cbf902f79ccf3/git_annex-10.20260624-py3-none-macosx_15_0_x86_64.whl", hash = "sha256:cf5d692fa07d93f714d5cb4d7f93177b35ed658cef000e2e6e9f0d7230196fcd", size = 13793104, upload-time = "2026-07-20T06:25:30Z" },
+    { url = "https://files.pythonhosted.org/packages/c7/ce/1bcced2cf98eb8d44db7dd4c81e23420f2a90a5046c00c68d43d27ae89a3/git_annex-10.20260624-py3-none-manylinux_2_34_aarch64.whl", hash = "sha256:1b031d594794fa495df382216c4e4238e10a56a17f9b79ccd04b6f557cb39b67", size = 26299123, upload-time = "2026-07-20T05:56:53.723Z" },
+    { url = "https://files.pythonhosted.org/packages/78/fd/b40ff330453f8cc574dae269f410e4312587836fbffc700a0d72317834cd/git_annex-10.20260624-py3-none-manylinux_2_34_x86_64.whl", hash = "sha256:9f7799b019abeefc55c20b165a52af3cc86527f6f0299cdb74507803e2aab288", size = 21975550, upload-time = "2026-07-20T05:55:40.401Z" },
+    { url = "https://files.pythonhosted.org/packages/fc/c6/6b9d4fa52826db05af46f8027c64c356ed9dd9f259cc3d8d1b697a82ad48/git_annex-10.20260624-py3-none-win_amd64.whl", hash = "sha256:52e4a155939a8f6f2733e4a3c96e0127902b60c964745fb69688b7860f054d5d", size = 27138277, upload-time = "2026-07-20T06:04:47.955Z" },
 ]
 
 [[package]]

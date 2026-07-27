@@ -11,23 +11,17 @@ Once the pipeline is run, this folder contains:
   mm, from the MRIQC `*_timeseries.tsv` `framewise_displacement` column), and
   entities `dataset`, `subject`, `session`, `task`, `run`, `task_grouped`.
 
-## tSNR brain maps (from `invoke run-tsnr-maps`)
-
-- `tsnr_maps/{dataset}/sub-XX_space-MNI152NLin2009cAsym_stat-avgtsnr_statmap.nii.gz`
-  — the upstream per-subject average tSNR map (MNI space), copied verbatim from
-  the dataset's `tsnr` derivative (this is the one step that fetches `.nii.gz`,
-  and only these small avgtsnr MNI maps).
-- `tsnr_maps/{dataset}/{dataset}_space-MNI152NLin2009cAsym_stat-avgtsnr_statmap.nii.gz`
-  — the dataset-level average, the mean of the per-subject maps (each resampled
-  to the first subject's grid, NaNs ignored voxelwise).
-
 ## Figures (from `invoke run-notebooks`)
 
 - `figures/qc_measures/` — FD and tSNR raincloud distributions by subject and by
   dataset, and an FD-vs-tSNR scatter.
 - `figures/tsnr_maps/` — axial volumetric montages of the average tSNR maps: one
   per dataset (`{dataset}_avgtsnr.png`) and one per subject
-  (`{dataset}_sub-XX_avgtsnr.png`), on a shared colour scale.
+  (`{dataset}_sub-XX_avgtsnr.png`), on a shared colour scale. Rendered directly
+  from the upstream per-subject `stat-avgtsnr` maps in
+  `source_data/cneuromod.all/{dataset}/tsnr/`; the dataset-average is computed
+  in memory by the notebook (each subject resampled to a common grid,
+  `np.nanmean`) — no NIfTI is written here or anywhere under `output_data/`.
 - `figures/motion_bands/` — stacked bars of the per-run motion budget (% low
   FD ≤ 0.2, moderate 0.2–0.5, high > 0.5 mm), averaged over runs:
   `motion_bands_by_dataset_subject.png` (one panel per dataset, one bar per
@@ -37,5 +31,6 @@ Once the pipeline is run, this folder contains:
 Each `figures/{notebook}/` folder also doubles as the notebook's "already ran"
 sentinel used by `invoke run-notebooks`.
 
-📝 Note: everything in this folder is **ignored by Git** (see `.gitignore`), so
-outputs are not tracked.
+📝 Note: `tables/` and `figures/` (plus `qa_figure.png`/`qa_figure.svg`) are
+**tracked in Git** — no NIfTI is stored here, so these outputs stay small and
+diffable.

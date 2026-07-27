@@ -28,46 +28,53 @@ compatibility). Linter: **ruff** (`uv run ruff check .`). No test framework.
   generic `fetch_data` template task). The new structure nests derivatives per
   dataset: `{dataset}/bids`, `{dataset}/mriqc`, `{dataset}/fmriprep`,
   `{dataset}/tsnr`, … After making the superdataset available, `fetch`
-  **retrieves the small MRIQC text files the pipeline reads** (MRIQC
-  `*_bold.json` and `*_timeseries.tsv`) — installing each dataset's `mriqc`
-  subdataset and `datalad get`-ing those files, so a fresh clone is ready to
-  `run` offline. It **never** pulls `.nii.gz` and never the large fMRIPrep/bids
-  content. `fetch --dataset/--subject/--session` (each a comma-separated list)
-  narrows this retrieval to a chosen slice; with no filter it covers every
-  dataset — see `analysis/prefetch.py`. The retrieval is tolerant (inaccessible
-  content only warns), and the `run-*` steps re-`datalad get` on demand as a
-  safety net, so skipping `fetch` still works.
-- **Asset gathering (`fetch`) is separate from reproduction (`run`).** `run`
-  does **not** call the full `fetch` — it only ensures the superdataset is
-  *available* via `_ensure_superdataset_available` (the cheap symlink/clone half,
-  factored out of `fetch`), then each `run-qc-measures` step installs and
-  `datalad get`s only its own dataset's files on demand (`qc_measures.py`). So
-  `invoke run` never re-walks/re-prefetches all datasets; `invoke fetch` is the
-  do-it-once bulk gather. Do not reintroduce a `fetch(c)` call inside `run`.
+  **retrieves every small file the pipeline reads** — installing each dataset's
+  `mriqc` and `tsnr` subdatasets and `datalad get`-ing (a) the MRIQC
+  `*_bold.json` and `*_timeseries.tsv` text files, and (b) the per-subject
+  `sub-*_space-MNI152NLin2009cAsym_stat-avgtsnr_statmap.nii.gz` maps — so a fresh
+  clone is fully ready to `run` offline. Those avgtsnr maps are the **only**
+  `.nii.gz` it pulls (never run-level, `T1w`, or fMRIPrep content).
+  `fetch --dataset/--subject/--session` (each a comma-separated list) narrows this
+  retrieval to a chosen slice; with no filter it covers every dataset — see
+  `analysis/prefetch.py`. The retrieval is tolerant (inaccessible content only
+  warns).
+- **Asset gathering (`fetch`) is separate from reproduction (`run`) — and `run`
+  NEVER pulls.** This split is load-bearing: `run` reads only what is already on
+  disk and **no `run-*` step calls `datalad get` or installs a subdataset**. A
+  plain `run` only ensures the superdataset is *available* via
+  `_ensure_superdataset_available` (the cheap symlink/clone half of `fetch`), then
+  each step globs its dataset's files and processes whatever is present —
+  tolerant path warns-and-skips (or writes an empty table) for a dataset whose
+  input was never fetched, pointing the user at `invoke fetch`. `invoke fetch` is
+  the do-it-once bulk gather; `invoke run` is fast and offline. **Do not
+  reintroduce any `datalad get`/`install_subdataset` into the `run-*` steps or a
+  `fetch(c)` call into the non-smoke `run` path** — that on-demand re-pulling was
+  removed on purpose (it made every `run` slow). The one exception is `run
+  --smoke` (see below), which fetches its single dataset to stay a self-contained
+  end-to-end test.
 - **Chunk unit: `dataset`.** Each `run-{name}` task processes one CNeuroMod
   dataset at a time (writing one TSV per dataset), auto-discovering datasets from
   `cneuromod.all` (`analysis/datasets.py`), exposing a `--dataset` selector
   (comma-separated) and a `smoke` flag (first dataset only), and skipping
   datasets whose output exists. `run` itself also takes `--dataset`, forwarding
   it to `run-qc-measures`.
-- **`run --smoke` is a real test — strict, not tolerant.** The production pipeline
-  (plain `run`, `run-qc-measures`) is deliberately *tolerant* of partly-public
-  data: inaccessible participants only warn, and an empty result writes an empty
-  table. `run --smoke` is the opposite: `--smoke` implies `--strict`, threading a
-  `strict=True` flag through
-  `_ensure_marker_submodule` → `install_subdataset` → `extract_qc_measures`, so a
-  failed submodule install or a zero-row extraction **raises** (non-zero exit),
-  and `run` asserts a non-empty TSV **and** a non-empty tSNR map at the end. It
-  runs on a single dataset that both has functional MRIQC data and ships an
-  upstream `stat-avgtsnr` map (`smoke_dataset` in `invoke.yaml`, default `floc`,
-  the `--dataset` default under `--smoke`) — never blindly the first dataset
+- **`run --smoke` is a real test — strict, and the one `run` that fetches.** The
+  production pipeline (plain `run`, `run-qc-measures`) is deliberately *tolerant*
+  of partly-public / not-yet-fetched data: a missing input only warns, and an
+  empty result writes an empty table. `run --smoke` is the opposite. To be a
+  genuine end-to-end plumbing test it first **`fetch`es its single dataset**
+  (retrieval included), then runs `--strict`: `--smoke` implies `--strict`,
+  threading `strict=True` into `extract_qc_measures` so a zero-row extraction
+  **raises** (non-zero exit), and `run` asserts a non-empty TSV **and** that the
+  source `tsnr` derivative has at least one fetched avgtsnr map on disk. It runs
+  on a single dataset that both has functional MRIQC data and ships an upstream
+  `stat-avgtsnr` map (`smoke_dataset` in `invoke.yaml`, default `floc`, the
+  `--dataset` default under `--smoke`) — never blindly the first dataset
   alphabetically, which is `anat` (anatomical-only, no BOLD → empty by nature),
-  and **not** `hcptrt` (functional MRIQC but no `avgtsnr`, so it cannot smoke-test
-  `run-tsnr-maps`). In strict mode `run-qc-measures`/`run-tsnr-maps` also re-run a
-  dataset whose output exists, so a stale file can't mask a retrieval failure. Note: the
-  per-file content `datalad get` stays best-effort
-  even under strict (JSONs may already be on disk while a fresh `get` fails on a
-  stale git-annex); the strict gate is the final row count, not the fetch.
+  and **not** `hcptrt` (functional MRIQC but no `avgtsnr`, so there is nothing
+  for the tsnr_maps notebook to render). In strict mode `run-qc-measures` also
+  re-runs a dataset whose output exists, so a stale file can't mask a missing
+  input.
 - **Two analysis paths** (in `analysis/`, mirroring `cneuromod_qc`):
   - `run-qc-measures` → `analysis/qc_measures.py`: per-run image-quality metrics
     read **from MRIQC only** (`{dataset}/mriqc/**/*_bold.json` plus the sibling
@@ -77,56 +84,80 @@ compatibility). Linter: **ruff** (`uv run ruff check .`). No test framework.
     volumes with FD > 0.2 / 0.5 mm, computed from the `framewise_displacement`
     column of the MRIQC `*_timeseries.tsv` — *not* the BIDS sidecar, which holds
     no FD data) → `output_data/tables/{dataset}.tsv`.
-  - `run-tsnr-maps` → `analysis/tsnr_maps.py`: average tSNR **brain maps** per
-    subject and per dataset. It reuses the **upstream per-subject `stat-avgtsnr`
-    map** each `{dataset}/tsnr` derivative already ships (never recomputed from
-    run-level maps), copies it into `output_data/tsnr_maps/{dataset}/`, and writes
-    the across-subject mean map beside it (subjects resampled to a common grid via
-    `nilearn.image.resample_to_img`, `np.nanmean`). The notebook renders these as
-    volumetric montages (nilearn) — *not* a cortical surface, which would discard
-    subcortex/cerebellum and smooth the ventral/orbitofrontal dropout tSNR QA must
-    show. The `tsnr` scalar column in `qc_measures` (an MRIQC IQM) is a different,
-    unrelated thing from these voxelwise statmaps.
+  - tSNR **brain maps** (`notebooks/tsnr_maps.ipynb`, no `analysis/` step or
+    `run-*` task — there is nothing to compute-and-persist, so it lives entirely
+    in the notebook). It reads the **upstream per-subject `stat-avgtsnr` map**
+    each `{dataset}/tsnr` derivative ships directly from
+    `source_data/cneuromod.all/{dataset}/tsnr/` (never recomputed from run-level
+    maps, never copied into `output_data/`) and averages subjects **in memory**
+    for the dataset-level panel (resampled to a common grid via
+    `nilearn.image.resample_to_img`, `np.nanmean`) — nothing is written except
+    the rendered PNG montages. `analysis/tsnr_maps.py` now holds only the
+    `SPACE`/`SUBJECT_AVG_GLOB` constants shared between the notebook and
+    `analysis/prefetch.py`. Montages are volumetric (nilearn) — *not* a cortical
+    surface, which would discard subcortex/cerebellum and smooth the
+    ventral/orbitofrontal dropout tSNR QA must show. The `tsnr` scalar column in
+    `qc_measures` (an MRIQC IQM) is a different, unrelated thing from these
+    voxelwise statmaps.
+    - **Cut coordinates are chosen once per dataset, from that dataset's average
+      map, then reused for every subject panel in it** (via
+      `nilearn.plotting.find_cut_slices` on the average, not
+      `plot_stat_map`'s own autoselection per image). Autoselecting
+      independently per subject picked different slices for each panel, making
+      them hard to compare; anchoring on the average — the least noisy signal —
+      keeps a dataset's average and all its subject panels on the same axial
+      slices.
     - **Light v1 — only datasets that ship an upstream `stat-avgtsnr`** (floc,
       retinotopy, things at the time of writing). Datasets with only run-level
-      `stat-tsnr` maps (hcptrt, friends, …) are **skipped with a warning**:
-      computing their subject-average from run-level maps means fetching many
-      full-res `.nii.gz` (a large footprint), deliberately deferred to a future
-      step. So a plain `run` installs every `tsnr` tree but only writes maps for
-      the avgtsnr datasets; the rest warn-and-skip (tolerant path, no output).
-    - **Scoped `.nii.gz` exception.** This is the *only* step that fetches image
-      content. It stays tight: it globs and `datalad get`s **only**
+      `stat-tsnr` maps (hcptrt, friends, …) are **skipped with a warning** in the
+      notebook: computing their subject-average from run-level maps means
+      fetching many full-res `.nii.gz` (a large footprint), deliberately
+      deferred to a future step.
+    - **Scoped `.nii.gz` exception (fetched in `fetch`, read in the notebook).**
+      The avgtsnr maps are the *only* image content the pipeline pulls, and that
+      pull lives in `fetch`/`analysis/prefetch.py` — the notebook only reads what
+      is present. `fetch` globs and `datalad get`s **only**
       `sub-*_space-MNI152NLin2009cAsym_stat-avgtsnr_statmap.nii.gz` (one small map
-      per subject) — never run-level, never `T1w`, never fMRIPrep. Every other
-      step still pulls text files only. Do not widen this glob without cause.
+      per subject) — never run-level, never `T1w`, never fMRIPrep. Do not widen
+      this glob (`SUBJECT_AVG_GLOB` in `analysis/tsnr_maps.py`) without cause.
     - **Requires git-annex ≥ 10.20230126** on `PATH` (the cneuromod.all
-      subdatasets are annex v10 format). This is the first step that fetches fresh
-      annexed content, so an old system git-annex (e.g. 8.x) makes `datalad get`
-      refuse and every map come back empty. `run --smoke` then fails at the tSNR
-      assertion — a real environment signal, not a code bug.
-- **Derivative folders are nested Datalad subdatasets.** Every `{dataset}/{marker}`
-  (`bids`, `mriqc`, `fmriprep`, `tsnr`, …) is a Datalad subdataset nested *inside*
-  the per-`{dataset}` subdataset of `cneuromod.all`, present on disk as an empty
-  mountpoint until installed. Each `run-{name}` task first installs the subdataset
-  it needs via `install_subdataset` (`analysis/datalad_utils.py`), called at the
-  **task layer** in `tasks.py` (`_ensure_marker_submodule`). This runs
-  `datalad get -n` (no content): datalad installs the intermediate `{dataset}`
-  subdataset and the nested `{marker}` in one call — plain `git submodule` cannot
-  reach a submodule nested inside another submodule — while leaving large sibling
-  subdatasets like `stimuli` alone (non-recursive). Tolerant like `datalad_get`
-  (never raises). Then the `analysis/` step globs the installed tree and
-  `datalad get`s the small text content. Skipping this install is why a fresh
-  checkout would silently produce empty metric tables.
+      subdatasets are annex v10 format). `fetch` is where fresh annexed content
+      (the avgtsnr `.nii.gz`) is retrieved, so an old git-annex (e.g. Ubuntu apt's
+      8.x) makes that `datalad get` refuse and every map come back empty — and
+      then `run --smoke` (which fetches first) fails at the avgtsnr-presence
+      assertion. This is now pinned as a project dependency: the `git-annex`
+      PyPI package bundles a recent standalone binary into the venv, so `uv run`
+      guarantees a v10 on `PATH`. Running outside `uv run` with only an old
+      system git-annex is a real environment signal, not a code bug.
+- **Derivative folders are nested Datalad subdatasets — installed by `fetch`.**
+  Every `{dataset}/{marker}` (`bids`, `mriqc`, `fmriprep`, `tsnr`, …) is a Datalad
+  subdataset nested *inside* the per-`{dataset}` subdataset of `cneuromod.all`,
+  present on disk as an empty mountpoint until installed. **`fetch`** installs the
+  ones the pipeline needs (`mriqc`, `tsnr`) via `install_subdataset`
+  (`analysis/datalad_utils.py`), called through the `_ensure_marker_submodule`
+  callback `prefetch_slice` receives from `tasks.py`. This runs `datalad get -n`
+  (no content): datalad installs the intermediate `{dataset}` subdataset and the
+  nested `{marker}` in one call — plain `git submodule` cannot reach a submodule
+  nested inside another submodule — while leaving large sibling subdatasets like
+  `stimuli` alone (non-recursive). Tolerant like `datalad_get` (never raises).
+  `run` does **not** install anything: skipping `fetch` is why `run` then warns
+  "no … present" and produces empty output for that dataset.
 - **Tolerant `datalad get`** (`analysis/datalad_utils.py`): CNeuroMod data is only
   partly public and content lives on credentialed special remotes, so `datalad get`
   can partially fail (e.g. participants without a public-data agreement, or an
-  environment without the right auth). The helper only fetches the small text
-  files it needs (MRIQC JSONs — never `.nii.gz`), never raises, retries once
-  over HTTPS, and lets each step proceed with whatever content is present.
+  environment without the right auth). Used only by `fetch`/`prefetch` (never by a
+  `run-*` step): it fetches the small files the pipeline needs (MRIQC text plus the
+  scoped avgtsnr `.nii.gz`), never raises, retries once over HTTPS, and lets the
+  gather proceed with whatever content is reachable.
 - **Notebook figures live in `output_data/figures/{notebook_stem}/`** (set via
   `figures_dir` in `invoke.yaml`). This folder doubles as airoh's per-notebook
   "already ran" sentinel, so it must NOT collide with a data dir name — keep the
   metric tables under `output_data/tables/`, distinct from the notebook stems.
+- **`output_data/tables/` and `output_data/figures/` are git-tracked.** Now that
+  no step writes NIfTI under `output_data/` (tSNR montages read source_data and
+  persist nothing but the PNG), the remaining outputs are small and diffable, so
+  `output_data/.gitignore` tracks them instead of ignoring the whole folder. Keep
+  a `*.nii.gz` guard line so a stray large binary can never be committed there.
 
 ## Persona
 

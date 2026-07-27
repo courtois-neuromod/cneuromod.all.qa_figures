@@ -123,16 +123,18 @@ def fetch(c, source=None, dataset=None, subject=None, session=None):
     "dataset": "Comma-separated dataset names to process (default: all with an "
                "mriqc subdataset).",
     "smoke": "Process only the first dataset (fast end-to-end check).",
-    "strict": "Raise on any retrieval/extraction failure instead of warning "
+    "strict": "Raise on missing input or empty extraction instead of warning "
               "(implied by run --smoke; also re-runs datasets whose output exists).",
 })
 def run_qc_measures(c, dataset=None, smoke=False, strict=False):
     """
     Extract per-run MRIQC QC metrics for each dataset of cneuromod.all.
 
-    Writes one tidy table per dataset to output_data/tables/{dataset}.tsv.
-    Datasets whose output already exists are skipped — except in ``strict`` mode,
-    where a stale table must not mask a retrieval failure, so it is re-run.
+    Reads only the MRIQC files already present on disk — retrieval is
+    ``invoke fetch``'s job, so this step never calls ``datalad get``. Writes one
+    tidy table per dataset to output_data/tables/{dataset}.tsv. Datasets whose
+    output already exists are skipped — except in ``strict`` mode, where a stale
+    table must not mask missing input, so it is re-run.
     """
     from analysis.datasets import list_datasets
     from analysis.qc_measures import extract_qc_measures
@@ -146,44 +148,7 @@ def run_qc_measures(c, dataset=None, smoke=False, strict=False):
         if out.exists() and not strict:
             print(f"🫧 Skipping {dataset} qc_measures (output exists)")
             continue
-        _ensure_marker_submodule(cneuromod_dir, dataset, "mriqc", strict=strict)
         extract_qc_measures(
-            dataset, cneuromod_dir, output_dir, smoke=smoke, strict=strict
-        )
-
-
-@task(help={
-    "dataset": "Comma-separated dataset names to process (default: all with a "
-               "tsnr subdataset).",
-    "smoke": "Process only the first subject of the first dataset (fast check).",
-    "strict": "Raise on any retrieval/extraction failure instead of warning "
-              "(implied by run --smoke; also re-runs datasets whose output exists).",
-})
-def run_tsnr_maps(c, dataset=None, smoke=False, strict=False):
-    """
-    Assemble average tSNR brain maps per subject and per dataset from cneuromod.all.
-
-    Reuses the upstream per-subject ``stat-avgtsnr`` MNI maps in each dataset's
-    tsnr derivative: copies them into output_data/tsnr_maps/{dataset}/ and writes
-    the across-subject mean map beside them. This is the one step that fetches
-    ``.nii.gz`` — only the small avgtsnr MNI maps, one per subject. Datasets whose
-    dataset-average output already exists are skipped, except in ``strict`` mode.
-    """
-    from analysis.datasets import list_datasets
-    from analysis.tsnr_maps import SPACE, compute_tsnr_maps
-
-    cneuromod_dir = _cneuromod_dir(c)
-    output_dir = Path(c.config.get("output_data_dir"))
-    names = _select_datasets(dataset, list_datasets(cneuromod_dir, "tsnr"), smoke)
-
-    for dataset in names:
-        out = (output_dir / "tsnr_maps" / dataset
-               / f"{dataset}_space-{SPACE}_stat-avgtsnr_statmap.nii.gz")
-        if out.exists() and not strict:
-            print(f"🫧 Skipping {dataset} tsnr_maps (output exists)")
-            continue
-        _ensure_marker_submodule(cneuromod_dir, dataset, "tsnr", strict=strict)
-        compute_tsnr_maps(
             dataset, cneuromod_dir, output_dir, smoke=smoke, strict=strict
         )
 
@@ -217,7 +182,7 @@ def run_notebooks(c):
 @task(help={
     "dataset": "Comma-separated dataset names to process (default: all with an "
                "mriqc subdataset). In --smoke mode, defaults to `smoke_dataset` "
-               "in invoke.yaml (i.e. hcptrt).",
+               "in invoke.yaml (i.e. floc).",
     "smoke": "Strict minimal end-to-end test on one functional dataset: implies "
              "--strict, re-runs stale TSVs, and asserts non-empty output at the "
              "end (non-zero exit if nothing is extracted). Defaults --dataset to "
@@ -225,32 +190,34 @@ def run_notebooks(c):
     "strict": "Raise on any retrieval/extraction failure instead of warning.",
 })
 def run(c, dataset=None, smoke=False, strict=False):
-    """Full pipeline: ensure cneuromod.all available → qc-measures → figures.
+    """Full pipeline: check inputs present → qc-measures → figures.
 
-    Unlike ``fetch``, ``run`` does NOT bulk-prefetch: it only makes the
-    superdataset available, then each ``run-qc-measures`` step installs and
-    ``datalad get``s only its own dataset's files on demand. Run ``invoke fetch``
-    first to gather all assets up front; ``run`` alone still works on a fresh
-    clone via that per-step on-demand retrieval.
+    ``run`` does NOT pull data: it reads only the files ``invoke fetch`` already
+    retrieved, and no step calls ``datalad get``. A tolerant production run warns
+    and skips (or writes an empty table) for any dataset whose input is not
+    present; a ``--strict`` run raises instead. **Run ``invoke fetch`` first.**
 
-    ``--smoke`` turns this into a strict end-to-end test: unlike the tolerant
-    production run, it FAILS LOUDLY (non-zero exit) if nothing is retrieved or
-    extracted, so it actually tests the plumbing. It runs on a single dataset
-    that genuinely has functional MRIQC data (default `smoke_dataset`, i.e.
-    hcptrt) — an empty result then unambiguously means retrieval is broken, not
-    that the dataset simply has no BOLD runs (e.g. anat).
+    ``--smoke`` turns this into a strict end-to-end test. Because it must exercise
+    the whole plumbing (including retrieval), it is the ONE mode that fetches: it
+    ``fetch``es its single dataset, runs, and then FAILS LOUDLY (non-zero exit) if
+    nothing was extracted. It runs on a dataset that has both functional MRIQC
+    data and an upstream avgtsnr map (default `smoke_dataset`, i.e. floc), so an
+    empty result unambiguously means the plumbing is broken, not that the dataset
+    simply has no BOLD runs (e.g. anat).
     """
     strict = strict or smoke
     if smoke and not dataset:
-        dataset = c.config.get("smoke_dataset", "hcptrt")
+        dataset = c.config.get("smoke_dataset", "floc")
 
-    # Reproduction only ensures the superdataset is *available*; it does NOT
-    # re-run fetch's bulk prefetch. Each run-qc-measures step installs and
-    # `datalad get`s only its own dataset's files on demand (see qc_measures.py),
-    # keeping asset gathering (`fetch`) separate from reproduction (`run`).
-    _ensure_superdataset_available(c)
+    if smoke:
+        # Smoke is a self-contained end-to-end test, so it fetches its one
+        # dataset before running. Every other path is fetch-free: `run` only
+        # checks presence, keeping asset gathering (`fetch`) separate from
+        # reproduction (`run`). Do NOT add a fetch(c) call to the non-smoke path.
+        fetch(c, dataset=dataset)
+    else:
+        _ensure_superdataset_available(c)
     run_qc_measures(c, dataset=dataset, smoke=smoke, strict=strict)
-    run_tsnr_maps(c, dataset=dataset, smoke=smoke, strict=strict)
     run_notebooks(c)
 
     if not smoke:
@@ -259,9 +226,10 @@ def run(c, dataset=None, smoke=False, strict=False):
 
     import pandas as pd
 
-    from analysis.tsnr_maps import SPACE
+    from analysis.tsnr_maps import SUBJECT_AVG_GLOB
 
     output_dir = Path(c.config.get("output_data_dir"))
+    cneuromod_dir = _cneuromod_dir(c)
     targets = [name.strip() for name in dataset.split(",") if name.strip()]
     for target in targets:
         out = output_dir / "tables" / f"{target}.tsv"
@@ -269,14 +237,13 @@ def run(c, dataset=None, smoke=False, strict=False):
             raise Exit(
                 f"❌ Smoke test FAILED: no QC rows extracted for {target}", code=1
             )
-        tsnr_map = (output_dir / "tsnr_maps" / target
-                    / f"{target}_space-{SPACE}_stat-avgtsnr_statmap.nii.gz")
-        if not tsnr_map.exists() or tsnr_map.stat().st_size == 0:
+        avgtsnr_maps = list((cneuromod_dir / target / "tsnr").glob(SUBJECT_AVG_GLOB))
+        if not any(path.is_file() for path in avgtsnr_maps):
             raise Exit(
-                f"❌ Smoke test FAILED: no tSNR map produced for {target}", code=1
+                f"❌ Smoke test FAILED: no avgtsnr map fetched for {target}", code=1
             )
         print(f"✅ Smoke test passed: {target} produced QC rows at {out} "
-              f"and a tSNR map at {tsnr_map}")
+              f"and has an avgtsnr map fetched under {cneuromod_dir / target / 'tsnr'}")
 
 
 # --------------------------------------------------------------------------- #
@@ -290,20 +257,13 @@ def clean_qc_measures(c):
 
 
 @task
-def clean_tsnr_maps(c):
-    """Remove tSNR brain-map outputs."""
-    from airoh.utils import clean_folder
-    clean_folder(c, "output_data_dir", "tsnr_maps/*")
-
-
-@task
 def clean_figures(c):
     """Remove generated figures and notebook sentinels."""
     from airoh.utils import clean_folder
     clean_folder(c, "figures_dir")
 
 
-@task(pre=[clean_qc_measures, clean_tsnr_maps, clean_figures])
+@task(pre=[clean_qc_measures, clean_figures])
 def clean(c):
     """Remove all computed outputs."""
     pass
