@@ -89,11 +89,15 @@ def compute_tsnr_maps(dataset, cneuromod_dir, output_dir, smoke=False, strict=Fa
     dataset_dir.mkdir(parents=True, exist_ok=True)
 
     present = [p for p in subject_maps if p.is_file()]
-    if strict and not present:
-        raise RuntimeError(
-            f"{dataset}: found {len(subject_maps)} avgtsnr map(s) but none had "
-            f"content on disk (datalad get did not retrieve them)"
-        )
+    if not present:
+        if strict:
+            raise RuntimeError(
+                f"{dataset}: found {len(subject_maps)} avgtsnr map(s) but none had "
+                f"content on disk (datalad get did not retrieve them)"
+            )
+        print(f"⚠️  {dataset}: found {len(subject_maps)} avgtsnr map(s) but none had "
+              f"content on disk (datalad get did not retrieve them) — skipping")
+        return None
     for path in present:
         shutil.copy2(path, dataset_dir / path.name)
 
