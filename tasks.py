@@ -99,8 +99,10 @@ def fetch_mni152(c):
                "fetch to.",
     "session": "Comma-separated session labels (e.g. 001,002) to restrict the "
                "fetch to.",
+    "retry_failed": "Re-attempt files that failed on a previous fetch (e.g. "
+                    "access was since granted) instead of skipping them.",
 })
-def fetch(c, source=None, dataset=None, subject=None, session=None):
+def fetch(c, source=None, dataset=None, subject=None, session=None, retry_failed=False):
     """
     Make the cneuromod.all Datalad superdataset available under source_data/,
     then retrieve the small MRIQC text files the analysis steps read.
@@ -115,6 +117,9 @@ def fetch(c, source=None, dataset=None, subject=None, session=None):
     is ever retrieved. Pass --dataset/--subject/--session to narrow that
     retrieval to a slice. Tolerant of partly-public data: inaccessible content
     only warns, never aborts (the run steps re-`datalad get` on demand anyway).
+    Files that fail are remembered (source_data/.fetch_failures.json) and
+    skipped on the next fetch instead of being retried over the network every
+    time — pass --retry-failed to re-attempt them.
 
     Also fetches (or reuses the cached) ICBM152 2009c MNI template used as the
     anatomical background for the tSNR coverage montages (see `fetch-mni152`).
@@ -131,6 +136,7 @@ def fetch(c, source=None, dataset=None, subject=None, session=None):
         ensure_submodule=lambda ds, marker: _ensure_marker_submodule(
             cneuromod_dir, ds, marker
         ),
+        retry_failed=retry_failed,
     )
 
     fetch_mni152(c)

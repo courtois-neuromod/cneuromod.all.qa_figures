@@ -6,6 +6,7 @@ errors are expected: the pipeline retrieves whatever it can and skips the rest,
 so a single inaccessible run never aborts a whole dataset.
 """
 
+import os
 import subprocess
 from pathlib import Path
 
@@ -14,6 +15,26 @@ from pathlib import Path
 # first attempt fails we retry once, rewriting SSH github URLs to HTTPS for that
 # single invocation only (no persistent change to the user's git config).
 _HTTPS_OVERRIDE = "url.https://github.com/.insteadOf=git@github.com:"
+
+# Some CNeuroMod content lives on credentialed SSH special remotes this
+# environment has no key for. Left to their defaults, git/ssh fall back to an
+# interactive password prompt — which reads from stdin and, with no TTY
+# attached to a non-interactive subprocess, blocks forever instead of failing.
+# Forcing batch mode (no prompts) plus a bounded connect timeout makes an
+# unreachable/unauthorized remote fail fast like any other inaccessible
+# content, instead of hanging the whole fetch indefinitely.
+_NONINTERACTIVE_ENV = {
+    **os.environ,
+    "GIT_TERMINAL_PROMPT": "0",
+    "GIT_SSH_COMMAND": (
+        os.environ.get("GIT_SSH_COMMAND", "ssh")
+        + " -o BatchMode=yes -o ConnectTimeout=15"
+    ),
+}
+
+# Hard backstop in case some other step (not git/ssh auth) still stalls —
+# generous enough for a real bulk retrieval, short enough to not hang forever.
+_SUBPROCESS_TIMEOUT_SECONDS = 600
 
 
 def _is_datalad_dataset(root):
@@ -26,7 +47,17 @@ def _run(extra_config, args, cwd):
     if extra_config:
         cmd += ["-c", extra_config]
     cmd += args
-    return subprocess.run(cmd, cwd=str(cwd), capture_output=True, text=True)
+    try:
+        return subprocess.run(
+            cmd, cwd=str(cwd), capture_output=True, text=True,
+            stdin=subprocess.DEVNULL, env=_NONINTERACTIVE_ENV,
+            timeout=_SUBPROCESS_TIMEOUT_SECONDS,
+        )
+    except subprocess.TimeoutExpired as exc:
+        return subprocess.CompletedProcess(
+            cmd, returncode=1, stdout=exc.stdout or "",
+            stderr=(exc.stderr or "") + f"\ntimed out after {_SUBPROCESS_TIMEOUT_SECONDS}s",
+        )
 
 
 def datalad_get(paths, dataset_root, recursive=False, get_content=True,
@@ -79,7 +110,16 @@ def install_subdataset(path, dataset_root, strict=False):
     warns), so an inaccessible derivative never aborts the whole run. With
     ``strict=True`` it raises if the subdataset is not actually installed
     afterwards (no ``.git`` at ``path``) — used by the smoke test.
+
+    Skips the ``datalad`` subprocess entirely when the subdataset is already
+    installed (``.git`` already present at ``path``) — on a repeat ``fetch``
+    against an already-populated checkout this is the common case, and
+    unconditionally re-invoking ``datalad get -n`` for every dataset/marker
+    made every rerun pay full ``datalad`` startup/repo-scan overhead even when
+    nothing had changed.
     """
+    if (Path(dataset_root) / path / ".git").exists():
+        return
     datalad_get(path, dataset_root, get_content=False, strict=strict)
     if strict and not (Path(dataset_root) / path / ".git").exists():
         raise RuntimeError(

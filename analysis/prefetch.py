@@ -20,6 +20,7 @@ from bids.layout import parse_file_entities
 
 from analysis.datalad_utils import datalad_get
 from analysis.datasets import list_datasets
+from analysis.fetch_state import load_known_failures, save_known_failures
 from analysis.tsnr_maps import SUBJECT_AVG_GLOB
 
 # (subdataset marker, [file globs]) to prefetch — the small files the analysis
@@ -57,7 +58,8 @@ def _matches(path, subjects, sessions):
     return True
 
 
-def prefetch_slice(cneuromod_dir, datasets, subjects, sessions, ensure_submodule=None):
+def prefetch_slice(cneuromod_dir, datasets, subjects, sessions, ensure_submodule=None,
+                    retry_failed=False):
     """Fetch the analysis input files for the given dataset/subject/session slice.
 
     For each ``(marker, patterns)`` in ``_TARGETS`` (MRIQC text, then the avgtsnr
@@ -69,8 +71,24 @@ def prefetch_slice(cneuromod_dir, datasets, subjects, sessions, ensure_submodule
     globbed (the invoke task provides it; see ``tasks.py``). Kept as a callback so
     this module stays free of the invoke ``Context``. Best-effort throughout —
     inaccessible content only warns (see ``analysis.datalad_utils``).
+
+    Files that failed to fetch on a previous call are remembered (see
+    ``analysis.fetch_state``) and skipped by default — some CNeuroMod content
+    lives only on credentialed remotes a given environment can never reach, and
+    without this a repeat fetch retries the exact same unreachable files over
+    the network every time, which is what makes it slow. Pass
+    ``retry_failed=True`` to bypass the skip and re-attempt them (e.g. after
+    access was granted); the cache is refreshed either way, so a file that
+    newly succeeds or newly fails updates the record for next time. Saved after
+    every dataset/marker (not just once at the end): an unreachable remote can
+    make a single ``datalad get`` batch take a very long time, so an
+    interrupted or timed-out run must not lose the failures it already
+    discovered.
     """
     root = Path(cneuromod_dir)
+    known_failures = load_known_failures(root.parent)
+    skip_set = set() if retry_failed else known_failures
+    failures = set(known_failures)
 
     for marker, patterns in _TARGETS:
         names = datasets or list_datasets(root, marker)
@@ -79,26 +97,53 @@ def prefetch_slice(cneuromod_dir, datasets, subjects, sessions, ensure_submodule
                 ensure_submodule(dataset, marker)
             counts = []
             for pattern in patterns:
-                fetched = _prefetch_target(
-                    root, dataset, marker, pattern, subjects, sessions)
-                counts.append(f"{fetched} {pattern}")
-            print(f"📦 {dataset}/{marker}: prefetched " + ", ".join(counts))
+                present, fetched, skipped, new_failures, resolved = _prefetch_target(
+                    root, dataset, marker, pattern, subjects, sessions, skip_set)
+                failures -= resolved
+                failures |= new_failures
+                note = f"{present} already had, {fetched} newly fetched"
+                if skipped:
+                    note += f", {skipped} skipped (known inaccessible)"
+                counts.append(f"{note} {pattern}")
+            print(f"📦 {dataset}/{marker}: " + "; ".join(counts))
+            save_known_failures(root.parent, failures)
 
 
-def _prefetch_target(root, dataset, marker, pattern, subjects, sessions):
-    """Glob the (already-initialized) marker tree, get matching files. Returns count.
+def _prefetch_target(root, dataset, marker, pattern, subjects, sessions, skip_set):
+    """Glob the (already-initialized) marker tree, get missing matching files.
+
+    Returns ``(already_present, newly_fetched, skipped, new_failures, resolved)``:
+    counts of files already on disk and newly fetched, a count of files skipped
+    because their root-relative path is in ``skip_set`` (previously failed), and
+    the sets of root-relative paths that newly failed or newly succeeded this
+    call (for the caller to update its failure cache). Files already present
+    are never re-requested; among the rest, only those not in ``skip_set`` are
+    handed to ``datalad get``.
 
     The ``{dataset}/{marker}`` submodule is initialized by the caller's
     ``ensure_submodule`` callback (see ``prefetch_slice``) before this runs.
     """
     marker_dir = root / dataset / marker
     if not marker_dir.is_dir():
-        return 0
+        return 0, 0, 0, set(), set()
 
-    files = [p for p in marker_dir.rglob(pattern) if _matches(p, subjects, sessions)]
-    if files:
-        datalad_get([p.relative_to(root) for p in files], root)
-    # Count files whose content is actually present now — datalad get is
-    # best-effort (credentialed remotes may be unreachable), so a matched file
-    # can remain a broken annex symlink.
-    return sum(1 for p in files if p.is_file())
+    matched = [p for p in marker_dir.rglob(pattern) if _matches(p, subjects, sessions)]
+    rel_paths = {p: str(p.relative_to(root)) for p in matched}
+    missing = [p for p in matched if not p.is_file()]
+    already_present = len(matched) - len(missing)
+
+    to_attempt = [p for p in missing if rel_paths[p] not in skip_set]
+    skipped = len(missing) - len(to_attempt)
+
+    if to_attempt:
+        datalad_get([p.relative_to(root) for p in to_attempt], root)
+
+    newly_fetched, new_failures, resolved = 0, set(), set()
+    for p in to_attempt:
+        if p.is_file():
+            newly_fetched += 1
+            resolved.add(rel_paths[p])
+        else:
+            new_failures.add(rel_paths[p])
+
+    return already_present, newly_fetched, skipped, new_failures, resolved
