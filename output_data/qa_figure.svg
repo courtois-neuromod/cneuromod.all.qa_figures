@@ -3,8 +3,8 @@
 
 <svg
    width="208.92685mm"
-   height="130.98477mm"
-   viewBox="0 0 208.92685 130.98477"
+   height="204.48047mm"
+   viewBox="0 0 208.92685 204.48046"
    version="1.1"
    id="svg5"
    inkscape:version="1.1.2 (0a00cf5339, 2022-02-04)"
@@ -27,9 +27,9 @@
      inkscape:pagecheckerboard="0"
      inkscape:document-units="mm"
      showgrid="false"
-     inkscape:zoom="1.4788159"
-     inkscape:cx="318.49806"
-     inkscape:cy="246.81909"
+     inkscape:zoom="1.0456808"
+     inkscape:cx="552.74995"
+     inkscape:cy="436.07955"
      inkscape:window-width="2560"
      inkscape:window-height="1008"
      inkscape:window-x="0"
@@ -169,6 +169,28 @@
          y="227.46629">f</tspan></text>
     <text
        xml:space="preserve"
+       style="font-size:4.23333px;line-height:1.25;font-family:sans-serif;stroke-width:0.264583"
+       x="0.54915249"
+       y="260.74561"
+       id="text21401-6"><tspan
+         sodipodi:role="line"
+         id="tspan21399-1"
+         style="stroke-width:0.264583"
+         x="0.54915249"
+         y="260.74561">g</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:4.23333px;line-height:1.25;font-family:sans-serif;stroke-width:0.264583"
+       x="0.28906959"
+       y="298.42456"
+       id="text21401-6-8"><tspan
+         sodipodi:role="line"
+         id="tspan21399-1-7"
+         style="stroke-width:0.264583"
+         x="0.28906959"
+         y="298.42456">h</tspan></text>
+    <text
+       xml:space="preserve"
        style="font-size:3.52778px;line-height:1.25;font-family:sans-serif;stroke-width:0.264583"
        x="5.4877262"
        y="191.70998"
@@ -233,5 +255,23 @@
          style="font-size:3.52778px;stroke-width:0.264583"
          x="160.98088"
          y="191.70998">tSNR per run and subject</tspan></text>
+    <image
+       width="204.41776"
+       height="35.745186"
+       preserveAspectRatio="none"
+       xlink:href="figures/tsnr_maps/all_datasets_avgtsnr.png"
+       id="image66136"
+       x="4.154304"
+       y="258.0513"
+       style="stroke-width:2.27387" />
+    <image
+       width="205.1244"
+       height="35.868752"
+       preserveAspectRatio="none"
+       xlink:href="figures/tsnr_maps/all_datasets_coverage.png"
+       id="image68150"
+       x="3.5383012"
+       y="295.27631"
+       style="stroke-width:2.26604" />
   </g>
 </svg>

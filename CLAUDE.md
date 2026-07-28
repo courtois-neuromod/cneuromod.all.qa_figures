@@ -105,14 +105,24 @@ compatibility). Linter: **ruff** (`uv run ruff check .`). No test framework.
     ventral/orbitofrontal dropout tSNR QA must show. The `tsnr` scalar column in
     `qc_measures` (an MRIQC IQM) is a different, unrelated thing from these
     voxelwise statmaps.
-    - **Cut coordinates are chosen once per dataset, from that dataset's average
-      map, then reused for every subject panel in it** (via
-      `nilearn.plotting.find_cut_slices` on the average, not
-      `plot_stat_map`'s own autoselection per image). Autoselecting
-      independently per subject picked different slices for each panel, making
-      them hard to compare; anchoring on the average — the least noisy signal —
-      keeps a dataset's average and all its subject panels on the same axial
-      slices.
+    - **One fixed set of cut coordinates and color ranges for every panel** —
+      every dataset, every subject, the grand average, and every coverage
+      panel (`CUT_COORDS`, `TSNR_VMIN`/`TSNR_VMAX`, `COVERAGE_VMIN`/
+      `COVERAGE_VMAX` in the notebook). Earlier versions picked slices
+      per-dataset via `nilearn.plotting.find_cut_slices` on that dataset's
+      average and computed a per-run 98th-percentile `vmax`; both were
+      replaced with hard-coded constants so every panel across every dataset
+      is sliced and colored identically and stays numerically comparable
+      across notebook re-runs, not just within one dataset.
+      `CUT_COORDS = (-54, -42, -28.5, -14.5, -0.5, 19.5, 33.5, 47.5, 59.5,
+      71.5)` was chosen once by running `find_cut_slices(grand_average,
+      direction="z", n_cuts=8)` (which gave the 8 values from -28.5 up) and
+      extending it with two fixed inferior slices (-54, -42): `find_cut_slices`
+      alone is cortex-heavy and reliably misses the cerebellum (at best it
+      grazes its superior edge), so those two are hard-coded in rather than
+      left to chance. `TSNR_VMIN`/`TSNR_VMAX` are fixed at `0`/`50` and
+      `COVERAGE_VMIN`/`COVERAGE_VMAX` at `0`/`1` (coverage is already a
+      fraction) rather than a computed ceiling.
     - **Light v1 — only datasets that ship an upstream `stat-avgtsnr`** (floc,
       retinotopy, things at the time of writing). Datasets with only run-level
       `stat-tsnr` maps (hcptrt, friends, …) are **skipped with a warning** in the
