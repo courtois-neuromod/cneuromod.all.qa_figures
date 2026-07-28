@@ -99,10 +99,11 @@ def fetch_mni152(c):
                "fetch to.",
     "session": "Comma-separated session labels (e.g. 001,002) to restrict the "
                "fetch to.",
-    "retry_failed": "Re-attempt files that failed on a previous fetch (e.g. "
-                    "access was since granted) instead of skipping them.",
+    "skip_inaccessible": "Skip files that failed on a previous fetch instead "
+                         "of re-attempting them (default: always retry, since "
+                         "access can be granted later).",
 })
-def fetch(c, source=None, dataset=None, subject=None, session=None, retry_failed=False):
+def fetch(c, source=None, dataset=None, subject=None, session=None, skip_inaccessible=False):
     """
     Make the cneuromod.all Datalad superdataset available under source_data/,
     then retrieve the small MRIQC text files the analysis steps read.
@@ -117,9 +118,10 @@ def fetch(c, source=None, dataset=None, subject=None, session=None, retry_failed
     is ever retrieved. Pass --dataset/--subject/--session to narrow that
     retrieval to a slice. Tolerant of partly-public data: inaccessible content
     only warns, never aborts (the run steps re-`datalad get` on demand anyway).
-    Files that fail are remembered (source_data/.fetch_failures.json) and
-    skipped on the next fetch instead of being retried over the network every
-    time — pass --retry-failed to re-attempt them.
+    Files that fail are remembered (source_data/.fetch_failures.json); by
+    default every fetch still retries them (access can be granted later), but
+    pass --skip-inaccessible once you know a file is permanently out of reach
+    and don't want to keep paying its retrieval cost on every routine fetch.
 
     Also fetches (or reuses the cached) ICBM152 2009c MNI template used as the
     anatomical background for the tSNR coverage montages (see `fetch-mni152`).
@@ -136,7 +138,7 @@ def fetch(c, source=None, dataset=None, subject=None, session=None, retry_failed
         ensure_submodule=lambda ds, marker: _ensure_marker_submodule(
             cneuromod_dir, ds, marker
         ),
-        retry_failed=retry_failed,
+        skip_inaccessible=skip_inaccessible,
     )
 
     fetch_mni152(c)

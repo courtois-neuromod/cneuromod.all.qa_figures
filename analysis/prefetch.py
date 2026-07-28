@@ -59,7 +59,7 @@ def _matches(path, subjects, sessions):
 
 
 def prefetch_slice(cneuromod_dir, datasets, subjects, sessions, ensure_submodule=None,
-                    retry_failed=False):
+                    skip_inaccessible=False):
     """Fetch the analysis input files for the given dataset/subject/session slice.
 
     For each ``(marker, patterns)`` in ``_TARGETS`` (MRIQC text, then the avgtsnr
@@ -72,22 +72,25 @@ def prefetch_slice(cneuromod_dir, datasets, subjects, sessions, ensure_submodule
     this module stays free of the invoke ``Context``. Best-effort throughout —
     inaccessible content only warns (see ``analysis.datalad_utils``).
 
-    Files that failed to fetch on a previous call are remembered (see
-    ``analysis.fetch_state``) and skipped by default — some CNeuroMod content
-    lives only on credentialed remotes a given environment can never reach, and
-    without this a repeat fetch retries the exact same unreachable files over
-    the network every time, which is what makes it slow. Pass
-    ``retry_failed=True`` to bypass the skip and re-attempt them (e.g. after
-    access was granted); the cache is refreshed either way, so a file that
-    newly succeeds or newly fails updates the record for next time. Saved after
-    every dataset/marker (not just once at the end): an unreachable remote can
-    make a single ``datalad get`` batch take a very long time, so an
-    interrupted or timed-out run must not lose the failures it already
-    discovered.
+    By default every matching-but-missing file is attempted on every call, even
+    one that failed last time (some CNeuroMod content lives only on
+    credentialed remotes a given environment can never reach, so a file that
+    failed once will keep failing — but access can also be granted later, so
+    always retrying is the safe default). Files that fail are remembered (see
+    ``analysis.fetch_state``) regardless. Pass ``skip_inaccessible=True`` to
+    skip anything in that cache instead of re-attempting it — worthwhile once
+    you've confirmed a given file is permanently out of reach and don't want to
+    keep paying its retrieval cost (each credentialed-remote attempt costs
+    real time, e.g. ~3s per file) on every routine fetch. The cache is
+    refreshed either way, so a file that newly succeeds or newly fails updates
+    the record for next time, and is saved after every dataset/marker (not
+    just once at the end): an unreachable remote can make a single
+    ``datalad get`` batch take a very long time, so an interrupted or
+    timed-out run must not lose the failures it already discovered.
     """
     root = Path(cneuromod_dir)
     known_failures = load_known_failures(root.parent)
-    skip_set = set() if retry_failed else known_failures
+    skip_set = known_failures if skip_inaccessible else set()
     failures = set(known_failures)
 
     for marker, patterns in _TARGETS:

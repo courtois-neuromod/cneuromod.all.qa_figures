@@ -210,15 +210,18 @@ compatibility). Linter: **ruff** (`uv run ruff check .`). No test framework.
     not a pipeline output): some CNeuroMod content lives only on credentialed
     remotes a given environment can never reach (no SSH key, no special-remote
     auth), so a broken-symlink file that failed once will fail identically on
-    every future attempt. Without a cache, every `fetch` re-attempts the exact
-    same unreachable files over the network — connection timeouts times the
-    HTTPS retry times every affected file — which was the dominant cost of a
-    repeat fetch in practice, dwarfing actual new-content retrieval. The cache
-    records failures per root-relative path and is refreshed every fetch: a
-    file that newly succeeds is dropped from it, a file that newly fails is
-    added. `invoke fetch --retry-failed` bypasses the skip (e.g. after access
-    is granted) without discarding cache entries for datasets/files not part
-    of that run.
+    every future attempt, at a real per-file cost (git-annex trying every
+    configured remote, ~3s/file in practice). The cache records failures per
+    root-relative path and is refreshed every fetch: a file that newly
+    succeeds is dropped from it, a file that newly fails is added. **By
+    default every fetch still retries every previously-failed file** — access
+    can be granted later, and a silently-stale skip would then hide genuinely
+    new content forever, which is a worse failure mode than an occasional slow
+    fetch. Pass `invoke fetch --skip-inaccessible` to instead skip anything in
+    the cache — worthwhile once you've confirmed a file is permanently out of
+    reach (e.g. a dataset like the smoke test's `gamepad` example, whose MRIQC
+    content is not accessible in a given environment) and don't want to keep
+    paying its retrieval cost on every routine fetch.
 - **Notebook figures live in `output_data/figures/{notebook_stem}/`** (set via
   `figures_dir` in `invoke.yaml`). This folder doubles as airoh's per-notebook
   "already ran" sentinel, so it must NOT collide with a data dir name — keep the
