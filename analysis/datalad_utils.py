@@ -97,6 +97,34 @@ def datalad_get(paths, dataset_root, recursive=False, get_content=True,
         print(f"⚠️  datalad get returned errors (continuing without): {preview} ...")
 
 
+def update_subdataset(path, dataset_root, strict=False):
+    """Advance an already-installed marker subdataset's pin via ``datalad update --merge``.
+
+    Only the git tree (commit pin, filenames) is refreshed here — no annexed
+    content is fetched, so this stays cheap even against a large derivative.
+    Non-recursive: it advances only ``path`` itself, not any subdataset nested
+    inside it. If ``path`` isn't installed yet (no ``.git``), this is a no-op —
+    ``install_subdataset`` handles that case instead.
+
+    On failure it retries once over HTTPS (same fallback ``datalad_get`` uses,
+    for environments that can reach github over HTTPS but not SSH). By default
+    tolerant (prints a warning and returns) so a stale/unreachable remote never
+    aborts the whole fetch; with ``strict=True`` it raises ``RuntimeError``.
+    """
+    root = Path(dataset_root) / path
+    if not (root / ".git").exists():
+        return
+    result = _run(None, ["update", "--merge"], root)
+    if result.returncode != 0:
+        result = _run(_HTTPS_OVERRIDE, ["update", "--merge"], root)
+    if result.returncode != 0:
+        if strict:
+            raise RuntimeError(
+                f"datalad update --merge failed for {path}\n{result.stderr.strip()}"
+            )
+        print(f"⚠️  datalad update --merge returned errors (continuing without): {path}")
+
+
 def install_subdataset(path, dataset_root, strict=False):
     """Install the subdataset at ``path`` (relative to ``dataset_root``), no content.
 
@@ -111,14 +139,15 @@ def install_subdataset(path, dataset_root, strict=False):
     ``strict=True`` it raises if the subdataset is not actually installed
     afterwards (no ``.git`` at ``path``) — used by the smoke test.
 
-    Skips the ``datalad`` subprocess entirely when the subdataset is already
-    installed (``.git`` already present at ``path``) — on a repeat ``fetch``
-    against an already-populated checkout this is the common case, and
-    unconditionally re-invoking ``datalad get -n`` for every dataset/marker
-    made every rerun pay full ``datalad`` startup/repo-scan overhead even when
-    nothing had changed.
+    When the subdataset is already installed (``.git`` already present at
+    ``path``), skips the ``datalad get -n`` install call (the expensive full
+    install is only needed once) but still runs a lightweight
+    ``update_subdataset`` refresh, so new upstream commits (e.g. a dataset
+    newly shipping an avgtsnr map) surface on every repeat ``fetch`` instead
+    of only at first install.
     """
     if (Path(dataset_root) / path / ".git").exists():
+        update_subdataset(path, dataset_root, strict=strict)
         return
     datalad_get(path, dataset_root, get_content=False, strict=strict)
     if strict and not (Path(dataset_root) / path / ".git").exists():

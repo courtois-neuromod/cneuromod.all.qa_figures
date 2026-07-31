@@ -5,31 +5,40 @@ each dataset's derivative subdatasets and ``datalad get``s exactly the files the
 ``run-*`` steps read, so that ``run`` works purely offline — checking presence,
 never pulling:
 
-  - MRIQC ``*_bold.json`` and ``*_timeseries.tsv`` (small text metadata), and
+  - MRIQC ``*_bold.json`` and ``*_timeseries.tsv`` (small text metadata),
   - the per-subject ``stat-avgtsnr`` MNI maps under each ``tsnr`` derivative
-    (small ``.nii.gz``, one per subject — the only image content ever fetched).
+    (small ``.nii.gz``, one per subject), and
+  - the per-run ``stat-tsnr`` MNI maps under each ``tsnr`` derivative (one per
+    functional run — read by ``run-atlas-tsnr``).
 
 Passing a dataset/subject/session narrows this to that slice; with no filter it
-covers every dataset. No other ``.nii.gz`` (run-level, T1w, fMRIPrep) is
-retrieved.
+covers every dataset. Separately, and unconditionally (it is not nested under any
+one functional dataset), it also installs the dataset-root-level ``anat/atlases``
+subdataset and fetches the single shared combined-atlas volume + label TSV that
+``run-atlas-tsnr`` resamples every run's tSNR map onto. No other ``.nii.gz``
+(T1w, fMRIPrep) is retrieved.
 """
 
 from pathlib import Path
 
 from bids.layout import parse_file_entities
 
+from analysis.atlas_labels import ATLAS_GLOB
+from analysis.atlas_tsnr import RUN_TSNR_GLOB
 from analysis.datalad_utils import datalad_get
 from analysis.datasets import list_datasets
 from analysis.fetch_state import load_known_failures, save_known_failures
 from analysis.tsnr_maps import SUBJECT_AVG_GLOB
 
 # (subdataset marker, [file globs]) to prefetch — the small files the analysis
-# steps read: MRIQC text metadata, plus the per-subject avgtsnr MNI maps, the one
-# narrow slice of annexed image content the pipeline needs. Everything ``run``
-# later reads must be retrieved here, since ``run`` no longer fetches on demand.
+# steps read: MRIQC text metadata, plus the per-subject avgtsnr MNI maps and the
+# per-run tsnr MNI maps, the annexed image content the pipeline needs. Everything
+# ``run`` later reads must be retrieved here, since ``run`` no longer fetches on
+# demand. ``anat/atlases`` is fetched separately (see ``prefetch_atlases``) since
+# it lives at the cneuromod.all root, not nested under a functional dataset.
 _TARGETS = [
     ("mriqc", ["*_bold.json", "*_timeseries.tsv"]),
-    ("tsnr", [SUBJECT_AVG_GLOB]),
+    ("tsnr", [SUBJECT_AVG_GLOB, RUN_TSNR_GLOB]),
 ]
 
 
@@ -110,6 +119,39 @@ def prefetch_slice(cneuromod_dir, datasets, subjects, sessions, ensure_submodule
                 counts.append(f"{note} {pattern}")
             print(f"📦 {dataset}/{marker}: " + "; ".join(counts))
             save_known_failures(root.parent, failures)
+
+    prefetch_atlases(root, ensure_submodule=ensure_submodule,
+                      skip_inaccessible=skip_inaccessible)
+
+
+def prefetch_atlases(cneuromod_dir, ensure_submodule=None, skip_inaccessible=False):
+    """Install ``anat/atlases`` and fetch the shared combined-atlas volume + TSV.
+
+    ``anat/atlases`` sits at the cneuromod.all root, sibling to the per-dataset
+    subdatasets, so it needs its own install/get call rather than fitting the
+    per-``(dataset, marker)`` loop in ``prefetch_slice``. It is a single file
+    shared by every subject/dataset (see ``analysis.atlas_labels``), so unlike
+    the rest of this module there is no subject/session slice to filter by —
+    always fetched in full, unconditional on any ``--dataset``/``--subject``
+    filter passed to ``invoke fetch``.
+    """
+    root = Path(cneuromod_dir)
+    known_failures = load_known_failures(root.parent)
+    skip_set = known_failures if skip_inaccessible else set()
+
+    if ensure_submodule is not None:
+        ensure_submodule("anat", "atlases")
+
+    present, fetched, skipped, new_failures, resolved = _prefetch_target(
+        root, "anat", "atlases", ATLAS_GLOB, None, None, skip_set)
+
+    failures = (known_failures - resolved) | new_failures
+    save_known_failures(root.parent, failures)
+
+    note = f"{present} already had, {fetched} newly fetched"
+    if skipped:
+        note += f", {skipped} skipped (known inaccessible)"
+    print(f"📦 anat/atlases: {note} {ATLAS_GLOB}")
 
 
 def _prefetch_target(root, dataset, marker, pattern, subjects, sessions, skip_set):

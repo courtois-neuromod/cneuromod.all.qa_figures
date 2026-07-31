@@ -35,6 +35,12 @@ def _ensure_marker_submodule(cneuromod_dir, dataset, marker, strict=False):
     subdatasets like ``stimuli`` alone. Tolerant by default: an inaccessible
     derivative (credentialed remote, no auth) only warns so one dataset never
     aborts the run. With ``strict=True`` (smoke test) a failed install raises.
+
+    When the marker is already installed, this no longer leaves it silently
+    pinned at its original commit: ``install_subdataset`` runs a lightweight
+    ``datalad update --merge`` to advance it to latest upstream (tree/metadata
+    only, no content), so newly-added upstream files surface on a repeat
+    ``fetch`` without a full reinstall.
     """
     from analysis.datalad_utils import install_subdataset
 
@@ -183,6 +189,45 @@ def run_qc_measures(c, dataset=None, smoke=False, strict=False):
         )
 
 
+@task(help={
+    "dataset": "Comma-separated dataset names to process (default: all with a "
+               "tsnr subdataset).",
+    "smoke": "Process only the first dataset, and only its first run (fast "
+             "end-to-end check).",
+    "strict": "Raise on missing input or empty extraction instead of warning "
+              "(implied by run --smoke; also re-runs datasets whose output exists).",
+})
+def run_atlas_tsnr(c, dataset=None, smoke=False, strict=False):
+    """
+    Extract per-run, per-region tSNR for each dataset of cneuromod.all.
+
+    Resamples each functional run's MNI ``stat-tsnr`` statmap onto the shared
+    combined atlas (``anat/atlases``) and averages tSNR within each parcel.
+    Reads only files already present on disk — retrieval is ``invoke fetch``'s
+    job, so this step never calls ``datalad get``. Writes one tidy table per
+    dataset to output_data/tables/atlas_tsnr/{dataset}.tsv. Datasets whose output
+    already exists are skipped — except in ``strict`` mode, where a stale table
+    must not mask missing input, so it is re-run.
+    """
+    from analysis.atlas_tsnr import extract_region_tsnr
+    from analysis.datasets import list_datasets
+
+    cneuromod_dir = _cneuromod_dir(c)
+    atlases_dir = cneuromod_dir / "anat" / "atlases"
+    output_dir = Path(c.config.get("output_data_dir"))
+    names = _select_datasets(dataset, list_datasets(cneuromod_dir, "tsnr"), smoke)
+
+    for dataset in names:
+        out = output_dir / "tables" / "atlas_tsnr" / f"{dataset}.tsv"
+        if out.exists() and not strict:
+            print(f"🫧 Skipping {dataset} atlas_tsnr (output exists)")
+            continue
+        extract_region_tsnr(
+            dataset, cneuromod_dir, output_dir, atlases_dir,
+            smoke=smoke, strict=strict,
+        )
+
+
 # --------------------------------------------------------------------------- #
 # Notebooks
 # --------------------------------------------------------------------------- #
@@ -248,6 +293,7 @@ def run(c, dataset=None, smoke=False, strict=False):
     else:
         _ensure_superdataset_available(c)
     run_qc_measures(c, dataset=dataset, smoke=smoke, strict=strict)
+    run_atlas_tsnr(c, dataset=dataset, smoke=smoke, strict=strict)
     run_notebooks(c)
 
     if not smoke:
@@ -272,8 +318,15 @@ def run(c, dataset=None, smoke=False, strict=False):
             raise Exit(
                 f"❌ Smoke test FAILED: no avgtsnr map fetched for {target}", code=1
             )
-        print(f"✅ Smoke test passed: {target} produced QC rows at {out} "
-              f"and has an avgtsnr map fetched under {cneuromod_dir / target / 'tsnr'}")
+        atlas_out = output_dir / "tables" / "atlas_tsnr" / f"{target}.tsv"
+        if not atlas_out.exists() or pd.read_csv(atlas_out, sep="\t").empty:
+            raise Exit(
+                f"❌ Smoke test FAILED: no atlas_tsnr rows extracted for {target}",
+                code=1,
+            )
+        print(f"✅ Smoke test passed: {target} produced QC rows at {out}, "
+              f"has an avgtsnr map fetched under {cneuromod_dir / target / 'tsnr'}, "
+              f"and produced atlas_tsnr rows at {atlas_out}")
 
 
 # --------------------------------------------------------------------------- #
@@ -287,13 +340,20 @@ def clean_qc_measures(c):
 
 
 @task
+def clean_atlas_tsnr(c):
+    """Remove per-region atlas-tSNR outputs."""
+    from airoh.utils import clean_folder
+    clean_folder(c, "output_data_dir", "tables/atlas_tsnr/*.tsv")
+
+
+@task
 def clean_figures(c):
     """Remove generated figures and notebook sentinels."""
     from airoh.utils import clean_folder
     clean_folder(c, "figures_dir")
 
 
-@task(pre=[clean_qc_measures, clean_figures])
+@task(pre=[clean_qc_measures, clean_atlas_tsnr, clean_figures])
 def clean(c):
     """Remove all computed outputs."""
     pass
