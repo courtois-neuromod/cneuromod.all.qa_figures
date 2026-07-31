@@ -229,12 +229,90 @@ def run_atlas_tsnr(c, dataset=None, smoke=False, strict=False):
 
 
 # --------------------------------------------------------------------------- #
+# Composed figure
+# --------------------------------------------------------------------------- #
+def _figure_paths(c):
+    """``(svg, png, panel_sizes_json)`` for the hand-authored montage."""
+    svg = Path(c.config.get("figure_svg", "output_data/qa_figure.svg"))
+    png = Path(c.config.get("figure_png", "output_data/qa_figure.png"))
+    panel_sizes = Path(c.config.get("figures_dir")) / "panel_sizes.json"
+    return svg, png, panel_sizes
+
+
+@task
+def run_figure_layout(c):
+    """Export the montage's panel geometry to figures/panel_sizes.json.
+
+    Read by the notebooks (see notebooks/figure_style.py) so every placed panel
+    renders at exactly the physical size the montage allocates it. Always
+    re-run, never skipped: it is cheap, and a box resized in Inkscape must take
+    effect on the very next `invoke run`.
+    """
+    from analysis.figure_layout import write_panel_sizes
+
+    svg, _, panel_sizes = _figure_paths(c)
+    write_panel_sizes(svg, panel_sizes)
+
+
+@task
+def export_figure(c):
+    """Render the hand-authored montage to output_data/qa_figure.png with Inkscape.
+
+    Tolerant, like the rest of this pipeline: Inkscape is an optional external
+    dependency needed only to recompose the final figure, never to reproduce a
+    panel, so a missing binary (or a failed export) warns and returns rather
+    than failing the run. Skipped when the PNG is already newer than the SVG and
+    every panel it links.
+    """
+    import shutil
+    import subprocess
+
+    from analysis.figure_layout import read_panel_sizes
+
+    svg, png, _ = _figure_paths(c)
+    dpi = c.config.get("figure_export_dpi", 300)
+    if not svg.is_file():
+        print(f"⚠️  No montage at {svg} — nothing to export")
+        return
+    if shutil.which("inkscape") is None:
+        print("⚠️  Inkscape not found on PATH — skipping the figure export. "
+              f"Install it (https://inkscape.org/release/), or open {svg} and "
+              "export the PNG from the GUI.")
+        return
+
+    # The montage links its panels by relative path, so the sources to compare
+    # against are the SVG itself plus every panel it places.
+    figures_dir = Path(c.config.get("figures_dir"))
+    sources = [svg] + [figures_dir / name for name in read_panel_sizes(svg)]
+    newest_source = max((p.stat().st_mtime for p in sources if p.is_file()), default=0)
+    if png.is_file() and png.stat().st_mtime >= newest_source:
+        print(f"⏭️  {png} is up to date")
+        return
+
+    result = subprocess.run(
+        ["inkscape", "--export-type=png", f"--export-filename={png}",
+         f"--export-dpi={dpi}", str(svg)],
+        capture_output=True, text=True,
+    )
+    if result.returncode != 0:
+        print(f"⚠️  Inkscape export failed ({result.stderr.strip()}) — open {svg} "
+              "and export the PNG from the GUI instead.")
+        return
+    print(f"🖼️  Exported {png} at {dpi} dpi")
+
+
+# --------------------------------------------------------------------------- #
 # Notebooks
 # --------------------------------------------------------------------------- #
-@task
+@task(pre=[run_figure_layout])
 def run_notebooks(c):
     """
     Generate QA figures from the metric tables in output_data/ using notebooks.
+
+    `run-figure-layout` runs first because the notebooks size every placed panel
+    from the geometry it writes — and `clean-figures` wipes that file along with
+    the figures dir it lives in. (`run` calls both explicitly, in the same
+    order; this `pre=` only covers invoking `run-notebooks` on its own.)
     """
     from airoh.utils import ensure_dir_exist
     from airoh.utils import run_notebooks as airoh_run_notebooks
@@ -294,7 +372,11 @@ def run(c, dataset=None, smoke=False, strict=False):
         _ensure_superdataset_available(c)
     run_qc_measures(c, dataset=dataset, smoke=smoke, strict=strict)
     run_atlas_tsnr(c, dataset=dataset, smoke=smoke, strict=strict)
+    # Panel geometry has to be on disk before the notebooks size their figures
+    # against it; the export then recomposes the montage from the fresh panels.
+    run_figure_layout(c)
     run_notebooks(c)
+    export_figure(c)
 
     if not smoke:
         print("all analyses completed")
@@ -353,7 +435,22 @@ def clean_figures(c):
     clean_folder(c, "figures_dir")
 
 
-@task(pre=[clean_qc_measures, clean_atlas_tsnr, clean_figures])
+@task
+def clean_figure(c):
+    """Remove the composed montage PNG and its panel geometry.
+
+    Never the SVG: that one is hand-authored in Inkscape and is a pipeline
+    *source*, despite living in output_data/ (its relative image links resolve
+    from there).
+    """
+    _, png, panel_sizes = _figure_paths(c)
+    for path in (png, panel_sizes):
+        if path.is_file():
+            path.unlink()
+            print(f"🧹 Removed {path}")
+
+
+@task(pre=[clean_qc_measures, clean_atlas_tsnr, clean_figures, clean_figure])
 def clean(c):
     """Remove all computed outputs."""
     pass

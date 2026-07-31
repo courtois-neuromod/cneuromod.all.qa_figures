@@ -48,6 +48,17 @@ a bundled **git-annex ≥ 10** (the `git-annex` PyPI package).
 > `uv run` so that binary is found first. (A conda-forge or system git-annex ≥ 10
 > already on `PATH` also works.)
 
+> 🖼️ **[Inkscape](https://inkscape.org/) 1.x is an optional extra**, and a
+> *system* dependency rather than a Python one, so it is not in `pyproject.toml`.
+> It is used for one thing: `export-figure` shells out to its command line to
+> render the hand-authored montage `output_data/qa_figure.svg` into
+> `output_data/qa_figure.png`. Nothing else needs it — every individual panel
+> under `output_data/figures/` is produced by the notebooks. Without Inkscape
+> `invoke run` still completes and exits 0, printing a warning; you can then open
+> the SVG and export the PNG from the GUI. Install with
+> `sudo apt install inkscape`, `brew install --cask inkscape`, or from
+> <https://inkscape.org/release/>.
+
 ### **Step 2**: Fetch the source data
 
 ```bash
@@ -102,7 +113,8 @@ uv run invoke run
 ```
 
 Runs the analysis in order (ensure `cneuromod.all` available → `run-qc-measures`
-→ `run-notebooks`). **`run` never pulls data** — it reads only
+→ `run-atlas-tsnr` → `run-figure-layout` → `run-notebooks` → `export-figure`).
+**`run` never pulls data** — it reads only
 the files `fetch` already retrieved and calls no `datalad get`, so it is fast and
 offline. **Run `invoke fetch` first**: any dataset whose input is missing is
 warned-and-skipped (an empty table), pointing you back at `fetch`. Steps that
@@ -147,11 +159,16 @@ The list below should match `invoke --list`.
 | `fetch`             | Make `cneuromod.all` available, then retrieve all input files: MRIQC text (`*_bold.json`, `*_timeseries.tsv`) + the small avgtsnr MNI `.nii.gz`, plus the MNI152 template (`fetch-mni152`); narrow with `--dataset`/`--subject`/`--session` |
 | `fetch-mni152`      | Download (or reuse the cached) ICBM152 2009 MNI template + brain mask under `source_data/nilearn/`, used as the tSNR coverage montages' anatomical background/brain restriction |
 | `run-qc-measures`   | Extract per-run MRIQC metrics per dataset (`--dataset`) from files already fetched; skips datasets already done |
+| `run-atlas-tsnr`    | Extract per-run, per-region tSNR against the shared MNI combined atlas, one table per dataset (`--dataset`) |
+| `run-figure-layout` | Read each panel's placed size out of `output_data/qa_figure.svg` into `output_data/figures/panel_sizes.json`, so the notebooks render every panel at its true on-page size. Always re-runs |
 | `run-notebooks`     | Execute notebooks, saving QA figures to `output_data/figures/`     |
-| `run`               | Full pipeline (ensure `cneuromod.all` available → `run-qc-measures` → `run-notebooks`); **never pulls data** — reads only what `fetch` retrieved; scope with `--dataset`, or `--smoke` for a strict minimal end-to-end test (default `floc`; fetches its one dataset then fails non-zero if nothing is extracted) |
+| `export-figure`     | Render `output_data/qa_figure.svg` to `qa_figure.png` at 300 dpi with the Inkscape CLI. Skipped when the PNG is newer than the SVG and every panel it links; warns and exits 0 when Inkscape is not installed |
+| `run`               | Full pipeline (ensure `cneuromod.all` available → `run-qc-measures` → `run-atlas-tsnr` → `run-figure-layout` → `run-notebooks` → `export-figure`); **never pulls data** — reads only what `fetch` retrieved; scope with `--dataset`, or `--smoke` for a strict minimal end-to-end test (default `floc`; fetches its one dataset then fails non-zero if nothing is extracted) |
 | `clean`             | Remove all computed outputs                                        |
 | `clean-qc-measures` | Remove QC-metric tables                                            |
+| `clean-atlas-tsnr`  | Remove per-region atlas-tSNR tables                                |
 | `clean-figures`     | Remove generated figures and notebook sentinels                   |
+| `clean-figure`      | Remove the composed `qa_figure.png` and `panel_sizes.json` — never the hand-authored SVG |
 | `clean-source`      | Remove all fetched source data                                     |
 | `clean-cneuromod`   | Remove the fetched `cneuromod.all` superdataset (symlink or clone) |
 
@@ -170,6 +187,14 @@ Use `invoke --list` or `invoke --help <task>` for full descriptions.
 - **Smoke test.** `run --smoke` fetches its one known-functional dataset, runs a
   strict end-to-end pass, and fails loudly (non-zero) if nothing is extracted,
   while the plain `run` stays tolerant of partly-public / not-yet-fetched data.
+- **The montage is the source of truth for layout.** `output_data/qa_figure.svg`
+  is hand-composed in Inkscape and links the notebook panels by relative path.
+  `run-figure-layout` reads each placed box out of it, and the notebooks render
+  every panel at exactly that physical size at 300 dpi — so panels are placed
+  1:1 and text is the same size everywhere on the page. Resize a box in
+  Inkscape and the next `invoke run` regenerates that panel to match, with no
+  re-placement. (This is why no notebook uses `bbox_inches="tight"`: cropping
+  after the fact makes the saved size unpredictable.)
 - **Fetch pulls, run reads.** `cneuromod.all` is huge, so `fetch` pulls just the
   small files the pipeline needs (MRIQC text + avgtsnr maps) with `datalad get`;
   `run` never pulls — it reads what `fetch` retrieved, staying fast and offline.

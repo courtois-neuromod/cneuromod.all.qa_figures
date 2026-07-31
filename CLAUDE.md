@@ -227,7 +227,16 @@ compatibility). Linter: **ruff** (`uv run ruff check .`). No test framework.
     they contribute one raincloud entry apiece rather than one per parcel —
     a per-parcel/per-subregion breakdown for all three groups in one panel
     would be unreadable. The underlying TSV keeps full per-parcel/
-    per-subregion granularity for anyone who wants to re-slice it.
+    per-subregion granularity for anyone who wants to re-slice it. Panel i's
+    violins are filled with a canonical **Yeo-7 `GROUP_COLORS`** palette (plus
+    two off-palette colors for Cerebellum/Central structures) instead of the
+    notebook's usual single recessive hue — colour here carries real
+    information, linking each violin to a same-colored map in the sibling
+    panel below. That sibling panel, `network_maps.png`, renders the nine
+    region groups as glass-brain maps (one axial tile per group, in the same
+    worst-to-best order as the violins) of the union of each group's atlas
+    parcels, so a reader can trace a distribution to its anatomical extent by
+    matching color and column position.
     Unlike `tsnr_maps`'s "light v1" subset, this step runs on **every**
     dataset with a `tsnr` subdataset from day one, because it computes its
     own per-run mean rather than depending on an upstream avgtsnr map.
@@ -321,6 +330,50 @@ compatibility). Linter: **ruff** (`uv run ruff check .`). No test framework.
   persist nothing but the PNG), the remaining outputs are small and diffable, so
   `output_data/.gitignore` tracks them instead of ignoring the whole folder. Keep
   a `*.nii.gz` guard line so a stray large binary can never be committed there.
+- **The composed figure: `output_data/qa_figure.svg` is a hand-authored pipeline
+  _source_, and the single source of truth for panel geometry.** It is edited by
+  hand in Inkscape and links the notebook panels by relative path
+  (`figures/qc_measures/…`), which is why it must live in `output_data/` — those
+  links resolve from its own directory. Nothing regenerates it; `clean-figure`
+  removes the PNG and `panel_sizes.json` but must never touch the SVG.
+  - **Panels are rendered at their placed size, 1:1.** `run-figure-layout` →
+    `analysis/figure_layout.py` parses each `<image>` box out of the SVG into
+    `output_data/figures/panel_sizes.json` (millimetres; the root
+    `width`/`viewBox` ratio gives mm-per-user-unit, ancestor scales are folded
+    in). `notebooks/figure_style.py`'s `panel_size()` reads it back, so a panel
+    the montage places gets exactly that `figsize` and is saved at
+    `PAGE_DPI = 300`; a panel the montage does *not* place (`fd_vs_tsnr`, the
+    `motion_bands` figures, the per-subject and sagittal/coronal montages) keeps
+    its default size. Resize a box in Inkscape and the next `invoke run`
+    regenerates that panel to match — no re-placement, and the SVG never needs
+    hand-editing to fix scale.
+  - **No `bbox_inches="tight"`, anywhere.** Tight cropping resizes the canvas
+    after the fact (`figsize=(12, 7)` at 120 dpi used to save as 1202×729, not
+    1440×840), which is exactly what made placed panels land at scales from 0.15
+    to 0.69 and squashed panels a/i by 3.5–4.5× vertically. Saved pixels must
+    equal `figsize × dpi`; use `layout="constrained"` to reclaim margins inside
+    the fixed canvas instead. Do not reintroduce it.
+  - **`notebooks/figure_style.py` holds the shared style** (`HUE`/`INK`/`MUTED`/
+    `GRID`/`GROUP_COLORS`/`style_axes`, the rcParams block, `PAGE_DPI`,
+    `panel_size`, `montage_font_sizes`), previously copy-pasted into three
+    notebooks. It sits next to the notebooks, not in `analysis/`, for the same
+    reason `tsnr_maps.ipynb` duplicates `SPACE`/`SUBJECT_AVG_GLOB`: nbconvert
+    runs with `notebooks/` as the cwd, so `analysis` is not importable there.
+    Font sizes are set for the page (7 pt labels, 6 pt ticks) against the
+    Inkscape-authored text they sit beside (12 pt panel letters, 10 pt titles).
+    nilearn montages scale their `L`/`R`/`z=` annotations with figure width
+    (`montage_font_sizes`) and a *placed* montage also gets a shortened title,
+    because nilearn's opaque title box would otherwise cover the first slices —
+    including the hand-drawn OFC/vTC annotations in the SVG.
+  - **`export-figure` shells out to the Inkscape 1.x CLI** to render the SVG to
+    `qa_figure.png` at 300 dpi, and is **tolerant**: no binary on `PATH`, no SVG,
+    or a non-zero exit all warn and return. Inkscape is an *optional external
+    system dependency* (documented in README.md next to the git-annex note, not
+    in `pyproject.toml`) — it is needed only to recompose the montage, never to
+    reproduce data or any individual panel. The task is idempotent by mtime
+    rather than mere existence, since this output legitimately goes stale.
+  - `run-figure-layout` is also a `pre=` of `run-notebooks`, because
+    `clean-figures` wipes `figures_dir` — and `panel_sizes.json` lives inside it.
 
 ## Persona
 
