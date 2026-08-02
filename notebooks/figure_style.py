@@ -64,15 +64,18 @@ GROUP_COLORS = {
 # Panels are placed in the montage at 1:1, so a point here is a point on the
 # page. Sized against the Inkscape-authored text it sits next to (12 pt panel
 # letters, 10 pt titles, 8 pt annotations): axis labels read just below those.
+# Keep y-axis labels terse ("FD (mm)", not "Mean FD (mm)"): the placed panels
+# are only ~30 mm tall, and a rotated label longer than the axes is silently
+# clipped at the figure edge — constrained layout cannot shrink a fixed canvas.
 PAGE_DPI = 300
 MM_PER_INCH = 25.4
 FONT_SIZES = {
-    "font.size": 7,
-    "axes.labelsize": 7,
-    "axes.titlesize": 8,
-    "xtick.labelsize": 6,
-    "ytick.labelsize": 6,
-    "legend.fontsize": 6,
+    "font.size": 8,
+    "axes.labelsize": 8,
+    "axes.titlesize": 9,
+    "xtick.labelsize": 7,
+    "ytick.labelsize": 7,
+    "legend.fontsize": 7,
 }
 
 plt.rcParams.update({

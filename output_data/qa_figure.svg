@@ -3,8 +3,8 @@
 
 <svg
    width="208.26895mm"
-   height="184.45233mm"
-   viewBox="0 0 208.26895 184.45232"
+   height="175.45636mm"
+   viewBox="0 0 208.26895 175.45635"
    version="1.1"
    id="svg5"
    inkscape:version="1.1.2 (0a00cf5339, 2022-02-04)"
@@ -29,7 +29,7 @@
      showgrid="false"
      inkscape:zoom="1.0549047"
      inkscape:cx="408.56771"
-     inkscape:cy="236.98823"
+     inkscape:cy="312.82447"
      inkscape:window-width="2560"
      inkscape:window-height="1008"
      inkscape:window-x="0"
@@ -901,6 +901,15 @@
      id="layer1"
      transform="translate(-0.08114331,-150.6493)">
     <image
+       width="193.96748"
+       height="33.801308"
+       preserveAspectRatio="none"
+       xlink:href="figures/atlas_tsnr/network_maps.png"
+       id="image195678"
+       x="12.265944"
+       y="292.30435"
+       style="stroke-width:2.03518" />
+    <image
        width="203.70804"
        height="31.100008"
        preserveAspectRatio="none"
@@ -915,7 +924,7 @@
        preserveAspectRatio="none"
        xlink:href="figures/qc_measures/fd_mean_by_subject.png"
        id="image896"
-       x="70.888885"
+       x="3.4956808"
        y="190.93607"
        style="stroke-width:4.39954" />
     <image
@@ -933,7 +942,7 @@
        preserveAspectRatio="none"
        xlink:href="figures/qc_measures/fd_prop_gt05_by_subject.png"
        id="image920"
-       x="3.4956815"
+       x="70.888885"
        y="191.37842"
        style="stroke-width:4.47374" />
     <image
@@ -1249,14 +1258,5 @@
          x="67.557495"
          y="274.13962"
          id="tspan185691">tSNR distribution per network across runs</tspan></text>
-    <image
-       width="193.96748"
-       height="33.801308"
-       preserveAspectRatio="none"
-       xlink:href="figures/atlas_tsnr/network_maps.png"
-       id="image195678"
-       x="12.265944"
-       y="301.30032"
-       style="stroke-width:2.03518" />
   </g>
 </svg>
