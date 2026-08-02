@@ -27,6 +27,7 @@ import os
 from pathlib import Path
 
 import matplotlib.pyplot as plt
+from matplotlib.patches import Rectangle
 
 # --- House figure style (dataviz skill) --------------------------------------
 # Colour is assigned by the job it does and checked with the skill's validator:
@@ -106,6 +107,31 @@ def style_axes(ax):
     ax.spines["right"].set_visible(False)
     ax.yaxis.grid(True, color=GRID, linewidth=0.4)
     ax.set_axisbelow(True)
+    return ax
+
+
+def overlay_median_iqr(ax, data, x, y, order, width=0.08, offset=0.02, color=None):
+    """Draw a median line + open IQR box (no whiskers, caps, or fliers) per category.
+
+    A first attempt at showing median/decile numbers as text over each cloud
+    (two decimals x three stats x every category) was too heavy for these
+    ~1-inch-tall panels. An open box reads the same two numbers (median,
+    Q1-Q3) as a shape instead of digits, so it costs far less ink. `raincloud`
+    in both notebooks pushes the half-violin left (`offset=-.15`) and the
+    jittered strip right (`move=.3`) beyond their original spacing precisely
+    to open a clear gap for this narrow box to sit in, touching neither.
+    """
+    color = INK if color is None else color
+    quantiles = data.groupby(x)[y].quantile([.25, .5, .75]).unstack()
+    for position, category in enumerate(order):
+        if category not in quantiles.index:
+            continue
+        q1, median, q3 = quantiles.loc[category, [0.25, 0.5, 0.75]]
+        left = position + offset - width / 2
+        ax.add_patch(Rectangle((left, q1), width, q3 - q1, fill=False,
+                                edgecolor=color, linewidth=.6, zorder=5))
+        ax.hlines(median, left, left + width, color=color, linewidth=1.0,
+                  zorder=6)
     return ax
 
 
