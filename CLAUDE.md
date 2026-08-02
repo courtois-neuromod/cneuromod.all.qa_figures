@@ -213,21 +213,38 @@ compatibility). Linter: **ruff** (`uv run ruff check .`). No test framework.
       `SUBJECT_AVG_GLOB` are duplicated rather than imported) and skips the
       coverage cells with a warning if the template isn't cached yet.
   - `run-atlas-tsnr` → `analysis/atlas_tsnr.py` + `analysis/atlas_labels.py`:
-    per-run, per-region tSNR, one row per `(dataset, subject, session, task,
-    run, region_name, group, tsnr_mean)` → `output_data/tables/atlas_tsnr/
+    per-run, per-**region-group** tSNR, one row per `(dataset, subject,
+    session, task, run, group, tsnr_mean, n_parcels)` →
+    `output_data/tables/atlas_tsnr/
     {dataset}.tsv` (a separate subdirectory from `output_data/tables/*.tsv`,
     on purpose — `qc_measures.ipynb`'s `load_tables("tables")` globs
     `*.tsv` directly under `tables/` and must not pick this up).
+    - **Parcels are averaged away at write time, not read time**
+      (`_collapse_to_groups`). The step still computes a mean per atlas
+      parcel via `scipy.ndimage.mean`, but persists only the equal-weighted
+      mean over each group's parcels — 11 rows per run (7 cortex networks +
+      cerebellum + 3 Tian subcortex groups) instead of ~1178. Keeping the
+      per-parcel rows "in case someone re-slices them" cost 72 MB for
+      `things.tsv` alone (81 MB across the folder, over GitHub's 50 MB
+      warning threshold) in a directory that is git-tracked precisely
+      because it is meant to be small and diffable, and **no figure ever
+      showed an individual parcel** — the notebook's first act was to
+      average them. Do not reintroduce per-parcel rows here; recompute them
+      locally if a one-off analysis needs them.
+    - **`n_parcels` is what makes the aggregation lossless for pooling.** It
+      counts the parcels that actually contributed (`ndimage.mean` returns
+      NaN for one cropped out of a run's FOV), so pooling several groups by
+      an `n_parcels`-weighted mean reproduces the parcel-equal-weighted
+      value the per-parcel table used to give directly. A plain mean of the
+      group means would not, since the groups hold different parcel counts.
     Visualized in `notebooks/atlas_tsnr.ipynb` as **one fused raincloud**
     (`tsnr_by_region_group.png`) pooling nine distributions: the 7 Yeo
-    networks (each pooling its cortical parcels) plus **Cerebellum** and
-    **Central structures**, the latter two each collapsed to a single
-    per-run average across their parcels/subregions first (equal-weighted
-    `groupby(...).mean()` over `(dataset, subject, session, task, run)`) so
-    they contribute one raincloud entry apiece rather than one per parcel —
-    a per-parcel/per-subregion breakdown for all three groups in one panel
-    would be unreadable. The underlying TSV keeps full per-parcel/
-    per-subregion granularity for anyone who wants to re-slice it. Panel i's
+    networks plus **Cerebellum** and **Central structures** — one point per
+    run per category, never one per parcel, since a per-parcel/per-subregion
+    breakdown for all three groups in one panel would be unreadable. Seven
+    of the nine map 1:1 onto a stored group; "Central structures" is the
+    `n_parcels`-weighted pool of the three subcortex groups
+    (`category_values` in the notebook). Panel i's
     violins are filled with a canonical **Yeo-7 `GROUP_COLORS`** palette (plus
     two off-palette colors for Cerebellum/Central structures) instead of the
     notebook's usual single recessive hue — colour here carries real

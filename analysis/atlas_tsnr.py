@@ -4,9 +4,10 @@ For every functional run we already have a per-run ``stat-tsnr`` statmap in
 ``MNI152NLin2009cAsym`` space (the ``tsnr`` derivative). This step resamples
 each run's map onto the shared combined atlas's grid (see
 ``analysis/atlas_labels.py``) and averages tSNR within each atlas parcel via
-``scipy.ndimage.mean``, writing one tidy long-format TSV per dataset — one row
-per ``(run, region)``. Reads only files already on disk; never calls
-``datalad get`` (retrieval is ``invoke fetch``'s job).
+``scipy.ndimage.mean``, then collapses those parcels to one row per
+``(run, region group)`` — the granularity every figure actually shows. Reads
+only files already on disk; never calls ``datalad get`` (retrieval is
+``invoke fetch``'s job).
 """
 
 from pathlib import Path
@@ -24,8 +25,24 @@ SPACE = ATLAS_SPACE
 RUN_TSNR_GLOB = f"sub-*/ses-*/func/sub-*_ses-*_task-*_space-{SPACE}_stat-tsnr_statmap.nii.gz"
 
 
-def _region_rows(run_path, dataset, atlas_img, atlas_data, region_table):
-    """Tidy rows (one per atlas region) for one run's tSNR map, or None.
+def _collapse_to_groups(parcel_rows):
+    """One row per region group, averaging equally over that group's parcels.
+
+    The per-parcel values are dropped here rather than at read time: no figure
+    shows an individual parcel, and keeping them made a single dataset's table
+    72 MB of git history. ``n_parcels`` counts the parcels that actually
+    contributed (``ndimage.mean`` returns NaN for one cropped out of this run's
+    FOV), so a consumer can still pool several groups with every parcel weighted
+    equally — a plain mean of the group means would not, since the groups hold
+    different numbers of parcels.
+    """
+    return (parcel_rows.groupby("group")["tsnr_mean"]
+            .agg(tsnr_mean="mean", n_parcels="count")  # both skip NaN parcels
+            .reset_index())
+
+
+def _run_rows(run_path, dataset, atlas_img, atlas_data, region_table):
+    """Tidy rows (one per region group) for one run's tSNR map, or None.
 
     Resamples the run's tSNR map onto the atlas's grid (nearest-neighbor, to
     preserve observed tSNR values rather than blending them) before averaging
@@ -50,8 +67,9 @@ def _region_rows(run_path, dataset, atlas_img, atlas_data, region_table):
         "task": entities.get("task"),
         "run": entities.get("run"),
     }
-    rows = region_table[["region_name", "group"]].copy()
-    rows["tsnr_mean"] = means
+    parcel_rows = region_table[["region_name", "group"]].copy()
+    parcel_rows["tsnr_mean"] = means
+    rows = _collapse_to_groups(parcel_rows)
     for key, value in base.items():
         rows[key] = value
     return rows
@@ -94,8 +112,8 @@ def extract_region_tsnr(dataset, cneuromod_dir, output_dir, atlases_dir,
         atlas_data = atlas_img.get_fdata()
         region_table = load_region_table(atlases_dir).dropna(subset=["group"])
         tables = [rows for p in run_files
-                  if (rows := _region_rows(p, dataset, atlas_img, atlas_data,
-                                            region_table)) is not None]
+                  if (rows := _run_rows(p, dataset, atlas_img, atlas_data,
+                                         region_table)) is not None]
 
     table = pd.concat(tables, ignore_index=True) if tables else pd.DataFrame()
     if strict and table.empty:
@@ -107,6 +125,6 @@ def extract_region_tsnr(dataset, cneuromod_dir, output_dir, atlases_dir,
     output_path = Path(output_dir) / "tables" / "atlas_tsnr" / f"{dataset}.tsv"
     output_path.parent.mkdir(parents=True, exist_ok=True)
     table.to_csv(output_path, sep="\t", index=False)
-    print(f"✅ {dataset}: {len(run_files)} run(s) → {len(table)} region-row(s) "
+    print(f"✅ {dataset}: {len(run_files)} run(s) → {len(table)} group-row(s) "
           f"→ {output_path}")
     return output_path

@@ -11,6 +11,26 @@ Once the pipeline is run, this folder contains:
   mm, from the MRIQC `*_timeseries.tsv` `framewise_displacement` column), and
   entities `dataset`, `subject`, `session`, `task`, `run`, `task_grouped`.
 
+## Region-group tSNR tables (from `invoke run-atlas-tsnr`)
+
+- `tables/atlas_tsnr/{dataset}.tsv` — one row per `(run, region group)`:
+  `group`, `tsnr_mean`, `n_parcels`, plus the entities `dataset`, `subject`,
+  `session`, `task`, `run`. The 11 groups are the 7 Yeo networks
+  (`cortex_<Network>`), `cerebellum`, and the three Tian S3 subcortical
+  structures (`subcortex_<PUT|THA|CAU>`).
+
+  tSNR is computed per atlas parcel from the per-run MNI `stat-tsnr` statmaps,
+  then averaged within each group before writing — the per-parcel values are
+  not persisted (they made a single dataset's table 72 MB, and no figure shows
+  an individual parcel). `n_parcels` is the number of parcels that actually
+  contributed to that mean, i.e. those with voxels inside the run's field of
+  view; weight by it when pooling groups together so every parcel still counts
+  equally.
+
+  This lives in its own subdirectory rather than beside `tables/*.tsv` because
+  `qc_measures.ipynb` globs `*.tsv` directly under `tables/` and must not pick
+  these up.
+
 ## Figures (from `invoke run-notebooks`)
 
 - `figures/qc_measures/` — FD and tSNR raincloud distributions by subject and by

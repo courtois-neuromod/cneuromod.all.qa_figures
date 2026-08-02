@@ -159,14 +159,14 @@ The list below should match `invoke --list`.
 | `fetch`             | Make `cneuromod.all` available, then retrieve all input files: MRIQC text (`*_bold.json`, `*_timeseries.tsv`) + the small avgtsnr MNI `.nii.gz`, plus the MNI152 template (`fetch-mni152`); narrow with `--dataset`/`--subject`/`--session` |
 | `fetch-mni152`      | Download (or reuse the cached) ICBM152 2009 MNI template + brain mask under `source_data/nilearn/`, used as the tSNR coverage montages' anatomical background/brain restriction |
 | `run-qc-measures`   | Extract per-run MRIQC metrics per dataset (`--dataset`) from files already fetched; skips datasets already done |
-| `run-atlas-tsnr`    | Extract per-run, per-region tSNR against the shared MNI combined atlas, one table per dataset (`--dataset`) |
+| `run-atlas-tsnr`    | Extract per-run tSNR per region group (7 Yeo networks, cerebellum, 3 subcortical structures) against the shared MNI combined atlas, one table per dataset (`--dataset`) |
 | `run-figure-layout` | Read each panel's placed size out of `output_data/qa_figure.svg` into `output_data/figures/panel_sizes.json`, so the notebooks render every panel at its true on-page size. Always re-runs |
 | `run-notebooks`     | Execute notebooks, saving QA figures to `output_data/figures/`     |
 | `export-figure`     | Render `output_data/qa_figure.svg` to `qa_figure.png` at 300 dpi with the Inkscape CLI. Skipped when the PNG is newer than the SVG and every panel it links; warns and exits 0 when Inkscape is not installed |
 | `run`               | Full pipeline (ensure `cneuromod.all` available → `run-qc-measures` → `run-atlas-tsnr` → `run-figure-layout` → `run-notebooks` → `export-figure`); **never pulls data** — reads only what `fetch` retrieved; scope with `--dataset`, or `--smoke` for a strict minimal end-to-end test (default `floc`; fetches its one dataset then fails non-zero if nothing is extracted) |
 | `clean`             | Remove all computed outputs                                        |
 | `clean-qc-measures` | Remove QC-metric tables                                            |
-| `clean-atlas-tsnr`  | Remove per-region atlas-tSNR tables                                |
+| `clean-atlas-tsnr`  | Remove the region-group atlas-tSNR tables                          |
 | `clean-figures`     | Remove generated figures and notebook sentinels                   |
 | `clean-figure`      | Remove the composed `qa_figure.png` and `panel_sizes.json` — never the hand-authored SVG |
 | `clean-source`      | Remove all fetched source data                                     |
