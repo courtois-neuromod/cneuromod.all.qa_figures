@@ -250,10 +250,18 @@ compatibility). Linter: **ruff** (`uv run ruff check .`). No test framework.
     notebook's usual single recessive hue — colour here carries real
     information, linking each violin to a same-colored map in the sibling
     panel below. That sibling panel, `network_maps.png`, renders the nine
-    region groups as glass-brain maps (one axial tile per group, in the same
-    worst-to-best order as the violins) of the union of each group's atlas
+    region groups as glass-brain maps (one **sagittal** tile per group, in the
+    same worst-to-best order as the violins) of the union of each group's atlas
     parcels, so a reader can trace a distribution to its anatomical extent by
-    matching color and column position.
+    matching color and column position. Sagittal (`display_mode="x"`) rather
+    than axial: the dorsal/ventral extent along the anterior-posterior axis is
+    what visually separates the cerebellum and the central structures from the
+    cortical networks, which an axial projection stacks on top of each other.
+    The panel-i violins use `scale="width"` (a common maximum cloud width, not
+    a common area) at `VIOLIN_WIDTH = 1.4` — only the left half of each violin
+    is drawn, so a cloud spans 0.7 of a category slot and still clears the
+    neighbour's strip. Under the earlier area scaling the tight "Central
+    structures" distribution alone spilled a full column sideways.
     Unlike `tsnr_maps`'s "light v1" subset, this step runs on **every**
     dataset with a `tsnr` subdataset from day one, because it computes its
     own per-run mean rather than depending on an upstream avgtsnr map.
@@ -376,8 +384,13 @@ compatibility). Linter: **ruff** (`uv run ruff check .`). No test framework.
     notebooks. It sits next to the notebooks, not in `analysis/`, for the same
     reason `tsnr_maps.ipynb` duplicates `SPACE`/`SUBJECT_AVG_GLOB`: nbconvert
     runs with `notebooks/` as the cwd, so `analysis` is not importable there.
-    Font sizes are set for the page (7 pt labels, 6 pt ticks) against the
+    Font sizes are set for the page (8 pt labels, 7 pt ticks) against the
     Inkscape-authored text they sit beside (12 pt panel letters, 10 pt titles).
+    **Keep y-axis labels terse** (`FD (mm)`, not `Mean FD (mm)`): the placed
+    panels are only ~30 mm tall and a rotated label taller than the axes is
+    silently clipped at the figure edge — `layout="constrained"` reclaims
+    margins but cannot grow the fixed canvas, and `bbox_inches="tight"` (which
+    would) is banned. That is what forced the shortening when the fonts went up.
     nilearn montages scale their `L`/`R`/`z=` annotations with figure width
     (`montage_font_sizes`) and a *placed* montage also gets a shortened title,
     because nilearn's opaque title box would otherwise cover the first slices —
