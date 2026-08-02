@@ -12,15 +12,50 @@ source_data_dir: source_data
 # output data folders
 output_data_dir: output_data
 
-# file sources
+# figures base dir — each notebook writes into figures_dir/<notebook_stem>/,
+# which airoh also uses as the "already ran" sentinel for that notebook.
+figures_dir: output_data/figures
+
+# Composed QA figure.
 #
-# Each asset defines `output_file` plus `url` and/or `source`:
-#   - `url`    : download the file over HTTP into `output_file`
-#   - `source` : path to already-present data to symlink into `output_file`
-#                instead of downloading (a per-asset alternative to the
-#                `invoke fetch-{name} --source ...` flag)
-files:
-  papers:
-    url: https://api.figshare.com/v2/file/download/9843721
-    output_file: source_data/YNIMG_BrainParcellation_summary.tsv
-    # source: /path/to/existing/file.tsv   # symlink instead of downloading
+# `figure_svg` is a pipeline *source*, hand-authored in Inkscape, even though it
+# lives under output_data/ — it has to, because it links the notebook panels by
+# relative path and those links resolve from its own directory. It is also the
+# single source of truth for panel geometry: `run-figure-layout` reads each
+# placed box out of it into figures/panel_sizes.json, and the notebooks render
+# each panel at exactly that size. `export-figure` then renders it with the
+# Inkscape CLI, an optional external dependency (see README.md).
+figure_svg: output_data/qa_figure.svg
+figure_png: output_data/qa_figure.png
+figure_export_dpi: 300
+
+# Canonical target for `invoke run --smoke` (overridable with --dataset). Must be
+# a dataset that genuinely has functional MRIQC data AND ships an upstream
+# per-subject `stat-avgtsnr` map, so the strict smoke test exercises both the
+# qc-measures and the tsnr-maps steps end-to-end. floc is the smallest dataset
+# satisfying both (fLoc task MRIQC + a stat-avgtsnr map for 3 subjects); hcptrt
+# has functional MRIQC but NO avgtsnr, so it cannot smoke-test tsnr-maps.
+smoke_dataset: floc
+
+# Datalad datasets
+#
+# The cneuromod.all superdataset is the sole data source. It is a Datalad
+# superdataset holding many subdatasets whose file content is retrieved on
+# demand by the analysis steps (`datalad get`), not all at once.
+#
+#   - `url`        : remote to clone when no local checkout is available
+#   - `output_dir` : where the superdataset is made available inside source_data/
+#   - `source`     : path to an existing local checkout to use instead of cloning.
+#                    This is the primary use case here — cneuromod.all already
+#                    lives at ../cneuromod.all — and can be overridden on the
+#                    command line with `invoke fetch --source /path`.
+datasets:
+  cneuromod_all:
+    url: https://github.com/courtois-neuromod/cneuromod.all
+    output_dir: source_data/cneuromod.all
+    source: ../cneuromod.all
+  # ICBM152 2009c MNI template (nilearn.datasets.fetch_icbm152_2009), used only
+  # as the anatomical background for the tSNR coverage montages. A plain cached
+  # download — no url/source symlink semantics, unlike cneuromod_all above.
+  nilearn:
+    output_dir: source_data/nilearn

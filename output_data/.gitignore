@@ -1,2 +1,7 @@
+/qc_measures/
+/scans/
 *.csv
-*.png
+# Guard: nothing in this pipeline writes NIfTI to output_data/ anymore (tSNR
+# montages are rendered straight from source_data and never persisted here),
+# but keep this as a safety net against a stray large binary being committed.
+*.nii.gz

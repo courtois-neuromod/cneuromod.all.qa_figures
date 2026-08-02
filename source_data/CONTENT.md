@@ -1,8 +1,27 @@
-After `invoke fetch` is complete, expect the following content:
- * `YNIMG_BrainParcellation_summary.tsv` - a spreadsheet with some data on a series of articles.
+# Source Data
 
-📝 Note: tsv files are **ignored by Git** (see `.gitignore`), so data assets won't be tracked by default.
+After `invoke fetch`, this folder contains:
 
-📝 Note: assets here may be **symlinks** to data that already lives elsewhere on disk, rather than local copies — this happens when a fetch task is run with `--source` (e.g. `invoke fetch-papers --source /path`, or `invoke fetch --papers-source /path`), or a `source:` key is set in `invoke.yaml`.
+* `cneuromod.all/` — the [CNeuroMod](https://www.cneuromod.ca/) `cneuromod.all`
+  Datalad superdataset. It is either a **symlink** to an existing local checkout
+  (default: `../cneuromod.all`, set via `source:` in `invoke.yaml` or
+  `invoke fetch --source /path`) or a fresh **clone** of
+  `https://github.com/courtois-neuromod/cneuromod.all` when no local checkout is
+  available.
 
+📝 File **content** inside the superdataset is retrieved selectively, never all
+at once — the superdataset is large. `invoke fetch` installs each dataset's
+`mriqc` subdataset and `datalad get`s only the small MRIQC text files the
+pipeline reads (`*_bold.json`, `*_timeseries.tsv`); `*.nii.gz` and the large
+fMRIPrep/bids content are never pulled. The analysis steps re-`datalad get` on
+demand as a safety net.
 
+📝 `cneuromod.all/` is **ignored by Git** here (see `.gitignore`), since it is an
+external dataset with its own version control.
+
+* `nilearn/` — the ICBM152 2009 MNI template + whole-brain mask
+  (`nilearn.datasets.fetch_icbm152_2009`), used as the anatomical background
+  and brain restriction for the tSNR coverage montages in
+  `notebooks/tsnr_maps.ipynb`. `invoke fetch` downloads it once; the download
+  is cache-aware, so re-running `fetch` is a no-op. Ignored by Git (see
+  `.gitignore`).

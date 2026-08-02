@@ -1,7 +1,10 @@
 airoh>=0.3.2
+datalad
+git-annex>=10.20230126
 invoke
 requests
 jupyter>=1.0
 nbconvert>=7.0
 matplotlib>=3.5
 pandas>=1.3
+ruff

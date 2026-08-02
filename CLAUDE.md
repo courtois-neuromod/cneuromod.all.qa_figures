@@ -4,7 +4,393 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Overview
 
-This is the `airoh-mini` template — a starting point for structuring a reproducible data analysis. It is built on the [`invoke`](https://www.pyinvoke.org/) task runner. The `airoh` pip package provides reusable invoke tasks; this repo customizes them via `tasks.py` and `invoke.yaml`.
+**CNeuroMod QA Figures** generates quality-control (QC/QA) figures summarizing
+data quality across the [CNeuroMod](https://www.cneuromod.ca/) datasets. It reads
+from the `cneuromod.all` Datalad superdataset, extracts per-run QC metrics, and
+renders summary figures. The logic is adapted from Basile Pinsard's
+[`cneuromod_qc`](https://github.com/courtois-neuromod/cneuromod_qc), ported to the
+new nested `cneuromod.all` structure and generalized to all functional datasets.
+
+It is built on the [`invoke`](https://www.pyinvoke.org/) task runner (structured
+from the `airoh-mini` template). The `airoh` pip package provides reusable invoke
+tasks; this repo customizes them via `tasks.py` and `invoke.yaml`. Package
+manager: **uv** (Python pinned to 3.12 via `.python-version` for pybids/ptitprince
+compatibility). Linter: **ruff** (`uv run ruff check .`). No test framework.
+
+### Project-specific conventions
+
+- **Sole data source: the `cneuromod.all` Datalad superdataset.** The `fetch`
+  task in `tasks.py` makes it available under `source_data/cneuromod.all` — by
+  default a **symlink** to an existing local checkout (`../cneuromod.all`, set via
+  `source:` under `datasets:` in `invoke.yaml`, overridable with
+  `invoke fetch --source /path`), or a **clone** of the remote when no local
+  checkout exists. This is a deliberate, project-specific `fetch` (not the
+  generic `fetch_data` template task). The new structure nests derivatives per
+  dataset: `{dataset}/bids`, `{dataset}/mriqc`, `{dataset}/fmriprep`,
+  `{dataset}/tsnr`, … After making the superdataset available, `fetch`
+  **retrieves every small file the pipeline reads** — installing each dataset's
+  `mriqc` and `tsnr` subdatasets and `datalad get`-ing (a) the MRIQC
+  `*_bold.json` and `*_timeseries.tsv` text files, (b) the per-subject
+  `sub-*_space-MNI152NLin2009cAsym_stat-avgtsnr_statmap.nii.gz` maps, and (c) the
+  per-run `..._space-MNI152NLin2009cAsym_stat-tsnr_statmap.nii.gz` maps — so a
+  fresh clone is fully ready to `run` offline. Separately, and unconditionally
+  (it is not nested under any one functional dataset), `fetch` also installs the
+  dataset-root-level `anat/atlases` subdataset and fetches the single shared
+  combined-atlas volume + label TSV (see the atlas-tSNR bullet below). These
+  MNI `.nii.gz` maps and the one shared atlas file are the **only** image
+  content it pulls (never `T1w` or fMRIPrep content).
+  `fetch --dataset/--subject/--session` (each a comma-separated list) narrows the
+  per-dataset retrieval to a chosen slice (the shared atlas fetch is unaffected,
+  since it is not per-dataset); with no filter it covers every dataset — see
+  `analysis/prefetch.py`. The retrieval is tolerant (inaccessible content only
+  warns).
+- **Asset gathering (`fetch`) is separate from reproduction (`run`) — and `run`
+  NEVER pulls.** This split is load-bearing: `run` reads only what is already on
+  disk and **no `run-*` step calls `datalad get` or installs a subdataset**. A
+  plain `run` only ensures the superdataset is *available* via
+  `_ensure_superdataset_available` (the cheap symlink/clone half of `fetch`), then
+  each step globs its dataset's files and processes whatever is present —
+  tolerant path warns-and-skips (or writes an empty table) for a dataset whose
+  input was never fetched, pointing the user at `invoke fetch`. `invoke fetch` is
+  the do-it-once bulk gather; `invoke run` is fast and offline. **Do not
+  reintroduce any `datalad get`/`install_subdataset` into the `run-*` steps or a
+  `fetch(c)` call into the non-smoke `run` path** — that on-demand re-pulling was
+  removed on purpose (it made every `run` slow). The one exception is `run
+  --smoke` (see below), which fetches its single dataset to stay a self-contained
+  end-to-end test.
+- **Chunk unit: `dataset`.** Each `run-{name}` task processes one CNeuroMod
+  dataset at a time (writing one TSV per dataset), auto-discovering datasets from
+  `cneuromod.all` (`analysis/datasets.py`), exposing a `--dataset` selector
+  (comma-separated) and a `smoke` flag (first dataset only), and skipping
+  datasets whose output exists. `run` itself also takes `--dataset`, forwarding
+  it to `run-qc-measures`.
+- **`run --smoke` is a real test — strict, and the one `run` that fetches.** The
+  production pipeline (plain `run`, `run-qc-measures`) is deliberately *tolerant*
+  of partly-public / not-yet-fetched data: a missing input only warns, and an
+  empty result writes an empty table. `run --smoke` is the opposite. To be a
+  genuine end-to-end plumbing test it first **`fetch`es its single dataset**
+  (retrieval included), then runs `--strict`: `--smoke` implies `--strict`,
+  threading `strict=True` into `extract_qc_measures` so a zero-row extraction
+  **raises** (non-zero exit), and `run` asserts a non-empty TSV **and** that the
+  source `tsnr` derivative has at least one fetched avgtsnr map on disk. It runs
+  on a single dataset that both has functional MRIQC data and ships an upstream
+  `stat-avgtsnr` map (`smoke_dataset` in `invoke.yaml`, default `floc`, the
+  `--dataset` default under `--smoke`) — never blindly the first dataset
+  alphabetically, which is `anat` (anatomical-only, no BOLD → empty by nature),
+  and **not** `hcptrt` (functional MRIQC but no `avgtsnr`, so there is nothing
+  for the tsnr_maps notebook to render). In strict mode `run-qc-measures` also
+  re-runs a dataset whose output exists, so a stale file can't mask a missing
+  input.
+- **Three analysis paths** (in `analysis/`, mirroring `cneuromod_qc`):
+  - `run-qc-measures` → `analysis/qc_measures.py`: per-run image-quality metrics
+    read **from MRIQC only** (`{dataset}/mriqc/**/*_bold.json` plus the sibling
+    `*_timeseries.tsv`) — a deliberate choice to avoid installing/fetching the
+    large fMRIPrep derivatives. Metrics: `fd_mean`, `tsnr`, `snr`, `gsr_*`,
+    `dvars_*`, `size_t`, … plus `fd_prop_gt02`/`fd_prop_gt05` (proportion of
+    volumes with FD > 0.2 / 0.5 mm, computed from the `framewise_displacement`
+    column of the MRIQC `*_timeseries.tsv` — *not* the BIDS sidecar, which holds
+    no FD data) → `output_data/tables/{dataset}.tsv`.
+  - tSNR **brain maps** (`notebooks/tsnr_maps.ipynb`, no `analysis/` step or
+    `run-*` task — there is nothing to compute-and-persist, so it lives entirely
+    in the notebook). It reads the **upstream per-subject `stat-avgtsnr` map**
+    each `{dataset}/tsnr` derivative ships directly from
+    `source_data/cneuromod.all/{dataset}/tsnr/` (never recomputed from run-level
+    maps, never copied into `output_data/`) and averages subjects **in memory**
+    for the dataset-level panel (resampled to a common grid via
+    `nilearn.image.resample_to_img`, `np.nanmean`) — nothing is written except
+    the rendered PNG montages. A **grand-average panel**
+    (`all_datasets_avgtsnr.png`) pools every subject from every light-v1
+    dataset into one further mean, each subject weighted equally regardless of
+    how many subjects its dataset contributes (not an average-of-dataset-
+    averages, which would instead weight each dataset equally). It shares the
+    same `robust_vmax` ceiling and the same anchor-cut-coords-on-the-average
+    approach as the per-dataset panels. `analysis/tsnr_maps.py` now holds only the
+    `SPACE`/`SUBJECT_AVG_GLOB` constants shared between the notebook and
+    `analysis/prefetch.py`. Montages are volumetric (nilearn) — *not* a cortical
+    surface, which would discard subcortex/cerebellum and smooth the
+    ventral/orbitofrontal dropout tSNR QA must show. The `tsnr` scalar column in
+    `qc_measures` (an MRIQC IQM) is a different, unrelated thing from these
+    voxelwise statmaps.
+    - **One fixed set of cut coordinates and color ranges for every panel** —
+      every dataset, every subject, the grand average, and every coverage
+      panel (`CUT_COORDS`, `TSNR_VMIN`/`TSNR_VMAX`, `COVERAGE_VMIN`/
+      `COVERAGE_VMAX` in the notebook). Earlier versions picked slices
+      per-dataset via `nilearn.plotting.find_cut_slices` on that dataset's
+      average and computed a per-run 98th-percentile `vmax`; both were
+      replaced with hard-coded constants so every panel across every dataset
+      is sliced and colored identically and stays numerically comparable
+      across notebook re-runs, not just within one dataset.
+      `CUT_COORDS = (-54, -42, -28.5, -14.5, -0.5, 15, 33.5, 47.5, 59.5,
+      71.5)` was chosen once by running `find_cut_slices(grand_average,
+      direction="z", n_cuts=8)` (which gave the 8 values from -28.5 up, with
+      19.5 later hand-adjusted to 15) and extending it with two fixed
+      inferior slices (-54, -42): `find_cut_slices` alone is cortex-heavy and
+      reliably misses the cerebellum (at best it grazes its superior edge),
+      so those two are hard-coded in rather than left to chance. `TSNR_VMIN`/`TSNR_VMAX` are fixed at `0`/`50` and
+      `COVERAGE_VMIN`/`COVERAGE_VMAX` at `0`/`1` (coverage is already a
+      fraction) rather than a computed ceiling.
+    - **Every tSNR and coverage panel renders in all three views** — axial
+      (`CUT_COORDS`, `find_cut_slices(..., direction="z")` plus the two
+      hard-coded inferior slices above), sagittal (`SAGITTAL_CUT_COORDS`,
+      `direction="x"`) and coronal (`CORONAL_CUT_COORDS`, `direction="y"`) —
+      each a fixed 8-slice tuple chosen the same one-time way from the grand
+      average, no manual extension needed for these two. `VIEWS` in the
+      notebook is the single `(filename_suffix, display_mode, cut_coords)`
+      list every plotting loop iterates over. Axial keeps the historical
+      unsuffixed filename (`{name}.png`); sagittal/coronal add a
+      `_sagittal`/`_coronal` suffix, so e.g. `floc_avgtsnr.png` gets siblings
+      `floc_avgtsnr_sagittal.png` and `floc_avgtsnr_coronal.png`. Sagittal is
+      what best exposes ventral/orbitofrontal and brainstem dropout along the
+      anterior-posterior axis; coronal complements it with the medial-lateral
+      view of the same dropout regions — axial alone can miss both.
+    - **Light v1 — only datasets that ship an upstream `stat-avgtsnr`** (floc,
+      retinotopy, things, hcptrt at the time of writing). Datasets with only
+      run-level `stat-tsnr` maps (friends, …) are **skipped with a warning** in
+      the notebook: computing their subject-average from run-level maps means
+      fetching many full-res `.nii.gz` (a large footprint), deliberately
+      deferred to a future step. Inclusion is fully programmatic (any dataset
+      whose `tsnr` derivative has files matching `SUBJECT_AVG_GLOB`), so a
+      dataset newly shipping avgtsnr maps upstream (e.g. hcptrt, which added
+      them 2026-07-28) is picked up automatically once `invoke fetch` advances
+      that marker's pin — see the incremental-fetch `update_subdataset` bullet
+      above — with no notebook/analysis code change needed.
+    - **Scoped `.nii.gz` exception (fetched in `fetch`, read in the notebook).**
+      The avgtsnr maps, the per-run tsnr maps `run-atlas-tsnr` reads, and the
+      one shared combined atlas are the *only* image content the pipeline
+      pulls, and that pull lives in `fetch`/`analysis/prefetch.py` — the
+      notebooks only read what is present. `fetch` globs and `datalad get`s
+      `sub-*_space-MNI152NLin2009cAsym_stat-avgtsnr_statmap.nii.gz` (one small
+      map per subject, `SUBJECT_AVG_GLOB` in `analysis/tsnr_maps.py`), the
+      per-run `..._space-MNI152NLin2009cAsym_stat-tsnr_statmap.nii.gz` maps
+      (`RUN_TSNR_GLOB` in `analysis/atlas_tsnr.py`), and the shared atlas
+      volume + TSV (`ATLAS_GLOB` in `analysis/atlas_labels.py`) — never
+      `T1w`, never fMRIPrep. Do not widen these globs without cause.
+    - **Requires git-annex ≥ 10.20230126** on `PATH` (the cneuromod.all
+      subdatasets are annex v10 format). `fetch` is where fresh annexed content
+      (the avgtsnr `.nii.gz`) is retrieved, so an old git-annex (e.g. Ubuntu apt's
+      8.x) makes that `datalad get` refuse and every map come back empty — and
+      then `run --smoke` (which fetches first) fails at the avgtsnr-presence
+      assertion. This is now pinned as a project dependency: the `git-annex`
+      PyPI package bundles a recent standalone binary into the venv, so `uv run`
+      guarantees a v10 on `PATH`. Running outside `uv run` with only an old
+      system git-annex is a real environment signal, not a code bug.
+    - **Coverage panels** (`{dataset}_coverage.png`, `all_datasets_coverage.png`,
+      plus a `{dataset}_coverage_thr10.png`/`all_datasets_coverage_thr10.png`
+      pair at a looser threshold — see below) complement the continuous tSNR
+      panels above with a binary QA signal: each subject's map is thresholded
+      at raw `tsnr > threshold` (dimensionless scale, ~0–150 in practice — a
+      fraction like 0.2/0.3 is meaningless here and left the panel showing
+      solid "covered" almost everywhere) before averaging, turning "how good
+      is signal" into "fraction of subjects with any usable signal at this
+      voxel" — a clearer view of total-dropout regions (e.g. ventral/
+      orbitofrontal, ventral putamen) than a dim continuous value. Rendered at
+      **two thresholds** (`THRESHOLDS = (30, 10)` in the notebook): 30, the
+      original stricter "good signal" cut, keeps the unsuffixed filenames;
+      10, a looser "any usable signal at all" cut, gets a `_thr10` filename
+      suffix (`coverage_suffix()`) and highlights regions the stricter
+      threshold already shows as fully uncovered, distinguishing near-total
+      dropout from merely-degraded signal. **The threshold alone is not
+      enough**: background/
+      skull voxels can still clear even a real tSNR threshold from residual
+      structure/noise, so the averaged fraction is also zeroed outside the
+      **ICBM152 whole-brain mask** (nearest-neighbor resampled to each map's
+      grid) before plotting. Computed the same
+      light-v1/in-memory/anchor-cut-coords way as the tSNR panels (same
+      `dataset_cut_coords`/`grand_average_cut_coords`), but plotted on an
+      explicit **ICBM152 2009 MNI template** background (`nilearn.datasets.
+      fetch_icbm152_2009` — nilearn's asymmetrical ICBM152 2009 release a,
+      *not* the exact `MNI152NLin2009cAsym`/release-c template fMRIPrep uses;
+      close enough for a visual coverage overlay, not a claim of voxel-exact
+      alignment) rather than `plot_stat_map`'s implicit default, so
+      coverage/dropout regions are anatomically legible. The T1 template and
+      brain mask are fetched together (one `fetch_icbm152_2009` call) once
+      into `source_data/nilearn/` by the new `fetch-mni152` invoke task
+      (`analysis/mni152.py`'s `fetch_mni152_templates`, wired into the
+      umbrella `fetch`, never re-downloaded by `run`); the notebook
+      duplicates the same `fetch_icbm152_2009` call locally rather than
+      importing `analysis/mni152.py` (nbconvert runs with `notebooks/` as the
+      cwd, so `analysis` is not importable there — the same reason `SPACE`/
+      `SUBJECT_AVG_GLOB` are duplicated rather than imported) and skips the
+      coverage cells with a warning if the template isn't cached yet.
+  - `run-atlas-tsnr` → `analysis/atlas_tsnr.py` + `analysis/atlas_labels.py`:
+    per-run, per-**region-group** tSNR, one row per `(dataset, subject,
+    session, task, run, group, tsnr_mean, n_parcels)` →
+    `output_data/tables/atlas_tsnr/
+    {dataset}.tsv` (a separate subdirectory from `output_data/tables/*.tsv`,
+    on purpose — `qc_measures.ipynb`'s `load_tables("tables")` globs
+    `*.tsv` directly under `tables/` and must not pick this up).
+    - **Parcels are averaged away at write time, not read time**
+      (`_collapse_to_groups`). The step still computes a mean per atlas
+      parcel via `scipy.ndimage.mean`, but persists only the equal-weighted
+      mean over each group's parcels — 11 rows per run (7 cortex networks +
+      cerebellum + 3 Tian subcortex groups) instead of ~1178. Keeping the
+      per-parcel rows "in case someone re-slices them" cost 72 MB for
+      `things.tsv` alone (81 MB across the folder, over GitHub's 50 MB
+      warning threshold) in a directory that is git-tracked precisely
+      because it is meant to be small and diffable, and **no figure ever
+      showed an individual parcel** — the notebook's first act was to
+      average them. Do not reintroduce per-parcel rows here; recompute them
+      locally if a one-off analysis needs them.
+    - **`n_parcels` is what makes the aggregation lossless for pooling.** It
+      counts the parcels that actually contributed (`ndimage.mean` returns
+      NaN for one cropped out of a run's FOV), so pooling several groups by
+      an `n_parcels`-weighted mean reproduces the parcel-equal-weighted
+      value the per-parcel table used to give directly. A plain mean of the
+      group means would not, since the groups hold different parcel counts.
+    Visualized in `notebooks/atlas_tsnr.ipynb` as **one fused raincloud**
+    (`tsnr_by_region_group.png`) pooling nine distributions: the 7 Yeo
+    networks plus **Cerebellum** and **Central structures** — one point per
+    run per category, never one per parcel, since a per-parcel/per-subregion
+    breakdown for all three groups in one panel would be unreadable. Seven
+    of the nine map 1:1 onto a stored group; "Central structures" is the
+    `n_parcels`-weighted pool of the three subcortex groups
+    (`category_values` in the notebook). Panel i's
+    violins are filled with a canonical **Yeo-7 `GROUP_COLORS`** palette (plus
+    two off-palette colors for Cerebellum/Central structures) instead of the
+    notebook's usual single recessive hue — colour here carries real
+    information, linking each violin to a same-colored map in the sibling
+    panel below. That sibling panel, `network_maps.png`, renders the nine
+    region groups as glass-brain maps (one axial tile per group, in the same
+    worst-to-best order as the violins) of the union of each group's atlas
+    parcels, so a reader can trace a distribution to its anatomical extent by
+    matching color and column position.
+    Unlike `tsnr_maps`'s "light v1" subset, this step runs on **every**
+    dataset with a `tsnr` subdataset from day one, because it computes its
+    own per-run mean rather than depending on an upstream avgtsnr map.
+    - **Native T1w space does not ship a combined atlas — this step is
+      MNI-space.** The original design assumed `anat/atlases` shipped one
+      per-subject native-T1w cortex+subcortex+cerebellum parcellation, so
+      parcel means could be computed in each subject's own anatomy.
+      Inspecting the real, installed subdataset (2026-07-30) found that
+      native T1w only has a plain Schaefer2018 cortical parcellation per
+      subject — no subcortex, no cerebellum. What *does* exist is one
+      **shared, group-template MNI152NLin2009cAsym** combined atlas (same
+      file for every subject): `tpl-MNI152NLin2009cAsym_res-01_atlas-
+      Schaefer2018TianS3NettekovenAsym_desc-
+      1000Parcels7Networks50Subcort128Cereb_dseg.nii.gz` + a sibling label
+      TSV — Schaefer2018 1000-parcel/7-network cortex (labels 1–1000), Tian
+      S3 (Melbourne) subcortex (1001–1050), Nettekoven cerebellar cortex
+      (1051–1178), globally unique label IDs. The step therefore reads the
+      MNI (not T1w) per-run `stat-tsnr` statmaps and resamples each one
+      (nearest-neighbor) onto this single shared atlas's grid — loaded once
+      per pipeline run, not once per subject — via `scipy.ndimage.mean`.
+      `analysis/atlas_labels.py` owns the label scheme (`classify_region`:
+      Schaefer name → `cortex_<YeoNetwork>`, `Cereb-*` → `cerebellum`,
+      Tian S3 prefix → `subcortex_<PUT|THA|CAU>`, everything else — e.g.
+      pallidum, hippocampus, amygdala, nucleus accumbens — excluded,
+      `group=None`, not silently lumped in).
+- **Derivative folders are nested Datalad subdatasets — installed by `fetch`.**
+  Every `{dataset}/{marker}` (`bids`, `mriqc`, `fmriprep`, `tsnr`, …) is a Datalad
+  subdataset nested *inside* the per-`{dataset}` subdataset of `cneuromod.all`,
+  present on disk as an empty mountpoint until installed. **`fetch`** installs the
+  ones the pipeline needs (`mriqc`, `tsnr`) via `install_subdataset`
+  (`analysis/datalad_utils.py`), called through the `_ensure_marker_submodule`
+  callback `prefetch_slice` receives from `tasks.py`. This runs `datalad get -n`
+  (no content): datalad installs the intermediate `{dataset}` subdataset and the
+  nested `{marker}` in one call — plain `git submodule` cannot reach a submodule
+  nested inside another submodule — while leaving large sibling subdatasets like
+  `stimuli` alone (non-recursive). Tolerant like `datalad_get` (never raises).
+  `run` does **not** install anything: skipping `fetch` is why `run` then warns
+  "no … present" and produces empty output for that dataset. `anat/atlases` is
+  a **dataset-root-level** subdataset, sibling to the per-`{dataset}`
+  subdatasets rather than nested under one of them, so it is installed and
+  fetched from a distinct call site (`prefetch_atlases` in
+  `analysis/prefetch.py`) rather than the per-`(dataset, marker)` loop above —
+  same tolerant `install_subdataset`/`datalad_get` machinery, just called once
+  for the whole pipeline instead of once per dataset.
+- **Tolerant `datalad get`** (`analysis/datalad_utils.py`): CNeuroMod data is only
+  partly public and content lives on credentialed special remotes, so `datalad get`
+  can partially fail (e.g. participants without a public-data agreement, or an
+  environment without the right auth). Used only by `fetch`/`prefetch` (never by a
+  `run-*` step): it fetches the small files the pipeline needs (MRIQC text, the
+  scoped avgtsnr/per-run-tsnr `.nii.gz`, and the shared atlas), never raises, retries once over HTTPS, and lets the
+  gather proceed with whatever content is reachable.
+- **`fetch` is incremental — it skips what it already knows about.** A repeat
+  `invoke fetch` (the normal way to pick up new upstream assets) must not
+  redo work it already did. Three layers of "already have this, skip it"
+  checks make this true, all added because the naive version — unconditionally
+  re-invoking `datalad` for every dataset/marker/file on every run — made a
+  routine "check for new files" fetch take as long as a from-scratch clone:
+  - `install_subdataset` (`analysis/datalad_utils.py`) skips the expensive
+    `datalad get -n` install subprocess once `{dataset}/{marker}/.git`
+    already exists, but still calls `update_subdataset`, a cheap `datalad
+    update --merge` (tree/metadata only, no content) that advances the
+    marker's pin to latest upstream every fetch — so a dataset that newly
+    starts shipping a file (e.g. hcptrt's `stat-avgtsnr` maps, added
+    upstream 2026-07-28) is discovered without a full reinstall. Only the
+    initial install is skipped when already present, not the update check.
+  - `_prefetch_target` (`analysis/prefetch.py`) never re-requests a file whose
+    content is already on disk (`p.is_file()`).
+  - **Known-failed files are remembered** (`analysis/fetch_state.py`,
+    `source_data/.fetch_failures.json`, gitignored — local environment state,
+    not a pipeline output): some CNeuroMod content lives only on credentialed
+    remotes a given environment can never reach (no SSH key, no special-remote
+    auth), so a broken-symlink file that failed once will fail identically on
+    every future attempt, at a real per-file cost (git-annex trying every
+    configured remote, ~3s/file in practice). The cache records failures per
+    root-relative path and is refreshed every fetch: a file that newly
+    succeeds is dropped from it, a file that newly fails is added. **By
+    default every fetch still retries every previously-failed file** — access
+    can be granted later, and a silently-stale skip would then hide genuinely
+    new content forever, which is a worse failure mode than an occasional slow
+    fetch. Pass `invoke fetch --skip-inaccessible` to instead skip anything in
+    the cache — worthwhile once you've confirmed a file is permanently out of
+    reach (e.g. a dataset like the smoke test's `gamepad` example, whose MRIQC
+    content is not accessible in a given environment) and don't want to keep
+    paying its retrieval cost on every routine fetch.
+- **Notebook figures live in `output_data/figures/{notebook_stem}/`** (set via
+  `figures_dir` in `invoke.yaml`). This folder doubles as airoh's per-notebook
+  "already ran" sentinel, so it must NOT collide with a data dir name — keep the
+  metric tables under `output_data/tables/`, distinct from the notebook stems.
+- **`output_data/tables/` and `output_data/figures/` are git-tracked.** Now that
+  no step writes NIfTI under `output_data/` (tSNR montages read source_data and
+  persist nothing but the PNG), the remaining outputs are small and diffable, so
+  `output_data/.gitignore` tracks them instead of ignoring the whole folder. Keep
+  a `*.nii.gz` guard line so a stray large binary can never be committed there.
+- **The composed figure: `output_data/qa_figure.svg` is a hand-authored pipeline
+  _source_, and the single source of truth for panel geometry.** It is edited by
+  hand in Inkscape and links the notebook panels by relative path
+  (`figures/qc_measures/…`), which is why it must live in `output_data/` — those
+  links resolve from its own directory. Nothing regenerates it; `clean-figure`
+  removes the PNG and `panel_sizes.json` but must never touch the SVG.
+  - **Panels are rendered at their placed size, 1:1.** `run-figure-layout` →
+    `analysis/figure_layout.py` parses each `<image>` box out of the SVG into
+    `output_data/figures/panel_sizes.json` (millimetres; the root
+    `width`/`viewBox` ratio gives mm-per-user-unit, ancestor scales are folded
+    in). `notebooks/figure_style.py`'s `panel_size()` reads it back, so a panel
+    the montage places gets exactly that `figsize` and is saved at
+    `PAGE_DPI = 300`; a panel the montage does *not* place (`fd_vs_tsnr`, the
+    `motion_bands` figures, the per-subject and sagittal/coronal montages) keeps
+    its default size. Resize a box in Inkscape and the next `invoke run`
+    regenerates that panel to match — no re-placement, and the SVG never needs
+    hand-editing to fix scale.
+  - **No `bbox_inches="tight"`, anywhere.** Tight cropping resizes the canvas
+    after the fact (`figsize=(12, 7)` at 120 dpi used to save as 1202×729, not
+    1440×840), which is exactly what made placed panels land at scales from 0.15
+    to 0.69 and squashed panels a/i by 3.5–4.5× vertically. Saved pixels must
+    equal `figsize × dpi`; use `layout="constrained"` to reclaim margins inside
+    the fixed canvas instead. Do not reintroduce it.
+  - **`notebooks/figure_style.py` holds the shared style** (`HUE`/`INK`/`MUTED`/
+    `GRID`/`GROUP_COLORS`/`style_axes`, the rcParams block, `PAGE_DPI`,
+    `panel_size`, `montage_font_sizes`), previously copy-pasted into three
+    notebooks. It sits next to the notebooks, not in `analysis/`, for the same
+    reason `tsnr_maps.ipynb` duplicates `SPACE`/`SUBJECT_AVG_GLOB`: nbconvert
+    runs with `notebooks/` as the cwd, so `analysis` is not importable there.
+    Font sizes are set for the page (7 pt labels, 6 pt ticks) against the
+    Inkscape-authored text they sit beside (12 pt panel letters, 10 pt titles).
+    nilearn montages scale their `L`/`R`/`z=` annotations with figure width
+    (`montage_font_sizes`) and a *placed* montage also gets a shortened title,
+    because nilearn's opaque title box would otherwise cover the first slices —
+    including the hand-drawn OFC/vTC annotations in the SVG.
+  - **`export-figure` shells out to the Inkscape 1.x CLI** to render the SVG to
+    `qa_figure.png` at 300 dpi, and is **tolerant**: no binary on `PATH`, no SVG,
+    or a non-zero exit all warn and return. Inkscape is an *optional external
+    system dependency* (documented in README.md next to the git-annex note, not
+    in `pyproject.toml`) — it is needed only to recompose the montage, never to
+    reproduce data or any individual panel. The task is idempotent by mtime
+    rather than mere existence, since this output legitimately goes stale.
+  - `run-figure-layout` is also a `pre=` of `run-notebooks`, because
+    `clean-figures` wipes `figures_dir` — and `panel_sizes.json` lives inside it.
 
 ## Persona
 
@@ -82,7 +468,7 @@ invoke --list             # Show all available tasks
 
 **Linting:** The project linter and its configuration are chosen during `init` and stored in `pyproject.toml`. Run it before committing. Never disable a lint rule without a comment explaining why.
 
-**Testing:** The smoke test (`invoke run-smoke`) is the baseline end-to-end check. Add unit tests in `tests/` using the project's chosen test framework when a function contains non-trivial logic, has edge cases the smoke test won't catch, or is shared across multiple steps. Unit tests are optional for simple glue/orchestration code but encouraged for any pure transformation or computation logic in `analysis/`. The test framework and directory are configured during `init`.
+**Testing:** The smoke test (`invoke run --smoke`) is the baseline end-to-end check. Add unit tests in `tests/` using the project's chosen test framework when a function contains non-trivial logic, has edge cases the smoke test won't catch, or is shared across multiple steps. Unit tests are optional for simple glue/orchestration code but encouraged for any pure transformation or computation logic in `analysis/`. The test framework and directory are configured during `init`.
 
 **Template cleanup:** When starting a new project from this template, remove the demo code before adding project-specific work:
 - Delete `run_simulation` from `tasks.py` and remove it from the `pre=` chains on `run_notebooks` and `run`

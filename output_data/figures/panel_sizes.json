@@ -1,0 +1,42 @@
+{
+  "atlas_tsnr/network_maps.png": [
+    193.96748,
+    33.801308
+  ],
+  "atlas_tsnr/tsnr_by_region_group.png": [
+    207.98413,
+    27.086851
+  ],
+  "qc_measures/fd_mean_by_dataset.png": [
+    203.70804,
+    31.100008
+  ],
+  "qc_measures/fd_mean_by_subject.png": [
+    67.393204,
+    30.09568
+  ],
+  "qc_measures/fd_prop_gt02_by_subject.png": [
+    67.393204,
+    29.210976
+  ],
+  "qc_measures/fd_prop_gt05_by_subject.png": [
+    67.393204,
+    29.210976
+  ],
+  "qc_measures/tsnr_by_subject.png": [
+    91.676903,
+    44.37775
+  ],
+  "tsnr_maps/all_datasets_avgtsnr.png": [
+    104.88429,
+    14.78545
+  ],
+  "tsnr_maps/all_datasets_coverage.png": [
+    104.88429,
+    14.78545
+  ],
+  "tsnr_maps/all_datasets_coverage_thr10.png": [
+    104.88429,
+    14.78545
+  ]
+}

@@ -1,1 +1,4 @@
-*.tsv
+cneuromod.all
+nilearn
+.fetch_failures.json
+
