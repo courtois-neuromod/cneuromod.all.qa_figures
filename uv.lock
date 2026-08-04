@@ -21,14 +21,14 @@ wheels = [
 
 [[package]]
 name = "airoh"
-version = "0.3.2"
+version = "0.5.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "invoke" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/48/e1/8e8c93232adf704502c8fec87c7ddd90ff446df605377a9dafd0d31267fa/airoh-0.3.2.tar.gz", hash = "sha256:f46072d98e69a9ca1fe19d6f45e2b8478145458db8b56994ba7ebe467141f0ea", size = 16033, upload-time = "2026-07-23T14:52:30.696Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/f1/94/b8651b7efe7d6cca691b31b63c950c65ad0b8a06b0b869c23378221e719a/airoh-0.5.0.tar.gz", hash = "sha256:0d5827048d4b271681f43d47b8f60eb1462cb80e2c71bab4b1e724c4fb5c9d86", size = 47984, upload-time = "2026-08-04T13:02:43.467Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/44/5d/37d4cfb65f8d4d8a17da7c0b89b5a4c4056dfad941cf10eaaa54b21d064d/airoh-0.3.2-py3-none-any.whl", hash = "sha256:571de3b4fceb9a7260f95762ffeaec69c2f6271947579a09a093ccf517b8a284", size = 12478, upload-time = "2026-07-23T14:52:29.638Z" },
+    { url = "https://files.pythonhosted.org/packages/0d/85/dfab7e52494ce2a7a3bee8d8ba7b14c65a6dbb9df7fae1df3062c2b3a30a/airoh-0.5.0-py3-none-any.whl", hash = "sha256:6132e7f15603213a4513b7a4652837e8595ecc011ce671f03c7ce1de008e1d5a", size = 36946, upload-time = "2026-08-04T13:02:41.965Z" },
 ]
 
 [[package]]
@@ -381,7 +381,7 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
-    { name = "airoh", specifier = ">=0.3.2" },
+    { name = "airoh", specifier = ">=0.5.0" },
     { name = "datalad" },
     { name = "git-annex", specifier = ">=10.20230126" },
     { name = "invoke" },

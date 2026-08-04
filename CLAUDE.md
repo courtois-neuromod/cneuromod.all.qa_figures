@@ -292,7 +292,7 @@ compatibility). Linter: **ruff** (`uv run ruff check .`). No test framework.
   subdataset nested *inside* the per-`{dataset}` subdataset of `cneuromod.all`,
   present on disk as an empty mountpoint until installed. **`fetch`** installs the
   ones the pipeline needs (`mriqc`, `tsnr`) via `install_subdataset`
-  (`analysis/datalad_utils.py`), called through the `_ensure_marker_submodule`
+  (`airoh.datalad`), called through the `_ensure_marker_submodule`
   callback `prefetch_slice` receives from `tasks.py`. This runs `datalad get -n`
   (no content): datalad installs the intermediate `{dataset}` subdataset and the
   nested `{marker}` in one call — plain `git submodule` cannot reach a submodule
@@ -306,7 +306,7 @@ compatibility). Linter: **ruff** (`uv run ruff check .`). No test framework.
   `analysis/prefetch.py`) rather than the per-`(dataset, marker)` loop above —
   same tolerant `install_subdataset`/`datalad_get` machinery, just called once
   for the whole pipeline instead of once per dataset.
-- **Tolerant `datalad get`** (`analysis/datalad_utils.py`): CNeuroMod data is only
+- **Tolerant `datalad get`** (`airoh.datalad`): CNeuroMod data is only
   partly public and content lives on credentialed special remotes, so `datalad get`
   can partially fail (e.g. participants without a public-data agreement, or an
   environment without the right auth). Used only by `fetch`/`prefetch` (never by a
@@ -319,7 +319,7 @@ compatibility). Linter: **ruff** (`uv run ruff check .`). No test framework.
   checks make this true, all added because the naive version — unconditionally
   re-invoking `datalad` for every dataset/marker/file on every run — made a
   routine "check for new files" fetch take as long as a from-scratch clone:
-  - `install_subdataset` (`analysis/datalad_utils.py`) skips the expensive
+  - `install_subdataset` (`airoh.datalad`) skips the expensive
     `datalad get -n` install subprocess once `{dataset}/{marker}/.git`
     already exists, but still calls `update_subdataset`, a cheap `datalad
     update --merge` (tree/metadata only, no content) that advances the
@@ -329,7 +329,7 @@ compatibility). Linter: **ruff** (`uv run ruff check .`). No test framework.
     initial install is skipped when already present, not the update check.
   - `_prefetch_target` (`analysis/prefetch.py`) never re-requests a file whose
     content is already on disk (`p.is_file()`).
-  - **Known-failed files are remembered** (`analysis/fetch_state.py`,
+  - **Known-failed files are remembered** (`airoh.datalad`,
     `source_data/.fetch_failures.json`, gitignored — local environment state,
     not a pipeline output): some CNeuroMod content lives only on credentialed
     remotes a given environment can never reach (no SSH key, no special-remote
