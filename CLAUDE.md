@@ -362,11 +362,12 @@ compatibility). Linter: **ruff** (`uv run ruff check .`). No test framework.
   links resolve from its own directory. Nothing regenerates it; `clean-figure`
   removes the PNG and `panel_sizes.json` but must never touch the SVG.
   - **Panels are rendered at their placed size, 1:1.** `run-figure-layout` →
-    `analysis/figure_layout.py` parses each `<image>` box out of the SVG into
+    `airoh.figures.figure_layout` parses each `<image>` box out of every SVG
+    named under `figures:` in `invoke.yaml` into
     `output_data/figures/panel_sizes.json` (millimetres; the root
     `width`/`viewBox` ratio gives mm-per-user-unit, ancestor scales are folded
-    in). `notebooks/figure_style.py`'s `panel_size()` reads it back, so a panel
-    the montage places gets exactly that `figsize` and is saved at
+    in). `notebooks/figure_style.py` re-exports `airoh.figures.panel_size()`,
+    so a panel the montage places gets exactly that `figsize` and is saved at
     `PAGE_DPI = 300`; a panel the montage does *not* place (`fd_vs_tsnr`, the
     `motion_bands` figures, the per-subject and sagittal/coronal montages) keeps
     its default size. Resize a box in Inkscape and the next `invoke run`
@@ -395,13 +396,14 @@ compatibility). Linter: **ruff** (`uv run ruff check .`). No test framework.
     (`montage_font_sizes`) and a *placed* montage also gets a shortened title,
     because nilearn's opaque title box would otherwise cover the first slices —
     including the hand-drawn OFC/vTC annotations in the SVG.
-  - **`export-figure` shells out to the Inkscape 1.x CLI** to render the SVG to
-    `qa_figure.png` at 300 dpi, and is **tolerant**: no binary on `PATH`, no SVG,
-    or a non-zero exit all warn and return. Inkscape is an *optional external
-    system dependency* (documented in README.md next to the git-annex note, not
-    in `pyproject.toml`) — it is needed only to recompose the montage, never to
-    reproduce data or any individual panel. The task is idempotent by mtime
-    rather than mere existence, since this output legitimately goes stale.
+  - **`export-figure` → `airoh.figures.compose_figure` shells out to the
+    Inkscape 1.x CLI** to render the SVG to `qa_figure.png` at 300 dpi, and is
+    **tolerant**: no binary on `PATH`, no SVG, or a non-zero exit all warn and
+    return. Inkscape is an *optional external system dependency* (documented in
+    README.md next to the git-annex note, not in `pyproject.toml`) — it is
+    needed only to recompose the montage, never to reproduce data or any
+    individual panel. The task is idempotent by mtime rather than mere
+    existence, since this output legitimately goes stale.
   - `run-figure-layout` is also a `pre=` of `run-notebooks`, because
     `clean-figures` wipes `figures_dir` — and `panel_sizes.json` lives inside it.
 
@@ -452,7 +454,7 @@ invoke --list             # Show all available tasks
 
 **One asset, one `--source`:** `fetch_data`'s `source` is a single path bound to the single asset named in the call — never a root directory joined with each asset's filename. That is why each asset gets its own `fetch-{name}` task with its own `--source`, and the umbrella `fetch` routes named `--{name}-source` flags rather than one shared `--source`. Do **not** forward a single shared `--source` to several `fetch_data` calls: it links every asset to the same path and fails silently, printing a success line per asset and exiting 0.
 
-**Datalad datasets:** `--source` symlinks/copies a plain file or folder and does not run `datalad get`. Symlinking a datalad dataset exposes only content that is already present (un-fetched files are broken symlinks), and `--copy` raises on those un-fetched files. For a datalad dataset use `airoh.datalad.get_data` (configured under a `datasets:` section in `invoke.yaml`), not `fetch_data --source`; use `airoh.acquisition.ensure_submodule` for a plain git submodule.
+**Datalad datasets:** `--source` symlinks/copies a plain file or folder and does not run `datalad get`. Symlinking a datalad dataset exposes only content that is already present (un-fetched files are broken symlinks), and `--copy` raises on those un-fetched files. For a datalad dataset use `airoh.datalad.install_dataset`/`get_data` (configured under a `datasets:` section in `invoke.yaml`), not `fetch_data --source`; use `airoh.acquisition.ensure_submodule` for a plain git submodule. This project's `_ensure_marker_submodule`/`_ensure_superdataset_available` (see `tasks.py`) and `analysis/prefetch.py`'s `prefetch_slice`/`prefetch_atlases` are the project-specific composition on top of `airoh.datalad`'s generic `install_subdataset`/`prefetch_pattern`/failure-cache primitives.
 
 - `invoke.yaml` — all path and data config (`output_data_dir`, `source_data_dir`, `notebooks_dir`, `files:` for data assets — each with `output_file` plus `url` to download and/or `source` to symlink)
 - `tasks.py` — project-specific invoke tasks; imports reusable tasks from `airoh` (`airoh.acquisition` for data fetching, `airoh.utils` for general helpers)
@@ -462,7 +464,7 @@ invoke --list             # Show all available tasks
 
 **Analysis vs. notebooks:** Heavy computation belongs in `analysis/` Python code, invoked by `run-{name}` tasks, which write results to `output_data/`. Notebooks are for visualization only — they read from `output_data/` and produce figures. This keeps notebooks fast and focused.
 
-**Idempotent tasks:** Each `run-{name}` task must check whether its outputs already exist and skip execution if they do. This means `invoke run` can be called repeatedly during development of a later step — earlier steps are skipped automatically. To force a full rerun, call `invoke clean` first, then `invoke run`.
+**Idempotent tasks:** Each `run-{name}` task must check whether its outputs already exist and skip execution if they do. This means `invoke run` can be called repeatedly during development of a later step — earlier steps are skipped automatically. The flip side is that caching is by existence, not by content: an edited script or notebook is skipped, not redone. `invoke run --force` (clean everything, then run) is the documented way out; `invoke clean-{name}` then `run` redoes a single step. Do not add content-hash invalidation or a dependency graph — granular clean tasks plus one `--force` is the whole intended cache story.
 
 **Task naming conventions:**
 - Fetch tasks are named `fetch-{name}` (e.g. `fetch-papers`), one per data asset; the umbrella `fetch` calls them all and routes a `--{name}-source` flag to each.
@@ -481,15 +483,16 @@ invoke --list             # Show all available tasks
 
 **Linting:** The project linter and its configuration are chosen during `init` and stored in `pyproject.toml`. Run it before committing. Never disable a lint rule without a comment explaining why.
 
-**Testing:** The smoke test (`invoke run --smoke`) is the baseline end-to-end check. Add unit tests in `tests/` using the project's chosen test framework when a function contains non-trivial logic, has edge cases the smoke test won't catch, or is shared across multiple steps. Unit tests are optional for simple glue/orchestration code but encouraged for any pure transformation or computation logic in `analysis/`. The test framework and directory are configured during `init`.
+**Testing: this project has no unit tests, on purpose.** The deliverable is a figure, and the figure is the test — a broken metric or a mis-joined table shows up as a visibly wrong panel in a way no assertion was going to anticipate. Two checks stand in for a test suite, and they cover different failures:
 
-**Template cleanup:** When starting a new project from this template, remove the demo code before adding project-specific work:
-- Delete `run_simulation` from `tasks.py` and remove it from the `pre=` chains on `run_notebooks` and `run`
-- Delete `analysis/simulation.py` (and the `analysis/` folder if it stays empty)
-- Clear or replace `source_data/CONTENT.md` and `output_data/CONTENT.md` with project-specific descriptions
-- Update `invoke.yaml` (`files:`, paths) for the new project's data sources
+- `invoke run --smoke` — behavioural. Does the whole pipeline run end to end, on real data, and produce non-empty output. Strict: it fetches its one dataset and fails loudly if anything comes back empty.
+- `invoke verify` — structural. Do the code, config, data and docs still describe the same project.
 
-**Adding a new analysis step:** add a function to `analysis/`, add a `run-{name}` task and a matching `clean-{name}` task in `tasks.py`, wire both into the top-level `run` and `clean` tasks via `pre=` chains, and create or extend a notebook in `notebooks/` for visualization.
+Run both before committing. Do not add a tests directory without a reason that neither of these covers; if a pure function in `analysis/` ever grows genuinely tricky edge cases, that is the moment to reconsider, not before.
+
+**Verification:** `invoke verify` compares this project against its own documentation — the task list against README.md, `requirements.txt` against `pyproject.toml`, the paths named in the docs, each data folder against its `CONTENT.md`, config keys, tracked file sizes, provenance freshness, and ruff. It exits non-zero on any failure and is configured under `verify:` in `invoke.yaml`. It is deliberately not part of `run`. The mechanical checks cannot evaluate a prose claim about behaviour ("no run step fetches", "the coverage threshold is 30") — the `/verify` skill does that second pass, and is worth running after any change to what a step *does* as opposed to what it is called.
+
+**Adding a new analysis step:** add a function to `analysis/`, add a `run-{name}` task and a matching `clean-{name}` task in `tasks.py`, call both from the bodies of the top-level `run` and `clean` tasks, and create or extend a notebook in `notebooks/` for visualization. Call them in the body rather than declaring them as `pre=`: a `pre=` chain only fires when invoke runs the task from the command line, so `run --force` calling `clean(c)` from Python would execute an empty body and silently delete nothing.
 
 **Evolving CLAUDE.md:** Keep this file current as the project grows. It should always reflect the actual scope of the project — what it does, what data it uses, and what analysis steps it contains. When adding or removing a task, rename a folder, or change the pipeline structure, update CLAUDE.md in the same commit. Stale guidance here misleads future AI sessions and collaborators alike.
 

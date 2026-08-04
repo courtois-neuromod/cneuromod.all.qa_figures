@@ -1,0 +1,555 @@
+{
+  "command": "/home/pbellec/git/cneuromod.all.qa_figures/.venv/bin/invoke run",
+  "environment": {
+    "lockfiles": {
+      "requirements.txt": "714c20031479d767b843b174498922fbd0ed7629a936fc9eb4dc613533a17623",
+      "uv.lock": "6d97c1d660a349a884b7111b11626dbd716778ab223722202033f39ee1878927"
+    },
+    "packages": {
+      "airoh": "0.5.0",
+      "datalad": "1.6.1",
+      "git-annex": "10.20260624",
+      "invoke": "3.0.3",
+      "jupyter": "1.1.1",
+      "matplotlib": "3.10.9",
+      "nbconvert": "7.17.1",
+      "nibabel": "5.4.2",
+      "nilearn": "0.14.0",
+      "numpy": "2.4.4",
+      "pandas": "3.0.2",
+      "ptitprince": "0.3.1",
+      "pybids": "0.22.0",
+      "requests": "2.33.1",
+      "ruff": "0.16.0",
+      "seaborn": "0.13.2"
+    },
+    "platform": "Linux-6.8.0-136-generic-x86_64-with-glibc2.35",
+    "python": "3.12.12"
+  },
+  "inputs": {
+    "assets": {
+      "cneuromod_all": {
+        "commit": "87ad08a00f9883fcfe20a18ebc0b2e64791f9238",
+        "resolved_path": "/home/pbellec/git/cneuromod.all",
+        "sha256": null
+      },
+      "nilearn": {
+        "commit": null,
+        "resolved_path": "/home/pbellec/git/cneuromod.all.qa_figures/source_data/nilearn",
+        "sha256": null
+      }
+    },
+    "manifest_file": "source_data/MANIFEST.json",
+    "manifest_sha256": "dd93b855ce1845371527ba7168ed97a52e220146ba6be117729739c863252ed4"
+  },
+  "outputs": {
+    "figures/atlas_tsnr/network_maps.png": {
+      "sha256": "855c2ed46c48d74d156b84efffb41ae4804034d424fd71d850431e7f8788b798",
+      "size_bytes": 257775
+    },
+    "figures/atlas_tsnr/tsnr_by_region_group.png": {
+      "sha256": "2b580160f5da8b6a8f1e14b519fefcfc5060debf6de9d2a06809021f67a6b2e1",
+      "size_bytes": 196159
+    },
+    "figures/motion_bands/motion_bands_by_dataset_subject.png": {
+      "sha256": "7c908e2e64ccd805169dbe275ace9ad382f1f1f213baf9ec91e91c257fa476cd",
+      "size_bytes": 339059
+    },
+    "figures/motion_bands/motion_bands_grand_average.png": {
+      "sha256": "d31e3d4dd08701e017abe18d2b0e669358d8b8086a3df62c5b92896b30307337",
+      "size_bytes": 74306
+    },
+    "figures/panel_sizes.json": {
+      "sha256": "957b551d9cc19aee0aad4bef6ffa30c1d6e49c642246a54dcf055806dd0b5414",
+      "size_bytes": 767
+    },
+    "figures/qc_measures/fd_mean_by_dataset.png": {
+      "sha256": "a08cb3f4ddf7720ee79dfe68e06cec4c40de4dd534fb9aa72d9a7bc2bcab5dc6",
+      "size_bytes": 234039
+    },
+    "figures/qc_measures/fd_mean_by_subject.png": {
+      "sha256": "ed4dd4e21267728b3999f621a9c63c1e1d931020abda192b58d64db9d1726ef2",
+      "size_bytes": 68382
+    },
+    "figures/qc_measures/fd_prop_gt02_by_subject.png": {
+      "sha256": "d720aaaabb37d5177d3d414d68c2fb3428197272a0501e53231bda7af89ad807",
+      "size_bytes": 73182
+    },
+    "figures/qc_measures/fd_prop_gt05_by_subject.png": {
+      "sha256": "b0e0c0d64fa0bbcc4e2abaf34f62237a8200040f2a7fa65f28823f65c76fc46a",
+      "size_bytes": 47912
+    },
+    "figures/qc_measures/fd_vs_tsnr.png": {
+      "sha256": "78ebe364c8fc80df8bda13aa1406940b5929d78cb0635122d44812b8af280b7c",
+      "size_bytes": 281604
+    },
+    "figures/qc_measures/tsnr_by_subject.png": {
+      "sha256": "f6be2a132bc2ba588139cf59379794d36e337139ae79d0942d31bf28f750cce0",
+      "size_bytes": 161133
+    },
+    "figures/tsnr_maps/all_datasets_avgtsnr.png": {
+      "sha256": "4e8dc5563194db7a77b3bb85d8cf11068b0c990354b5bac881b9dd96e5fe89a8",
+      "size_bytes": 210821
+    },
+    "figures/tsnr_maps/all_datasets_avgtsnr_coronal.png": {
+      "sha256": "f91d288384ba7adc1d646be6285e365905f4d0a1b9823d3fdcca9b90ea7ac514",
+      "size_bytes": 268461
+    },
+    "figures/tsnr_maps/all_datasets_avgtsnr_sagittal.png": {
+      "sha256": "c3b8db5c897a1a84a9c6ddd791fc537c6151ed607186690cb28fbf3a720abe90",
+      "size_bytes": 297168
+    },
+    "figures/tsnr_maps/all_datasets_coverage.png": {
+      "sha256": "2c50988c554cab9a4ff2f68083135c20b617546ded5f2b7322539bded0c568bd",
+      "size_bytes": 189613
+    },
+    "figures/tsnr_maps/all_datasets_coverage_coronal.png": {
+      "sha256": "020d43538751ac8391a790c927a92bc22b05abda1c9bee17ae77357d7ecb9f09",
+      "size_bytes": 485139
+    },
+    "figures/tsnr_maps/all_datasets_coverage_sagittal.png": {
+      "sha256": "a9b80b12494ceec67306f78d0f3d370f4b9969b64d8c786e7b6f5d10baf656a7",
+      "size_bytes": 538020
+    },
+    "figures/tsnr_maps/all_datasets_coverage_thr10.png": {
+      "sha256": "066a43ffdc4297e8e60f3810d0593d208ff05bb7729c3deeeec4be753e304ec3",
+      "size_bytes": 157816
+    },
+    "figures/tsnr_maps/all_datasets_coverage_thr10_coronal.png": {
+      "sha256": "725078ec5ae75b2609f2cd34ac54f63816648a52326f26f957db640bb20b70a7",
+      "size_bytes": 417530
+    },
+    "figures/tsnr_maps/all_datasets_coverage_thr10_sagittal.png": {
+      "sha256": "00e3fac59852a40147ff17cdaec521bdf1baed8cdf4bbd8b9a2a83a5bcd3625c",
+      "size_bytes": 459761
+    },
+    "figures/tsnr_maps/floc_avgtsnr.png": {
+      "sha256": "7ee9fd804f89a8ee871f5e40f34860763eb5a71414ed65a23423ff14506bd985",
+      "size_bytes": 400839
+    },
+    "figures/tsnr_maps/floc_avgtsnr_coronal.png": {
+      "sha256": "1f074c0530e96b551fd5d71fc6e5e495d800ba83c064de255645372338affe97",
+      "size_bytes": 273859
+    },
+    "figures/tsnr_maps/floc_avgtsnr_sagittal.png": {
+      "sha256": "1c97062a58575cd0b658e8ad3541407ba3b5d7bb1006018211638483e3652191",
+      "size_bytes": 300043
+    },
+    "figures/tsnr_maps/floc_coverage.png": {
+      "sha256": "2fbd19e83b4b74316d4cb754e4a946b6711140cd87ccc81e305f07b49c7242d0",
+      "size_bytes": 624427
+    },
+    "figures/tsnr_maps/floc_coverage_coronal.png": {
+      "sha256": "0928a120cbcfc39ca8bd4be6edf0854dfde374c146abb5aff8cd249971caeede",
+      "size_bytes": 442103
+    },
+    "figures/tsnr_maps/floc_coverage_sagittal.png": {
+      "sha256": "d3c3f6b94f6b8f87237cebb02d6d6d32920201546371d00a4d729c42739cc9a2",
+      "size_bytes": 485851
+    },
+    "figures/tsnr_maps/floc_coverage_thr10.png": {
+      "sha256": "4f4189cd7c1c516e88718adfd44820806574c436a61a3717b5b9867f9dd66016",
+      "size_bytes": 566629
+    },
+    "figures/tsnr_maps/floc_coverage_thr10_coronal.png": {
+      "sha256": "62a4e75ca88a4c601a8dc9e5060b2dd6639667ae7ac8dbefc136624f9b2b60dc",
+      "size_bytes": 399719
+    },
+    "figures/tsnr_maps/floc_coverage_thr10_sagittal.png": {
+      "sha256": "4e47b5c044f7b4c596d384f1ac87a62032201784898d5bf85c83eea56e335fe3",
+      "size_bytes": 440238
+    },
+    "figures/tsnr_maps/floc_sub-01_avgtsnr.png": {
+      "sha256": "c39df7b912c557487f2f3bc97eef875edc0bf25b3a536b23c09c52e3f8824010",
+      "size_bytes": 419902
+    },
+    "figures/tsnr_maps/floc_sub-01_avgtsnr_coronal.png": {
+      "sha256": "a265b41e1562e5907f7836829dc28912976157341b79f1af9b1de238821d802f",
+      "size_bytes": 291384
+    },
+    "figures/tsnr_maps/floc_sub-01_avgtsnr_sagittal.png": {
+      "sha256": "af91b866e43d15c920a59d2eea80e2593de98bd62908aee14356854530d4099c",
+      "size_bytes": 309255
+    },
+    "figures/tsnr_maps/floc_sub-02_avgtsnr.png": {
+      "sha256": "0d6d9bedf25eb3b713a8706379c31da5c20a485138efc19f155e65c8f425001f",
+      "size_bytes": 422045
+    },
+    "figures/tsnr_maps/floc_sub-02_avgtsnr_coronal.png": {
+      "sha256": "db61b89d7efae9c1afb0f574539a2fbf00159f12d8a968fee5d0d452d06147e2",
+      "size_bytes": 273693
+    },
+    "figures/tsnr_maps/floc_sub-02_avgtsnr_sagittal.png": {
+      "sha256": "88c2390013f3e115fa06f4f1514113f7f9bf0c2c55b92f8570a678a8ba0413e3",
+      "size_bytes": 291134
+    },
+    "figures/tsnr_maps/floc_sub-03_avgtsnr.png": {
+      "sha256": "132f1186900bd9056dd036187ab9c9eacca63d7e206c6bd2339937246bfdbfb6",
+      "size_bytes": 397783
+    },
+    "figures/tsnr_maps/floc_sub-03_avgtsnr_coronal.png": {
+      "sha256": "5e7327e2e426daa5ed6c0cce39ab8d4cae6b3f4f80a1c1fabef7a85e74dbd8fb",
+      "size_bytes": 262900
+    },
+    "figures/tsnr_maps/floc_sub-03_avgtsnr_sagittal.png": {
+      "sha256": "bd48c80d31490210b9c6cc1137c31805bb805939d5131045d19a1ca339033580",
+      "size_bytes": 286124
+    },
+    "figures/tsnr_maps/retinotopy_avgtsnr.png": {
+      "sha256": "5571870748be5ad220ad0a9a9d0d2fe2cbf68a082e610e2d3d0a615d97573f32",
+      "size_bytes": 403542
+    },
+    "figures/tsnr_maps/retinotopy_avgtsnr_coronal.png": {
+      "sha256": "a6a61e75d8e840bd1a2a95a7d08730ec346a989a7191bc3694738382208e2263",
+      "size_bytes": 278120
+    },
+    "figures/tsnr_maps/retinotopy_avgtsnr_sagittal.png": {
+      "sha256": "a8bda64e73d6c82b27c19b065c107fa565591984e556237e553de69d8d2e4856",
+      "size_bytes": 306308
+    },
+    "figures/tsnr_maps/retinotopy_coverage.png": {
+      "sha256": "c998ccb325ba5afe219ae7a33e3e2636c6e2372723269eab590fa863cebeae62",
+      "size_bytes": 646931
+    },
+    "figures/tsnr_maps/retinotopy_coverage_coronal.png": {
+      "sha256": "913512ff189ec316554e57a73103a118c5837c8f8ff014a4daed92f770eb12b1",
+      "size_bytes": 455103
+    },
+    "figures/tsnr_maps/retinotopy_coverage_sagittal.png": {
+      "sha256": "d33b2f19261796c0f3b4a15d17393fd4884d6cbca211669fcb0feb92daa4a2fc",
+      "size_bytes": 505645
+    },
+    "figures/tsnr_maps/retinotopy_coverage_thr10.png": {
+      "sha256": "e876cc41638f1a644cc61c575d24a01a891cb6a926500092c68bb75ac79d1a98",
+      "size_bytes": 575666
+    },
+    "figures/tsnr_maps/retinotopy_coverage_thr10_coronal.png": {
+      "sha256": "ea199591ebbb63f31031f6c1cfdf6a3b8977dc222f1e26fef3aa4c8ead887546",
+      "size_bytes": 408173
+    },
+    "figures/tsnr_maps/retinotopy_coverage_thr10_sagittal.png": {
+      "sha256": "e58a1d0da34dada55ad313756d890a2fc99d059bff0f094eaa649bd9d83f735e",
+      "size_bytes": 449388
+    },
+    "figures/tsnr_maps/retinotopy_sub-01_avgtsnr.png": {
+      "sha256": "617a3bbfc30509c08b17f58d71288fc5d0b09d842d023118613a965bf96bc325",
+      "size_bytes": 420484
+    },
+    "figures/tsnr_maps/retinotopy_sub-01_avgtsnr_coronal.png": {
+      "sha256": "7943036693ff9c12379e2e4e3a56e3e9d30ba85631fb1de8b2f4a2a5a4885470",
+      "size_bytes": 296460
+    },
+    "figures/tsnr_maps/retinotopy_sub-01_avgtsnr_sagittal.png": {
+      "sha256": "f3b3f99d47e08540a02b42fe2f99d1e3042be297aabcc5f679e53754feac9613",
+      "size_bytes": 313615
+    },
+    "figures/tsnr_maps/retinotopy_sub-02_avgtsnr.png": {
+      "sha256": "b0d5bbfbbf0f28f506ac40d94fb77e98a0f37cc9ae5b0480ff5688f4fa142fa4",
+      "size_bytes": 423807
+    },
+    "figures/tsnr_maps/retinotopy_sub-02_avgtsnr_coronal.png": {
+      "sha256": "d21c34b83967d46eced18d02c623d9b91385cc955d6cdac9e89f4775d0aea413",
+      "size_bytes": 280444
+    },
+    "figures/tsnr_maps/retinotopy_sub-02_avgtsnr_sagittal.png": {
+      "sha256": "33b5154166f433aec763b1588536ee84371c0d04b9d7452296334c8e979f0236",
+      "size_bytes": 297720
+    },
+    "figures/tsnr_maps/retinotopy_sub-03_avgtsnr.png": {
+      "sha256": "32f53da51990dd514dbf018ad302ccab48c6fac0246ffa15c640ecf38218bca8",
+      "size_bytes": 408604
+    },
+    "figures/tsnr_maps/retinotopy_sub-03_avgtsnr_coronal.png": {
+      "sha256": "35acf231e1bd776bd5163d4648733bbfbf7764722c342019292ecd109f70e50f",
+      "size_bytes": 272048
+    },
+    "figures/tsnr_maps/retinotopy_sub-03_avgtsnr_sagittal.png": {
+      "sha256": "fdacf396764636440fb28606d8b2aa993640436ccc5bafe8a98201f68ebce66f",
+      "size_bytes": 295798
+    },
+    "figures/tsnr_maps/retinotopy_sub-05_avgtsnr.png": {
+      "sha256": "849eb9331a261a90a175cf9e0b8ab0b8f971fe6794509ef0543a428ac0874f25",
+      "size_bytes": 437264
+    },
+    "figures/tsnr_maps/retinotopy_sub-05_avgtsnr_coronal.png": {
+      "sha256": "5c5448683a3993f774da8f645c8a56adf854d12bc9d76055411d022a5c0a6e35",
+      "size_bytes": 288972
+    },
+    "figures/tsnr_maps/retinotopy_sub-05_avgtsnr_sagittal.png": {
+      "sha256": "181b450587288eaeeba5976864a6a4eb4180b80f21ecc7b7f57e61458e478bc7",
+      "size_bytes": 319848
+    },
+    "figures/tsnr_maps/things_avgtsnr.png": {
+      "sha256": "e3b567f798081fff06702c9d0316992e648a99011ed2945396055934b116411f",
+      "size_bytes": 374660
+    },
+    "figures/tsnr_maps/things_avgtsnr_coronal.png": {
+      "sha256": "69bd5fff198e240be2466ce576aa78c33d7560723e5a4524d0c106399dcfdfaa",
+      "size_bytes": 259664
+    },
+    "figures/tsnr_maps/things_avgtsnr_sagittal.png": {
+      "sha256": "3523b7348157fec15340502466e3f41c77f4e8607483ebe23603a5f6a3ec0fa1",
+      "size_bytes": 289473
+    },
+    "figures/tsnr_maps/things_coverage.png": {
+      "sha256": "ea6644f6b4823e168feca97dadcfb400e9623c0e3080e3b4bb0a7e5138cf6dbf",
+      "size_bytes": 632160
+    },
+    "figures/tsnr_maps/things_coverage_coronal.png": {
+      "sha256": "da5e183d53894a51cbe7e6883e314a1b02e2dd7b1606353631e9c9afa377e921",
+      "size_bytes": 446673
+    },
+    "figures/tsnr_maps/things_coverage_sagittal.png": {
+      "sha256": "1f76e194c590cbd67254934422bbb66fd8c173ba0478651802ed9ecdf5ceb73a",
+      "size_bytes": 492185
+    },
+    "figures/tsnr_maps/things_coverage_thr10.png": {
+      "sha256": "316fe5bfb43ed23dde0e2dad578d4c63f7f9e9a1416c5469983a87d5983fa430",
+      "size_bytes": 569392
+    },
+    "figures/tsnr_maps/things_coverage_thr10_coronal.png": {
+      "sha256": "4b19ae1011e50b4ea82a869a5f5d34c3d1f74e007e3fef9bf0ff6290fabffbdb",
+      "size_bytes": 403147
+    },
+    "figures/tsnr_maps/things_coverage_thr10_sagittal.png": {
+      "sha256": "cc2e8aefe7bde1ae51ed3a59ab431143d8ce859fac718611aac4dd9c9e844fce",
+      "size_bytes": 443738
+    },
+    "figures/tsnr_maps/things_sub-01_avgtsnr.png": {
+      "sha256": "ba3007df5b7a7d6486d2e99c95eb0958582faf02ffce7852ba5558e2f9c71035",
+      "size_bytes": 395768
+    },
+    "figures/tsnr_maps/things_sub-01_avgtsnr_coronal.png": {
+      "sha256": "7e8041d7eb74efbf30675e35739380be9ab015ef327a653db287a2bfde1aa469",
+      "size_bytes": 278958
+    },
+    "figures/tsnr_maps/things_sub-01_avgtsnr_sagittal.png": {
+      "sha256": "8ad5258dea2ff267baf745e575cd140593576e80a125dd0ea8f582a239b6b272",
+      "size_bytes": 299511
+    },
+    "figures/tsnr_maps/things_sub-02_avgtsnr.png": {
+      "sha256": "34f2baf29ff51693bd1b39b6df1baf169bd80514ffbb1e3a8286699b0f8f844d",
+      "size_bytes": 401128
+    },
+    "figures/tsnr_maps/things_sub-02_avgtsnr_coronal.png": {
+      "sha256": "287b579ec2b769b84e90b5719c201e86182beeff7a3c34f79a9d897f4b1ef510",
+      "size_bytes": 262732
+    },
+    "figures/tsnr_maps/things_sub-02_avgtsnr_sagittal.png": {
+      "sha256": "fb358638439fb5806471027f6d4e63e3ea18dbf9591429c663edd5483a118e03",
+      "size_bytes": 282582
+    },
+    "figures/tsnr_maps/things_sub-03_avgtsnr.png": {
+      "sha256": "2cd4b58743a621a99f5fcaffd4260f8cc2d701b919337119e96c5defd2a23f0e",
+      "size_bytes": 370478
+    },
+    "figures/tsnr_maps/things_sub-03_avgtsnr_coronal.png": {
+      "sha256": "ee39ce1476f208f2781f564bb4e4752db09f36a9048605425cb9c74ea2268269",
+      "size_bytes": 248873
+    },
+    "figures/tsnr_maps/things_sub-03_avgtsnr_sagittal.png": {
+      "sha256": "130e68b243954fa6e89fe3f9c2c0fd6b5e9a90bdc4cf2d8aebbc714da04cf1dc",
+      "size_bytes": 275192
+    },
+    "figures/tsnr_maps/things_sub-06_avgtsnr.png": {
+      "sha256": "295fd8d052d0f4c61b2b9eeae2cd5292cfaa836c2cd5956a2f720a8cebd4b01d",
+      "size_bytes": 401392
+    },
+    "figures/tsnr_maps/things_sub-06_avgtsnr_coronal.png": {
+      "sha256": "5d95e004dad982b802b12b6369f40ff0d341066d002b70f72fc3580eaec12ccb",
+      "size_bytes": 279229
+    },
+    "figures/tsnr_maps/things_sub-06_avgtsnr_sagittal.png": {
+      "sha256": "1fe1fb31ca514b7d4ca436723eaa4a618f1f53d93a47e1c2e824942625622e9f",
+      "size_bytes": 307069
+    },
+    "qa_figure.png": {
+      "sha256": "e19fd8df25b7b3918fc7624fbb3bc8dfe1d9f77afeb2aa42ed9953dab3b184c2",
+      "size_bytes": 1224367
+    },
+    "qa_figure.svg": {
+      "sha256": "99353ee333fd51d157221d13a37428f25c302b987b582d1bb921f58b1d7fb28f",
+      "size_bytes": 50124
+    },
+    "tables/anat.tsv": {
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+      "size_bytes": 1
+    },
+    "tables/atlas_tsnr/emotion-videos.tsv": {
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+      "size_bytes": 1
+    },
+    "tables/atlas_tsnr/floc.tsv": {
+      "sha256": "19e996a54e17fb17881baf2a1fd5a1ac8822cca7094be6188400cbde3024f2e4",
+      "size_bytes": 660
+    },
+    "tables/atlas_tsnr/friends.tsv": {
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+      "size_bytes": 1
+    },
+    "tables/atlas_tsnr/gamepad.tsv": {
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+      "size_bytes": 1
+    },
+    "tables/atlas_tsnr/harrypotter.tsv": {
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+      "size_bytes": 1
+    },
+    "tables/atlas_tsnr/hcptrt.tsv": {
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+      "size_bytes": 1
+    },
+    "tables/atlas_tsnr/langlocalizer.tsv": {
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+      "size_bytes": 1
+    },
+    "tables/atlas_tsnr/mario.tsv": {
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+      "size_bytes": 1
+    },
+    "tables/atlas_tsnr/mario3.tsv": {
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+      "size_bytes": 1
+    },
+    "tables/atlas_tsnr/mariostars.tsv": {
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+      "size_bytes": 1
+    },
+    "tables/atlas_tsnr/movie10.tsv": {
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+      "size_bytes": 1
+    },
+    "tables/atlas_tsnr/multfs.tsv": {
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+      "size_bytes": 1
+    },
+    "tables/atlas_tsnr/mutemusic.tsv": {
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+      "size_bytes": 1
+    },
+    "tables/atlas_tsnr/narratives.tsv": {
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+      "size_bytes": 1
+    },
+    "tables/atlas_tsnr/ood.tsv": {
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+      "size_bytes": 1
+    },
+    "tables/atlas_tsnr/petit-prince.tsv": {
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+      "size_bytes": 1
+    },
+    "tables/atlas_tsnr/retinotopy.tsv": {
+      "sha256": "ab54b5dd97339ac01e79082c73ea4da9c64ac44afab6d346dadbbc8e5c5e2ba7",
+      "size_bytes": 44836
+    },
+    "tables/atlas_tsnr/shinobi.tsv": {
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+      "size_bytes": 1
+    },
+    "tables/atlas_tsnr/things.tsv": {
+      "sha256": "03e6bf5584da23313197ffcb79f5ecca310be9638a523aa760ce94984b0737a1",
+      "size_bytes": 529201
+    },
+    "tables/atlas_tsnr/triplets.tsv": {
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+      "size_bytes": 1
+    },
+    "tables/emotion-videos.tsv": {
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+      "size_bytes": 1
+    },
+    "tables/floc.tsv": {
+      "sha256": "453eff13e9ea07c054f02233553c1e5853037118b055bdca83fb358681168a9b",
+      "size_bytes": 412
+    },
+    "tables/friends.tsv": {
+      "sha256": "6a85717dd239fa7f097117b4e7b90c4cc9c3d711eb6a3404e569d20840b6ec03",
+      "size_bytes": 141536
+    },
+    "tables/gamepad.tsv": {
+      "sha256": "df154aa42dcf763198d405c1997ffc672358d81c0a70239ba8f8d676d00ccd11",
+      "size_bytes": 9444
+    },
+    "tables/harrypotter.tsv": {
+      "sha256": "4dd553c72dcb591ca617b5ef3af6ed47ea0d53d5c34c5cf0245f17205f107d8a",
+      "size_bytes": 10378
+    },
+    "tables/hcptrt.tsv": {
+      "sha256": "233d017268c8cebf1243d8b3e2701979ac3b89cf7967fc323258034adc2aa77b",
+      "size_bytes": 175959
+    },
+    "tables/langlocalizer.tsv": {
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+      "size_bytes": 1
+    },
+    "tables/mario.tsv": {
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+      "size_bytes": 1
+    },
+    "tables/mario3.tsv": {
+      "sha256": "bd6733045df0df55b66edd232ef3d064e90c16e6739a72df8f358c17f67a5cd0",
+      "size_bytes": 94499
+    },
+    "tables/mariostars.tsv": {
+      "sha256": "277f42d10b4db50318df946720292e3af3a62dfe624ccb662659bafdcb6d6db0",
+      "size_bytes": 53777
+    },
+    "tables/movie10.tsv": {
+      "sha256": "d28286fea1437624368f44ffbd04867596684d11b12e971dcc0fa991d24ff5db",
+      "size_bytes": 91087
+    },
+    "tables/multfs.tsv": {
+      "sha256": "c1230b531d240f68ca400c87ec4603b9655e32f1811c44d02abece9953bbd2b5",
+      "size_bytes": 89188
+    },
+    "tables/mutemusic.tsv": {
+      "sha256": "1c3711d81de303d8c9e1579b9e47b2fcf9b8aa3d8759373d253a01cb8f770020",
+      "size_bytes": 26455
+    },
+    "tables/narratives.tsv": {
+      "sha256": "3fb63dcc6b63b882d189e8b20c2db93347be14ff8435d37aa61bf8025d3e51da",
+      "size_bytes": 96112
+    },
+    "tables/ood.tsv": {
+      "sha256": "b3ba8916e48fc47bd124eb2d66ec07eaf47df2696f9b00f0c6680243873bde19",
+      "size_bytes": 13741
+    },
+    "tables/petit-prince.tsv": {
+      "sha256": "7702239654569492b86d568edc032d099ff2f21a60de9051d4817243dc3ff9cb",
+      "size_bytes": 24753
+    },
+    "tables/retinotopy.tsv": {
+      "sha256": "d46df7386024862f6fad3bb073fe8dafc29939deecab6064f6358bacc7c2cac5",
+      "size_bytes": 18437
+    },
+    "tables/shinobi.tsv": {
+      "sha256": "9ec8ec3a9a75c63c1cd8c758ccf7bb8bc546966ce6eb12d4fe48614205697ef1",
+      "size_bytes": 59646
+    },
+    "tables/things.tsv": {
+      "sha256": "7cd5d6a15261081f5c46ae177b477cfe45615eb8b7876e4ca39deeeaf137b9b9",
+      "size_bytes": 224937
+    },
+    "tables/triplets.tsv": {
+      "sha256": "205e027e84a0e88182b6ed9c2c9d89fddeb20ba263d972b2d4ad7f29d344adb3",
+      "size_bytes": 92911
+    }
+  },
+  "recorded_at": "2026-08-04T00:25:28+00:00",
+  "repository": {
+    "branch": "figures-migration",
+    "commit": "0f961783190262c9709712f90d97e22e0c671a59",
+    "dirty": true,
+    "remote": "git@github.com:courtois-neuromod/cneuromod.all.qa_figures.git",
+    "toplevel": "/home/pbellec/git/cneuromod.all.qa_figures"
+  },
+  "schema": "airoh/provenance/1",
+  "tasks": [
+    "run-qc-measures",
+    "run-atlas-tsnr",
+    "run-figure-layout",
+    "run-notebooks",
+    "export-figure"
+  ]
+}

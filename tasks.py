@@ -42,7 +42,7 @@ def _ensure_marker_submodule(cneuromod_dir, dataset, marker, strict=False):
     only, no content), so newly-added upstream files surface on a repeat
     ``fetch`` without a full reinstall.
     """
-    from analysis.datalad_utils import install_subdataset
+    from airoh.datalad import install_subdataset
 
     install_subdataset(
         f"{dataset}/{marker}", Path(cneuromod_dir).resolve(), strict=strict
@@ -118,12 +118,17 @@ def fetch(c, source=None, dataset=None, subject=None, session=None, skip_inacces
     (../cneuromod.all by default), or clone the remote when no local checkout
     exists.
 
-    Then, by default, install every dataset's mriqc subdataset and `datalad get`
-    only the small text files the pipeline needs — MRIQC *_bold.json and
-    *_timeseries.tsv — so a fresh clone is ready for `run` offline. No *.nii.gz
-    is ever retrieved. Pass --dataset/--subject/--session to narrow that
-    retrieval to a slice. Tolerant of partly-public data: inaccessible content
-    only warns, never aborts (the run steps re-`datalad get` on demand anyway).
+    Then install each dataset's mriqc and tsnr subdatasets and `datalad get`
+    every small file the pipeline reads, so a fresh clone is ready for `run`
+    offline: the MRIQC *_bold.json and *_timeseries.tsv text files, the
+    per-subject stat-avgtsnr maps, and the per-run stat-tsnr maps. Separately,
+    it installs the dataset-root-level anat/atlases subdataset and fetches the
+    one shared combined-atlas volume and its label TSV. Those MNI *.nii.gz maps
+    and that single atlas file are the only image content retrieved — never T1w,
+    never fMRIPrep. Pass --dataset/--subject/--session to narrow the per-dataset
+    retrieval to a slice (the shared atlas fetch is unaffected). Tolerant of
+    partly-public data: inaccessible content only warns, never aborts — `run`
+    then warns and skips for whatever is missing, since no run step ever fetches.
     Files that fail are remembered (source_data/.fetch_failures.json); by
     default every fetch still retries them (access can be granted later), but
     pass --skip-inaccessible once you know a file is permanently out of reach
@@ -148,6 +153,9 @@ def fetch(c, source=None, dataset=None, subject=None, session=None, skip_inacces
     )
 
     fetch_mni152(c)
+
+    from airoh.provenance import record_sources
+    record_sources(c)
 
     print("✅ fetch complete.")
 
@@ -231,14 +239,6 @@ def run_atlas_tsnr(c, dataset=None, smoke=False, strict=False):
 # --------------------------------------------------------------------------- #
 # Composed figure
 # --------------------------------------------------------------------------- #
-def _figure_paths(c):
-    """``(svg, png, panel_sizes_json)`` for the hand-authored montage."""
-    svg = Path(c.config.get("figure_svg", "output_data/qa_figure.svg"))
-    png = Path(c.config.get("figure_png", "output_data/qa_figure.png"))
-    panel_sizes = Path(c.config.get("figures_dir")) / "panel_sizes.json"
-    return svg, png, panel_sizes
-
-
 @task
 def run_figure_layout(c):
     """Export the montage's panel geometry to figures/panel_sizes.json.
@@ -248,10 +248,8 @@ def run_figure_layout(c):
     re-run, never skipped: it is cheap, and a box resized in Inkscape must take
     effect on the very next `invoke run`.
     """
-    from analysis.figure_layout import write_panel_sizes
-
-    svg, _, panel_sizes = _figure_paths(c)
-    write_panel_sizes(svg, panel_sizes)
+    from airoh.figures import figure_layout
+    figure_layout(c)
 
 
 @task
@@ -264,41 +262,8 @@ def export_figure(c):
     than failing the run. Skipped when the PNG is already newer than the SVG and
     every panel it links.
     """
-    import shutil
-    import subprocess
-
-    from analysis.figure_layout import read_panel_sizes
-
-    svg, png, _ = _figure_paths(c)
-    dpi = c.config.get("figure_export_dpi", 300)
-    if not svg.is_file():
-        print(f"⚠️  No montage at {svg} — nothing to export")
-        return
-    if shutil.which("inkscape") is None:
-        print("⚠️  Inkscape not found on PATH — skipping the figure export. "
-              f"Install it (https://inkscape.org/release/), or open {svg} and "
-              "export the PNG from the GUI.")
-        return
-
-    # The montage links its panels by relative path, so the sources to compare
-    # against are the SVG itself plus every panel it places.
-    figures_dir = Path(c.config.get("figures_dir"))
-    sources = [svg] + [figures_dir / name for name in read_panel_sizes(svg)]
-    newest_source = max((p.stat().st_mtime for p in sources if p.is_file()), default=0)
-    if png.is_file() and png.stat().st_mtime >= newest_source:
-        print(f"⏭️  {png} is up to date")
-        return
-
-    result = subprocess.run(
-        ["inkscape", "--export-type=png", f"--export-filename={png}",
-         f"--export-dpi={dpi}", str(svg)],
-        capture_output=True, text=True,
-    )
-    if result.returncode != 0:
-        print(f"⚠️  Inkscape export failed ({result.stderr.strip()}) — open {svg} "
-              "and export the PNG from the GUI instead.")
-        return
-    print(f"🖼️  Exported {png} at {dpi} dpi")
+    from airoh.figures import compose_figure
+    compose_figure(c)
 
 
 # --------------------------------------------------------------------------- #
@@ -325,7 +290,8 @@ def run_notebooks(c):
     # the per-notebook "already ran" sentinel — kept separate from the data dir
     # output_data/tables/.
     airoh_run_notebooks(
-        c, notebooks_dir, figures_base, keys=["source_data_dir", "output_data_dir"]
+        c, notebooks_dir, figures_base,
+        keys=["source_data_dir", "output_data_dir", "figures_dir"],
     )
 
 
@@ -341,8 +307,9 @@ def run_notebooks(c):
              "end (non-zero exit if nothing is extracted). Defaults --dataset to "
              "`smoke_dataset`.",
     "strict": "Raise on any retrieval/extraction failure instead of warning.",
+    "force": "Delete every computed output first, then run from scratch.",
 })
-def run(c, dataset=None, smoke=False, strict=False):
+def run(c, dataset=None, smoke=False, strict=False, force=False):
     """Full pipeline: check inputs present → qc-measures → figures.
 
     ``run`` does NOT pull data: it reads only the files ``invoke fetch`` already
@@ -362,6 +329,13 @@ def run(c, dataset=None, smoke=False, strict=False):
     if smoke and not dataset:
         dataset = c.config.get("smoke_dataset", "floc")
 
+    if force:
+        # Every step caches on output existence, so an edited script or notebook
+        # is skipped rather than redone. This is the documented way out; to redo
+        # a single step, call its `clean-{name}` task instead.
+        print("💥 --force: removing every computed output before running")
+        clean(c)
+
     if smoke:
         # Smoke is a self-contained end-to-end test, so it fetches its one
         # dataset before running. Every other path is fetch-free: `run` only
@@ -377,6 +351,10 @@ def run(c, dataset=None, smoke=False, strict=False):
     run_figure_layout(c)
     run_notebooks(c)
     export_figure(c)
+
+    from airoh.provenance import record_run
+    record_run(c, tasks="run-qc-measures,run-atlas-tsnr,run-figure-layout,"
+                        "run-notebooks,export-figure")
 
     if not smoke:
         print("all analyses completed")
@@ -412,6 +390,26 @@ def run(c, dataset=None, smoke=False, strict=False):
 
 
 # --------------------------------------------------------------------------- #
+# Verification
+# --------------------------------------------------------------------------- #
+@task(help={
+    "skip": "Comma-separated check names to skip.",
+    "strict": "Treat warnings as failures.",
+})
+def verify(c, skip=None, strict=False):
+    """Check that the code, config, data and docs still agree.
+
+    Run before committing. Deliberately NOT part of `run`: reproducing figures
+    must not depend on documentation hygiene. The checks are mechanical — for
+    claims only prose can make ("this step never pulls data", "the threshold is
+    30"), use the `/verify` skill, which runs these first and then reads the
+    docs against the code.
+    """
+    from airoh.verify import verify as airoh_verify
+    airoh_verify(c, skip=skip, strict=strict)
+
+
+# --------------------------------------------------------------------------- #
 # Clean
 # --------------------------------------------------------------------------- #
 @task
@@ -443,17 +441,23 @@ def clean_figure(c):
     *source*, despite living in output_data/ (its relative image links resolve
     from there).
     """
-    _, png, panel_sizes = _figure_paths(c)
-    for path in (png, panel_sizes):
-        if path.is_file():
-            path.unlink()
-            print(f"🧹 Removed {path}")
+    from airoh.figures import clean_figure as airoh_clean_figure
+    airoh_clean_figure(c)
 
 
-@task(pre=[clean_qc_measures, clean_atlas_tsnr, clean_figures, clean_figure])
+@task
 def clean(c):
-    """Remove all computed outputs."""
-    pass
+    """Remove all computed outputs.
+
+    The steps run in the body rather than as `pre=`, because a `pre=` chain only
+    fires when invoke runs the task from the command line. `run --force` calls
+    `clean(c)` from Python, and would otherwise execute an empty function —
+    deleting nothing, silently, while printing success.
+    """
+    clean_qc_measures(c)
+    clean_atlas_tsnr(c)
+    clean_figures(c)
+    clean_figure(c)
 
 
 @task

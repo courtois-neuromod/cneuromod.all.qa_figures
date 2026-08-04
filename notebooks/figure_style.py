@@ -1,20 +1,20 @@
-"""House figure style and on-page panel sizing, shared by every QA notebook.
+"""House figure style, shared by every QA notebook.
 
 Lives next to the notebooks rather than in `analysis/` because nbconvert runs
 them with `notebooks/` as the cwd, so the `analysis` package is not importable
 there — the same constraint that makes `tsnr_maps.ipynb` duplicate its `SPACE`
 constants. A plain sibling module sidesteps it.
 
-Two jobs:
+The palette and `style_axes` chrome used to be copy-pasted into three
+notebooks; this module is the one place they're defined, plus a font scale
+sized for the final page rather than for a screen.
 
-1. **One style for every panel** — the palette and `style_axes` chrome that used
-   to be copy-pasted into three notebooks, plus a font scale sized for the final
-   page rather than for a screen.
-2. **True on-page sizing** — `panel_size` returns the physical box the hand-
-   authored Inkscape montage (`output_data/qa_figure.svg`) allocates to a panel,
-   read from the `panel_sizes.json` that `invoke run-figure-layout` writes. Each
-   panel is therefore rendered at exactly the size it is placed at, so text lands
-   on the page at the size it was authored in and is never stretched.
+On-page panel sizing (`panel_size`, `MM_PER_INCH`) now lives in
+`airoh.figures`, re-exported below for the notebooks' existing `panel()`
+helpers. That module returns the physical box the hand-authored Inkscape
+montage (`output_data/qa_figure.svg`) allocates to a panel, read from the
+`panel_sizes.json` that `invoke run-figure-layout` writes, so a panel renders
+at exactly the size it is placed at and its text is never stretched.
 
 Two rules go with that and must be kept: save at `PAGE_DPI`, and never pass
 `bbox_inches="tight"` — tight cropping resizes the canvas after the fact, which
@@ -22,11 +22,8 @@ is precisely what made the saved size unpredictable. Use `layout="constrained"`
 instead to reclaim margins inside the fixed canvas.
 """
 
-import json
-import os
-from pathlib import Path
-
 import matplotlib.pyplot as plt
+from airoh.figures import MM_PER_INCH, panel_size  # noqa: F401
 from matplotlib.patches import Rectangle
 
 # --- House figure style (dataviz skill) --------------------------------------
@@ -69,7 +66,6 @@ GROUP_COLORS = {
 # are only ~30 mm tall, and a rotated label longer than the axes is silently
 # clipped at the figure edge — constrained layout cannot shrink a fixed canvas.
 PAGE_DPI = 300
-MM_PER_INCH = 25.4
 FONT_SIZES = {
     "font.size": 8,
     "axes.labelsize": 8,
@@ -133,39 +129,6 @@ def overlay_median_iqr(ax, data, x, y, order, width=0.08, offset=0.02, color=Non
         ax.hlines(median, left, left + width, color=color, linewidth=1.0,
                   zorder=6)
     return ax
-
-
-# --- On-page panel sizing ----------------------------------------------------
-_PANEL_SIZES_CACHE = None
-
-
-def _panel_sizes():
-    """The `{panel: (width_mm, height_mm)}` map written by `run-figure-layout`."""
-    global _PANEL_SIZES_CACHE
-    if _PANEL_SIZES_CACHE is None:
-        output_dir = Path(os.environ.get("OUTPUT_DATA_DIR", "../output_data"))
-        path = output_dir / "figures" / "panel_sizes.json"
-        try:
-            _PANEL_SIZES_CACHE = json.loads(path.read_text())
-        except (OSError, ValueError):
-            print(f"⚠️  no panel sizes at {path} — run `invoke run-figure-layout` "
-                  "to size panels from the montage; using default figure sizes.")
-            _PANEL_SIZES_CACHE = {}
-    return _PANEL_SIZES_CACHE
-
-
-def panel_size(name, default):
-    """Figure size in inches for the panel placed as `name` in the montage.
-
-    `name` is the panel's path relative to `output_data/figures/`, e.g.
-    `qc_measures/fd_mean_by_dataset.png`. Panels the montage does not place
-    (per-subject montages, exploratory figures) keep `default`, so every
-    notebook still runs standalone before any montage exists.
-    """
-    size_mm = _panel_sizes().get(name)
-    if size_mm is None:
-        return default
-    return (size_mm[0] / MM_PER_INCH, size_mm[1] / MM_PER_INCH)
 
 
 def montage_font_sizes(width_in, reference_in=4.13):

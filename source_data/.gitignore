@@ -2,3 +2,6 @@ cneuromod.all
 nilearn
 .fetch_failures.json
 
+# Provenance is tracked: it pins the cneuromod.all commit each run actually read.
+!MANIFEST.json
+
