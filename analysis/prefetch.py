@@ -21,13 +21,12 @@ subdataset and fetches the single shared combined-atlas volume + label TSV that
 
 from pathlib import Path
 
+from airoh.datalad import load_known_failures, prefetch_pattern, save_known_failures
 from bids.layout import parse_file_entities
 
 from analysis.atlas_labels import ATLAS_GLOB
 from analysis.atlas_tsnr import RUN_TSNR_GLOB
-from analysis.datalad_utils import datalad_get
 from analysis.datasets import list_datasets
-from analysis.fetch_state import load_known_failures, save_known_failures
 from analysis.tsnr_maps import SUBJECT_AVG_GLOB
 
 # (subdataset marker, [file globs]) to prefetch — the small files the analysis
@@ -79,15 +78,16 @@ def prefetch_slice(cneuromod_dir, datasets, subjects, sessions, ensure_submodule
     caller supplies to initialize each derivative git submodule before it is
     globbed (the invoke task provides it; see ``tasks.py``). Kept as a callback so
     this module stays free of the invoke ``Context``. Best-effort throughout —
-    inaccessible content only warns (see ``analysis.datalad_utils``).
+    inaccessible content only warns (see ``airoh.datalad``).
 
     By default every matching-but-missing file is attempted on every call, even
     one that failed last time (some CNeuroMod content lives only on
     credentialed remotes a given environment can never reach, so a file that
     failed once will keep failing — but access can also be granted later, so
     always retrying is the safe default). Files that fail are remembered (see
-    ``analysis.fetch_state``) regardless. Pass ``skip_inaccessible=True`` to
-    skip anything in that cache instead of re-attempting it — worthwhile once
+    ``airoh.datalad.load_known_failures``/``save_known_failures``) regardless.
+    Pass ``skip_inaccessible=True`` to skip anything in that cache instead of
+    re-attempting it — worthwhile once
     you've confirmed a given file is permanently out of reach and don't want to
     keep paying its retrieval cost (each credentialed-remote attempt costs
     real time, e.g. ~3s per file) on every routine fetch. The cache is
@@ -157,38 +157,14 @@ def prefetch_atlases(cneuromod_dir, ensure_submodule=None, skip_inaccessible=Fal
 def _prefetch_target(root, dataset, marker, pattern, subjects, sessions, skip_set):
     """Glob the (already-initialized) marker tree, get missing matching files.
 
-    Returns ``(already_present, newly_fetched, skipped, new_failures, resolved)``:
-    counts of files already on disk and newly fetched, a count of files skipped
-    because their root-relative path is in ``skip_set`` (previously failed), and
-    the sets of root-relative paths that newly failed or newly succeeded this
-    call (for the caller to update its failure cache). Files already present
-    are never re-requested; among the rest, only those not in ``skip_set`` are
-    handed to ``datalad get``.
+    BIDS-specific thin wrapper around ``airoh.datalad.prefetch_pattern``: it
+    narrows the generic glob-and-fetch core to this project's subject/session
+    filter via ``_matches``. See ``prefetch_pattern`` for the return shape.
 
     The ``{dataset}/{marker}`` submodule is initialized by the caller's
     ``ensure_submodule`` callback (see ``prefetch_slice``) before this runs.
     """
-    marker_dir = root / dataset / marker
-    if not marker_dir.is_dir():
-        return 0, 0, 0, set(), set()
-
-    matched = [p for p in marker_dir.rglob(pattern) if _matches(p, subjects, sessions)]
-    rel_paths = {p: str(p.relative_to(root)) for p in matched}
-    missing = [p for p in matched if not p.is_file()]
-    already_present = len(matched) - len(missing)
-
-    to_attempt = [p for p in missing if rel_paths[p] not in skip_set]
-    skipped = len(missing) - len(to_attempt)
-
-    if to_attempt:
-        datalad_get([p.relative_to(root) for p in to_attempt], root)
-
-    newly_fetched, new_failures, resolved = 0, set(), set()
-    for p in to_attempt:
-        if p.is_file():
-            newly_fetched += 1
-            resolved.add(rel_paths[p])
-        else:
-            new_failures.add(rel_paths[p])
-
-    return already_present, newly_fetched, skipped, new_failures, resolved
+    return prefetch_pattern(
+        root, pattern, subdir=f"{dataset}/{marker}", skip_set=skip_set,
+        match=lambda p: _matches(p, subjects, sessions),
+    )

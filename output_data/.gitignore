@@ -5,3 +5,7 @@
 # montages are rendered straight from source_data and never persisted here),
 # but keep this as a safety net against a stray large binary being committed.
 *.nii.gz
+
+# Provenance is a tracked output: it is the record of what produced everything
+# else here. It changes on every run, by design.
+!PROVENANCE.json

@@ -1,0 +1,38 @@
+{
+  "assets": {
+    "cneuromod_all": {
+      "datalad_id": "8d29aa4a-b016-4e8e-ac87-fa9b8b8a9359",
+      "declared_source": "../cneuromod.all",
+      "exists": true,
+      "git": {
+        "branch": "issue11_automate_dataset_info",
+        "commit": "87ad08a00f9883fcfe20a18ebc0b2e64791f9238",
+        "dirty": true,
+        "remote": "git@github.com:courtois-neuromod/cneuromod.all.git",
+        "toplevel": "/home/pbellec/git/cneuromod.all"
+      },
+      "is_symlink": true,
+      "mode": "symlink",
+      "mtime": "2026-07-26T01:31:09+00:00",
+      "path": "source_data/cneuromod.all",
+      "resolved_path": "/home/pbellec/git/cneuromod.all",
+      "sha256": null,
+      "size_bytes": null
+    },
+    "nilearn": {
+      "datalad_id": null,
+      "declared_source": null,
+      "exists": true,
+      "git": null,
+      "is_symlink": false,
+      "mode": "local",
+      "mtime": "2026-07-27T16:50:48+00:00",
+      "path": "source_data/nilearn",
+      "resolved_path": "/home/pbellec/git/cneuromod.all.qa_figures/source_data/nilearn",
+      "sha256": null,
+      "size_bytes": null
+    }
+  },
+  "recorded_at": "2026-08-03T02:30:01+00:00",
+  "schema": "airoh/manifest/1"
+}

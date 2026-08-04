@@ -119,12 +119,21 @@ the files `fetch` already retrieved and calls no `datalad get`, so it is fast an
 offline. **Run `invoke fetch` first**: any dataset whose input is missing is
 warned-and-skipped (an empty table), pointing you back at `fetch`. Steps that
 already produced output are skipped, so re-running only recomputes what is
-missing. To force a full rerun:
+missing.
+
+That caching is by file existence, not by content: **a notebook or script you
+just edited will still be skipped**, because its old output is sitting there. To
+force a full rerun:
 
 ```bash
-uv run invoke clean
-uv run invoke run
+uv run invoke run --force     # clean everything, then run from scratch
 ```
+
+To redo one step, remove just its outputs and run again — e.g.
+`uv run invoke clean-figures && uv run invoke run`.
+
+`run` also writes `output_data/PROVENANCE.json`: the project commit, the
+environment, the `cneuromod.all` commit it read, and a checksum of every output.
 
 For a fast end-to-end check that exercises the whole pipeline on a single
 dataset known to have functional MRIQC data (default `hcptrt`, configurable via
@@ -156,14 +165,15 @@ The list below should match `invoke --list`.
 
 | Task                | Description                                                        |
 | ------------------- | ------------------------------------------------------------------ |
-| `fetch`             | Make `cneuromod.all` available, then retrieve all input files: MRIQC text (`*_bold.json`, `*_timeseries.tsv`) + the small avgtsnr MNI `.nii.gz`, plus the MNI152 template (`fetch-mni152`); narrow with `--dataset`/`--subject`/`--session` |
+| `fetch`             | Make `cneuromod.all` available, then retrieve all input files: MRIQC text (`*_bold.json`, `*_timeseries.tsv`), the per-subject avgtsnr and per-run tsnr MNI `.nii.gz`, the shared combined atlas, and the MNI152 template (`fetch-mni152`); records `source_data/MANIFEST.json`; narrow with `--dataset`/`--subject`/`--session` |
 | `fetch-mni152`      | Download (or reuse the cached) ICBM152 2009 MNI template + brain mask under `source_data/nilearn/`, used as the tSNR coverage montages' anatomical background/brain restriction |
 | `run-qc-measures`   | Extract per-run MRIQC metrics per dataset (`--dataset`) from files already fetched; skips datasets already done |
 | `run-atlas-tsnr`    | Extract per-run tSNR per region group (7 Yeo networks, cerebellum, 3 subcortical structures) against the shared MNI combined atlas, one table per dataset (`--dataset`) |
 | `run-figure-layout` | Read each panel's placed size out of `output_data/qa_figure.svg` into `output_data/figures/panel_sizes.json`, so the notebooks render every panel at its true on-page size. Always re-runs |
 | `run-notebooks`     | Execute notebooks, saving QA figures to `output_data/figures/`     |
 | `export-figure`     | Render `output_data/qa_figure.svg` to `qa_figure.png` at 300 dpi with the Inkscape CLI. Skipped when the PNG is newer than the SVG and every panel it links; warns and exits 0 when Inkscape is not installed |
-| `run`               | Full pipeline (ensure `cneuromod.all` available → `run-qc-measures` → `run-atlas-tsnr` → `run-figure-layout` → `run-notebooks` → `export-figure`); **never pulls data** — reads only what `fetch` retrieved; scope with `--dataset`, or `--smoke` for a strict minimal end-to-end test (default `floc`; fetches its one dataset then fails non-zero if nothing is extracted) |
+| `run`               | Full pipeline (ensure `cneuromod.all` available → `run-qc-measures` → `run-atlas-tsnr` → `run-figure-layout` → `run-notebooks` → `export-figure`); **never pulls data** — reads only what `fetch` retrieved; records `output_data/PROVENANCE.json`; scope with `--dataset`, rebuild with `--force`, or `--smoke` for a strict minimal end-to-end test (default `floc`; fetches its one dataset then fails non-zero if nothing is extracted) |
+| `verify`            | Check that code, config, data and docs still agree — task list vs README, `requirements.txt` vs `pyproject.toml`, documented paths, each data folder vs its `CONTENT.md`, config keys, tracked file sizes, provenance freshness, ruff. Exits non-zero on drift; not part of `run` |
 | `clean`             | Remove all computed outputs                                        |
 | `clean-qc-measures` | Remove QC-metric tables                                            |
 | `clean-atlas-tsnr`  | Remove the region-group atlas-tSNR tables                          |
