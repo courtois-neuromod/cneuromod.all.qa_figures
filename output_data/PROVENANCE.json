@@ -3,7 +3,7 @@
   "environment": {
     "lockfiles": {
       "requirements.txt": "714c20031479d767b843b174498922fbd0ed7629a936fc9eb4dc613533a17623",
-      "uv.lock": "6d97c1d660a349a884b7111b11626dbd716778ab223722202033f39ee1878927"
+      "uv.lock": "7c87b5ad18f97fc8e9b405c1c7b019eabbbffc3ae6686f634146e48e157e4a2e"
     },
     "packages": {
       "airoh": "0.5.0",
@@ -48,8 +48,8 @@
       "size_bytes": 257775
     },
     "figures/atlas_tsnr/tsnr_by_region_group.png": {
-      "sha256": "2b580160f5da8b6a8f1e14b519fefcfc5060debf6de9d2a06809021f67a6b2e1",
-      "size_bytes": 196159
+      "sha256": "88eccfc8ac03ae1fb202a6a4532665cc0cfa02845ab17fbf3395dde9045062fb",
+      "size_bytes": 196034
     },
     "figures/motion_bands/motion_bands_by_dataset_subject.png": {
       "sha256": "7c908e2e64ccd805169dbe275ace9ad382f1f1f213baf9ec91e91c257fa476cd",
@@ -64,28 +64,28 @@
       "size_bytes": 767
     },
     "figures/qc_measures/fd_mean_by_dataset.png": {
-      "sha256": "a08cb3f4ddf7720ee79dfe68e06cec4c40de4dd534fb9aa72d9a7bc2bcab5dc6",
-      "size_bytes": 234039
+      "sha256": "7ff8b849112bfb83b41b70caa9e70d50902fbd1266f5a772bafcba549214da85",
+      "size_bytes": 234220
     },
     "figures/qc_measures/fd_mean_by_subject.png": {
-      "sha256": "ed4dd4e21267728b3999f621a9c63c1e1d931020abda192b58d64db9d1726ef2",
-      "size_bytes": 68382
+      "sha256": "f4bd6ad46fe7a56e119537b9d50a73fe5e411cc9df60e4d6052d96bcec008198",
+      "size_bytes": 68439
     },
     "figures/qc_measures/fd_prop_gt02_by_subject.png": {
-      "sha256": "d720aaaabb37d5177d3d414d68c2fb3428197272a0501e53231bda7af89ad807",
-      "size_bytes": 73182
+      "sha256": "2dde1d1048742705ed27cb51a3402f3f0763c05c519584018f2940ed3e90c001",
+      "size_bytes": 73353
     },
     "figures/qc_measures/fd_prop_gt05_by_subject.png": {
-      "sha256": "b0e0c0d64fa0bbcc4e2abaf34f62237a8200040f2a7fa65f28823f65c76fc46a",
-      "size_bytes": 47912
+      "sha256": "917520d5fe65103fc1658295651e39669fd6872a21b87172818ff1888e7cfb7c",
+      "size_bytes": 48245
     },
     "figures/qc_measures/fd_vs_tsnr.png": {
       "sha256": "78ebe364c8fc80df8bda13aa1406940b5929d78cb0635122d44812b8af280b7c",
       "size_bytes": 281604
     },
     "figures/qc_measures/tsnr_by_subject.png": {
-      "sha256": "f6be2a132bc2ba588139cf59379794d36e337139ae79d0942d31bf28f750cce0",
-      "size_bytes": 161133
+      "sha256": "755544056f368bd425858926bef454aff9c5433ebdad0877e7e8f65efc748dcf",
+      "size_bytes": 162108
     },
     "figures/tsnr_maps/all_datasets_avgtsnr.png": {
       "sha256": "4e8dc5563194db7a77b3bb85d8cf11068b0c990354b5bac881b9dd96e5fe89a8",
@@ -364,8 +364,8 @@
       "size_bytes": 307069
     },
     "qa_figure.png": {
-      "sha256": "e19fd8df25b7b3918fc7624fbb3bc8dfe1d9f77afeb2aa42ed9953dab3b184c2",
-      "size_bytes": 1224367
+      "sha256": "ace96e76fd0e4ec38be67aaa38da8c8bd06b8e6571197e5b370bdb9495b0193a",
+      "size_bytes": 1946441
     },
     "qa_figure.svg": {
       "sha256": "99353ee333fd51d157221d13a37428f25c302b987b582d1bb921f58b1d7fb28f",
@@ -380,8 +380,8 @@
       "size_bytes": 1
     },
     "tables/atlas_tsnr/floc.tsv": {
-      "sha256": "19e996a54e17fb17881baf2a1fd5a1ac8822cca7094be6188400cbde3024f2e4",
-      "size_bytes": 660
+      "sha256": "c324d1e076e7b591c99b5d0b3d528663426e2a61bfca9716ddcb451906cb61d6",
+      "size_bytes": 21853
     },
     "tables/atlas_tsnr/friends.tsv": {
       "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
@@ -460,8 +460,8 @@
       "size_bytes": 1
     },
     "tables/floc.tsv": {
-      "sha256": "453eff13e9ea07c054f02233553c1e5853037118b055bdca83fb358681168a9b",
-      "size_bytes": 412
+      "sha256": "4d477b8027a448793c00201a3324c42a084ab49d24285dca6d006fffa29db996",
+      "size_bytes": 10125
     },
     "tables/friends.tsv": {
       "sha256": "6a85717dd239fa7f097117b4e7b90c4cc9c3d711eb6a3404e569d20840b6ec03",
@@ -536,10 +536,10 @@
       "size_bytes": 92911
     }
   },
-  "recorded_at": "2026-08-04T00:25:28+00:00",
+  "recorded_at": "2026-08-04T15:13:16+00:00",
   "repository": {
-    "branch": "figures-migration",
-    "commit": "0f961783190262c9709712f90d97e22e0c671a59",
+    "branch": "main",
+    "commit": "251151ac6014e716af186c863b118ebce3352969",
     "dirty": true,
     "remote": "git@github.com:courtois-neuromod/cneuromod.all.qa_figures.git",
     "toplevel": "/home/pbellec/git/cneuromod.all.qa_figures"
