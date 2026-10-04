@@ -31,6 +31,22 @@ Once the pipeline is run, this folder contains:
   `qc_measures.ipynb` globs `*.tsv` directly under `tables/` and must not pick
   these up.
 
+## Summary tables (from `invoke run-qa-summary`)
+
+- `tables/summary/` — small tables summarizing the two sets of tables above, so
+  a paper can quote every number without recomputing it. All values are
+  unrounded.
+  - `overall.tsv` — `statistic`/`value` rows: run, dataset, subject and session
+    counts; FD and tSNR distributions (`*_median`, `*_mean`, `*_sd`, `*_min`,
+    `*_max`); runs with mean FD > 0.2 / 0.5 mm; volume-level outlier rates
+    (`vol_prop_gt02_*`, `vol_prop_gt05_*`) over the runs with an FD timeseries;
+    FD-tSNR Pearson and Spearman correlations.
+  - `by_subject.tsv`, `by_dataset.tsv` — `n_runs`, `fd_median`, `tsnr_median`.
+  - `by_region_group.tsv` — `group`, `n_runs`, `tsnr_median` (median over runs
+    of the per-run region-group tSNR), lowest first.
+  - `coverage.tsv` — per dataset: `n_runs_mriqc`, `n_runs_region_tsnr`, and
+    `region_tsnr_subjects` (comma-separated subject labels).
+
 ## Figures (from `invoke run-notebooks`)
 
 - `figures/qc_measures/` — FD and tSNR raincloud distributions by subject and by

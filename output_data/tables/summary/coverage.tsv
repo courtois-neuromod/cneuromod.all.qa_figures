@@ -1,0 +1,22 @@
+dataset	n_runs_mriqc	n_runs_region_tsnr	region_tsnr_subjects
+anat	0	0	
+emotion-videos	0	0	
+floc	38	36	01,02,03
+friends	1898	1423	01,02,03,05,06
+gamepad	34	34	01,02,03,06
+harrypotter	35	0	
+hcptrt	658	555	01,02,03,05,06
+langlocalizer	48	48	01,02,03,05
+mario	0	464	01,02,03,05,06
+mario3	337	0	
+mariostars	182	0	
+movie10	366	305	01,02,03,05,06
+multfs	322	0	
+mutemusic	91	91	01,02,03,05,06
+narratives	325	357	01,02,03,05,06
+ood	48	0	
+petit-prince	88	0	
+retinotopy	67	67	01,02,03,05
+shinobi	210	0	
+things	834	833	01,02,03,06
+triplets	324	0	

@@ -298,6 +298,15 @@ compatibility). Linter: **ruff** (`uv run ruff check .`). No test framework.
       Tian S3 prefix → `subcortex_<PUT|THA|CAU>`, everything else — e.g.
       pallidum, hippocampus, amygdala, nucleus accumbens — excluded,
       `group=None`, not silently lumped in).
+- **`run-qa-summary` → `analysis/qa_summary.py`: the numbers quoted in prose.**
+  Reads the two sets of per-run tables above and writes small summary tables to
+  `output_data/tables/summary/` (`overall`, `by_subject`, `by_dataset`,
+  `by_region_group`, `coverage`). Downstream papers read these instead of
+  recomputing statistics from the per-run tables, so every aggregate is defined
+  in one place. Values are unrounded; formatting belongs to the reader. Unlike
+  the other `run-*` steps it always re-runs (it is cheap, and a stale summary
+  would silently contradict the tables). It lives in a subdirectory for the same
+  reason as `atlas_tsnr/`: `qc_measures.ipynb` globs `*.tsv` directly under `tables/`.
 - **Derivative folders are nested Datalad subdatasets — installed by `fetch`.**
   Every `{dataset}/{marker}` (`bids`, `mriqc`, `fmriprep`, `tsnr`, …) is a Datalad
   subdataset nested *inside* the per-`{dataset}` subdataset of `cneuromod.all`,

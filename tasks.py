@@ -240,6 +240,21 @@ def run_atlas_tsnr(c, dataset=None, smoke=False, strict=False):
         )
 
 
+@task
+def run_qa_summary(c):
+    """
+    Summarize the QC tables into small tables a paper can quote directly.
+
+    Reads output_data/tables/{dataset}.tsv and tables/atlas_tsnr/{dataset}.tsv
+    and writes run counts, FD/tSNR distributions, per-subject, per-dataset and
+    per-region-group medians, and per-dataset coverage to
+    output_data/tables/summary/. Cheap, so it always re-runs: the summary must
+    never lag behind the tables it describes.
+    """
+    from analysis.qa_summary import summarize
+    summarize(Path(c.config.get("output_data_dir")))
+
+
 # --------------------------------------------------------------------------- #
 # Composed figure
 # --------------------------------------------------------------------------- #
@@ -314,7 +329,7 @@ def run_notebooks(c):
     "force": "Delete every computed output first, then run from scratch.",
 })
 def run(c, dataset=None, smoke=False, strict=False, force=False):
-    """Full pipeline: check inputs present → qc-measures → figures.
+    """Full pipeline: check inputs present → qc-measures → atlas-tsnr → summary → figures.
 
     ``run`` does NOT pull data: it reads only the files ``invoke fetch`` already
     retrieved, and no step calls ``datalad get``. A tolerant production run warns
@@ -350,6 +365,7 @@ def run(c, dataset=None, smoke=False, strict=False, force=False):
         _ensure_superdataset_available(c)
     run_qc_measures(c, dataset=dataset, smoke=smoke, strict=strict)
     run_atlas_tsnr(c, dataset=dataset, smoke=smoke, strict=strict)
+    run_qa_summary(c)
     # Panel geometry has to be on disk before the notebooks size their figures
     # against it; the export then recomposes the montage from the fresh panels.
     run_figure_layout(c)
@@ -357,7 +373,8 @@ def run(c, dataset=None, smoke=False, strict=False, force=False):
     export_figure(c)
 
     from airoh.provenance import record_run
-    record_run(c, tasks="run-qc-measures,run-atlas-tsnr,run-figure-layout,"
+    record_run(c, tasks="run-qc-measures,run-atlas-tsnr,run-qa-summary,"
+                        "run-figure-layout,"
                         "run-notebooks,export-figure")
 
     if not smoke:
@@ -431,6 +448,13 @@ def clean_atlas_tsnr(c):
 
 
 @task
+def clean_qa_summary(c):
+    """Remove the summary tables."""
+    from airoh.utils import clean_folder
+    clean_folder(c, "output_data_dir", "tables/summary/*.tsv")
+
+
+@task
 def clean_figures(c):
     """Remove generated figures and notebook sentinels."""
     from airoh.utils import clean_folder
@@ -460,6 +484,7 @@ def clean(c):
     """
     clean_qc_measures(c)
     clean_atlas_tsnr(c)
+    clean_qa_summary(c)
     clean_figures(c)
     clean_figure(c)
 

@@ -117,7 +117,7 @@ uv run invoke run
 ```
 
 Runs the analysis in order (ensure `cneuromod.all` available → `run-qc-measures`
-→ `run-atlas-tsnr` → `run-figure-layout` → `run-notebooks` → `export-figure`).
+→ `run-atlas-tsnr` → `run-qa-summary` → `run-figure-layout` → `run-notebooks` → `export-figure`).
 **`run` never pulls data** — it reads only
 the files `fetch` already retrieved and calls no `datalad get`, so it is fast and
 offline. **Run `invoke fetch` first**: any dataset whose input is missing is
@@ -173,14 +173,16 @@ The list below should match `invoke --list`.
 | `fetch-mni152`      | Download (or reuse the cached) ICBM152 2009 MNI template + brain mask under `source_data/nilearn/`, used as the tSNR coverage montages' anatomical background/brain restriction |
 | `run-qc-measures`   | Extract per-run MRIQC metrics per dataset (`--dataset`) from files already fetched; skips datasets already done |
 | `run-atlas-tsnr`    | Extract per-run tSNR per region group (7 Yeo networks, cerebellum, 3 subcortical structures) within each subject's own MNI `res-func` combined atlas, one table per dataset (`--dataset`) |
+| `run-qa-summary`    | Summarize the QC and region-tSNR tables (counts, FD/tSNR distributions, per-subject/dataset/region-group medians, coverage) into `output_data/tables/summary/`, for quoting in prose. Always re-runs |
 | `run-figure-layout` | Read each panel's placed size out of `output_data/qa_figure.svg` into `output_data/figures/panel_sizes.json`, so the notebooks render every panel at its true on-page size. Always re-runs |
 | `run-notebooks`     | Execute notebooks, saving QA figures to `output_data/figures/`     |
 | `export-figure`     | Render `output_data/qa_figure.svg` to `qa_figure.png` at 300 dpi with the Inkscape CLI. Skipped when the PNG is newer than the SVG and every panel it links; warns and exits 0 when Inkscape is not installed |
-| `run`               | Full pipeline (ensure `cneuromod.all` available → `run-qc-measures` → `run-atlas-tsnr` → `run-figure-layout` → `run-notebooks` → `export-figure`); **never pulls data** — reads only what `fetch` retrieved; records `output_data/PROVENANCE.json`; scope with `--dataset`, rebuild with `--force`, or `--smoke` for a strict minimal end-to-end test (default `floc`; fetches its one dataset then fails non-zero if nothing is extracted) |
+| `run`               | Full pipeline (ensure `cneuromod.all` available → `run-qc-measures` → `run-atlas-tsnr` → `run-qa-summary` → `run-figure-layout` → `run-notebooks` → `export-figure`); **never pulls data** — reads only what `fetch` retrieved; records `output_data/PROVENANCE.json`; scope with `--dataset`, rebuild with `--force`, or `--smoke` for a strict minimal end-to-end test (default `floc`; fetches its one dataset then fails non-zero if nothing is extracted) |
 | `verify`            | Check that code, config, data and docs still agree — task list vs README, `requirements.txt` vs `pyproject.toml`, documented paths, each data folder vs its `CONTENT.md`, config keys, tracked file sizes, provenance freshness, ruff. Exits non-zero on drift; not part of `run` |
 | `clean`             | Remove all computed outputs                                        |
 | `clean-qc-measures` | Remove QC-metric tables                                            |
 | `clean-atlas-tsnr`  | Remove the region-group atlas-tSNR tables                          |
+| `clean-qa-summary`  | Remove the summary tables                                          |
 | `clean-figures`     | Remove generated figures and notebook sentinels                   |
 | `clean-figure`      | Remove the composed `qa_figure.png` and `panel_sizes.json` — never the hand-authored SVG |
 | `clean-source`      | Remove all fetched source data                                     |
