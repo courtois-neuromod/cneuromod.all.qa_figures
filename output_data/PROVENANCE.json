@@ -1,20 +1,20 @@
 {
-  "command": "/home/pbellec/git/cneuromod.all.qa_figures/.venv/bin/invoke run",
+  "command": "/home/pbellec/git/cneuromod.all.qa_figures/.venv/bin/invoke run --force",
   "environment": {
     "lockfiles": {
       "requirements.txt": "714c20031479d767b843b174498922fbd0ed7629a936fc9eb4dc613533a17623",
-      "uv.lock": "7c87b5ad18f97fc8e9b405c1c7b019eabbbffc3ae6686f634146e48e157e4a2e"
+      "uv.lock": "ea3ce83d912517ac73d0ac54fc988c3d61eb08aac800dab90f0dc3215f45468f"
     },
     "packages": {
       "airoh": "0.5.0",
-      "datalad": "1.6.1",
+      "datalad": "1.6.5",
       "git-annex": "10.20260624",
       "invoke": "3.0.3",
       "jupyter": "1.1.1",
       "matplotlib": "3.10.9",
       "nbconvert": "7.17.1",
       "nibabel": "5.4.2",
-      "nilearn": "0.14.0",
+      "nilearn": "0.14.1",
       "numpy": "2.4.4",
       "pandas": "3.0.2",
       "ptitprince": "0.3.1",
@@ -23,13 +23,13 @@
       "ruff": "0.16.0",
       "seaborn": "0.13.2"
     },
-    "platform": "Linux-6.8.0-136-generic-x86_64-with-glibc2.35",
+    "platform": "Linux-6.8.0-138-generic-x86_64-with-glibc2.35",
     "python": "3.12.12"
   },
   "inputs": {
     "assets": {
       "cneuromod_all": {
-        "commit": "87ad08a00f9883fcfe20a18ebc0b2e64791f9238",
+        "commit": "64bdac0367e9cc5a2948d5e78e6866954c9c7986",
         "resolved_path": "/home/pbellec/git/cneuromod.all",
         "sha256": null
       },
@@ -40,7 +40,7 @@
       }
     },
     "manifest_file": "source_data/MANIFEST.json",
-    "manifest_sha256": "dd93b855ce1845371527ba7168ed97a52e220146ba6be117729739c863252ed4"
+    "manifest_sha256": "42794909c1e6f53bb0e20293ba310e5295a6809eafe9985bd56b88f19c271c23"
   },
   "outputs": {
     "figures/atlas_tsnr/network_maps.png": {
@@ -48,80 +48,80 @@
       "size_bytes": 257775
     },
     "figures/atlas_tsnr/tsnr_by_region_group.png": {
-      "sha256": "88eccfc8ac03ae1fb202a6a4532665cc0cfa02845ab17fbf3395dde9045062fb",
-      "size_bytes": 196034
+      "sha256": "4dad5c7070bef81f65dfa97334b57802cf94f087e2d02a3d6dfe3c9fd64f9993",
+      "size_bytes": 234293
     },
     "figures/motion_bands/motion_bands_by_dataset_subject.png": {
-      "sha256": "7c908e2e64ccd805169dbe275ace9ad382f1f1f213baf9ec91e91c257fa476cd",
-      "size_bytes": 339059
+      "sha256": "db20507838d452fa7b88c27940f6810b0db4b4225f281dfbbd8a01b686404d81",
+      "size_bytes": 396729
     },
     "figures/motion_bands/motion_bands_grand_average.png": {
-      "sha256": "d31e3d4dd08701e017abe18d2b0e669358d8b8086a3df62c5b92896b30307337",
-      "size_bytes": 74306
+      "sha256": "010a5a4f68492654963547ba364ee8743ec9331daa7c3ca48ea6d6ce21c08ef2",
+      "size_bytes": 74363
     },
     "figures/panel_sizes.json": {
       "sha256": "957b551d9cc19aee0aad4bef6ffa30c1d6e49c642246a54dcf055806dd0b5414",
       "size_bytes": 767
     },
     "figures/qc_measures/fd_mean_by_dataset.png": {
-      "sha256": "7ff8b849112bfb83b41b70caa9e70d50902fbd1266f5a772bafcba549214da85",
-      "size_bytes": 234220
+      "sha256": "265dc25ded2a77b706b4cc498f692930d4051770886c978e82e1269507fbee5e",
+      "size_bytes": 239730
     },
     "figures/qc_measures/fd_mean_by_subject.png": {
-      "sha256": "f4bd6ad46fe7a56e119537b9d50a73fe5e411cc9df60e4d6052d96bcec008198",
-      "size_bytes": 68439
+      "sha256": "f25a3e38f5c61a5e00525f446b979df6ea0572e721ec2230a41323d3669c1817",
+      "size_bytes": 70022
     },
     "figures/qc_measures/fd_prop_gt02_by_subject.png": {
-      "sha256": "2dde1d1048742705ed27cb51a3402f3f0763c05c519584018f2940ed3e90c001",
-      "size_bytes": 73353
+      "sha256": "0de7c72b903f24e9a4201e8577180aa415e92b8ff24869aef14663bd889d4054",
+      "size_bytes": 73362
     },
     "figures/qc_measures/fd_prop_gt05_by_subject.png": {
-      "sha256": "917520d5fe65103fc1658295651e39669fd6872a21b87172818ff1888e7cfb7c",
-      "size_bytes": 48245
+      "sha256": "ef7073c676e826ea0a06560f108b0be77a337914627c5861ab434ca61de4e3c9",
+      "size_bytes": 48050
     },
     "figures/qc_measures/fd_vs_tsnr.png": {
-      "sha256": "78ebe364c8fc80df8bda13aa1406940b5929d78cb0635122d44812b8af280b7c",
-      "size_bytes": 281604
+      "sha256": "ba35ac60d6682c2f95b00873bd811e89d0c2f353c147eaf21168c4bfd6d602ef",
+      "size_bytes": 348384
     },
     "figures/qc_measures/tsnr_by_subject.png": {
-      "sha256": "755544056f368bd425858926bef454aff9c5433ebdad0877e7e8f65efc748dcf",
-      "size_bytes": 162108
+      "sha256": "ec4397c1aaf675ddec19ad011ca9dbcb93409ba005ffa9486ef3b3dd54235502",
+      "size_bytes": 161357
     },
     "figures/tsnr_maps/all_datasets_avgtsnr.png": {
-      "sha256": "4e8dc5563194db7a77b3bb85d8cf11068b0c990354b5bac881b9dd96e5fe89a8",
-      "size_bytes": 210821
+      "sha256": "5c83738b7b801b22c793c1d732a8a0ba01b9aa0470700f4897b803179ce925da",
+      "size_bytes": 201206
     },
     "figures/tsnr_maps/all_datasets_avgtsnr_coronal.png": {
-      "sha256": "f91d288384ba7adc1d646be6285e365905f4d0a1b9823d3fdcca9b90ea7ac514",
-      "size_bytes": 268461
+      "sha256": "d640f4c65513cdfe4ff7db55f91069ccf3f9915ef917b02986ba7192184775f3",
+      "size_bytes": 258955
     },
     "figures/tsnr_maps/all_datasets_avgtsnr_sagittal.png": {
-      "sha256": "c3b8db5c897a1a84a9c6ddd791fc537c6151ed607186690cb28fbf3a720abe90",
-      "size_bytes": 297168
+      "sha256": "ba7728d1ea977a2c6ef4bca82417ec6d6111c8dfb2f6de19fec28f380e3761e6",
+      "size_bytes": 290772
     },
     "figures/tsnr_maps/all_datasets_coverage.png": {
-      "sha256": "2c50988c554cab9a4ff2f68083135c20b617546ded5f2b7322539bded0c568bd",
-      "size_bytes": 189613
+      "sha256": "9f6521e98f95251cc11ac4259b7d3a83a56564c5c40fbd29b6e4d97f1e3f82f4",
+      "size_bytes": 205453
     },
     "figures/tsnr_maps/all_datasets_coverage_coronal.png": {
-      "sha256": "020d43538751ac8391a790c927a92bc22b05abda1c9bee17ae77357d7ecb9f09",
-      "size_bytes": 485139
+      "sha256": "41062906efacd776c88df9be7376e54b65f8d08862d98c3f44537942b07de7fc",
+      "size_bytes": 539051
     },
     "figures/tsnr_maps/all_datasets_coverage_sagittal.png": {
-      "sha256": "a9b80b12494ceec67306f78d0f3d370f4b9969b64d8c786e7b6f5d10baf656a7",
-      "size_bytes": 538020
+      "sha256": "248fd02ad752f2c3c146d561a755fa332419ed8abbc28310da0e30e599b32c10",
+      "size_bytes": 605056
     },
     "figures/tsnr_maps/all_datasets_coverage_thr10.png": {
-      "sha256": "066a43ffdc4297e8e60f3810d0593d208ff05bb7729c3deeeec4be753e304ec3",
-      "size_bytes": 157816
+      "sha256": "fe621606bd55dc3a4eebd5109ce8199f0e762a26826c7f267bae419f3e017732",
+      "size_bytes": 164832
     },
     "figures/tsnr_maps/all_datasets_coverage_thr10_coronal.png": {
-      "sha256": "725078ec5ae75b2609f2cd34ac54f63816648a52326f26f957db640bb20b70a7",
-      "size_bytes": 417530
+      "sha256": "3535220b4087e667f97ee5647ac2e88dcc251b71ad599ea8aa3a391389fd683d",
+      "size_bytes": 441696
     },
     "figures/tsnr_maps/all_datasets_coverage_thr10_sagittal.png": {
-      "sha256": "00e3fac59852a40147ff17cdaec521bdf1baed8cdf4bbd8b9a2a83a5bcd3625c",
-      "size_bytes": 459761
+      "sha256": "a98541aeca2ede0037de6aee713c88cc351b8fde6ad1cdfdf29d3426bfe43f08",
+      "size_bytes": 483006
     },
     "figures/tsnr_maps/floc_avgtsnr.png": {
       "sha256": "7ee9fd804f89a8ee871f5e40f34860763eb5a71414ed65a23423ff14506bd985",
@@ -194,6 +194,750 @@
     "figures/tsnr_maps/floc_sub-03_avgtsnr_sagittal.png": {
       "sha256": "bd48c80d31490210b9c6cc1137c31805bb805939d5131045d19a1ca339033580",
       "size_bytes": 286124
+    },
+    "figures/tsnr_maps/friends_avgtsnr.png": {
+      "sha256": "ede223cee19eeaa1f8f1562efc95bfb21660b9a9bca4828155a3e3b1e814d434",
+      "size_bytes": 380676
+    },
+    "figures/tsnr_maps/friends_avgtsnr_coronal.png": {
+      "sha256": "e85accea7d04120948ae669689d7b40525beb2e61fc83d88f3778c9b48c35992",
+      "size_bytes": 265287
+    },
+    "figures/tsnr_maps/friends_avgtsnr_sagittal.png": {
+      "sha256": "e943f726e2fec006b3b18e9e89219ce005ab7c47007ac83b837441adc40352f3",
+      "size_bytes": 297590
+    },
+    "figures/tsnr_maps/friends_coverage.png": {
+      "sha256": "ae1ba2d4027cdd90adc1c6e525728817160a6bbda29a3e4605ac5f41ea3a17b2",
+      "size_bytes": 673507
+    },
+    "figures/tsnr_maps/friends_coverage_coronal.png": {
+      "sha256": "64203c1751f6a5bd737c1341b85e2d9de7132cf65f98ad73c8044d7c08956920",
+      "size_bytes": 474510
+    },
+    "figures/tsnr_maps/friends_coverage_sagittal.png": {
+      "sha256": "587a0c5ae3db46ef48953082881dcd5a5a769cba100121f5dfbcdc052a0631e9",
+      "size_bytes": 525910
+    },
+    "figures/tsnr_maps/friends_coverage_thr10.png": {
+      "sha256": "78047cddfbffaf262bc3145cc1daa051558ba82ec4795a60c8de72b02677f9ab",
+      "size_bytes": 586219
+    },
+    "figures/tsnr_maps/friends_coverage_thr10_coronal.png": {
+      "sha256": "feab79a106593bf72a240f9b1499efe00cb49bd9d48c5080aa7f88a2e11bb9a3",
+      "size_bytes": 415068
+    },
+    "figures/tsnr_maps/friends_coverage_thr10_sagittal.png": {
+      "sha256": "711fa286f63bedbb4cf9975666c656bf87015e759a49227d7118a661bb8bcada",
+      "size_bytes": 455554
+    },
+    "figures/tsnr_maps/friends_sub-01_avgtsnr.png": {
+      "sha256": "65b101e4b5c86a3e218211ba9911c011c888d22d6e2afbe25aeb0852511a7792",
+      "size_bytes": 400860
+    },
+    "figures/tsnr_maps/friends_sub-01_avgtsnr_coronal.png": {
+      "sha256": "c09f10c8ec5f551e6e4baf6f179d113d0f29de078e6e9d3973ef0e96ae8b363e",
+      "size_bytes": 288109
+    },
+    "figures/tsnr_maps/friends_sub-01_avgtsnr_sagittal.png": {
+      "sha256": "37417e763dd4f2902fe2a15602656b802d57b168850fc93f877156a2cc93a122",
+      "size_bytes": 308663
+    },
+    "figures/tsnr_maps/friends_sub-02_avgtsnr.png": {
+      "sha256": "6f48fc2b67b373cda773e74cf96a53449a19933711f618a6082259b20fdb97b7",
+      "size_bytes": 410700
+    },
+    "figures/tsnr_maps/friends_sub-02_avgtsnr_coronal.png": {
+      "sha256": "e9596f5c845a431375fb7258df4990cb7c22e1dd1ef077773c76bd1fa47b6164",
+      "size_bytes": 274667
+    },
+    "figures/tsnr_maps/friends_sub-02_avgtsnr_sagittal.png": {
+      "sha256": "428a58550700aa1880b79160e5e21594ac6e5c507297bd2264d244860daffc04",
+      "size_bytes": 295357
+    },
+    "figures/tsnr_maps/friends_sub-03_avgtsnr.png": {
+      "sha256": "235922d65312fc6b966de1f2b2b58b4278161571a0757c5a2ba546db94329f20",
+      "size_bytes": 393041
+    },
+    "figures/tsnr_maps/friends_sub-03_avgtsnr_coronal.png": {
+      "sha256": "94494c35da5d79328f0b2d35aee03fde56e88fef06d4d6d91d2252bce3e22692",
+      "size_bytes": 270378
+    },
+    "figures/tsnr_maps/friends_sub-03_avgtsnr_sagittal.png": {
+      "sha256": "e5224761a43087557b568066fa2e9835629feb9d84264449abab6fed8bb9cea6",
+      "size_bytes": 296794
+    },
+    "figures/tsnr_maps/friends_sub-05_avgtsnr.png": {
+      "sha256": "6615962616f2c72c4464de30bdb4c3b9132daa6c48d0da4aa6ccb9c98c950688",
+      "size_bytes": 420611
+    },
+    "figures/tsnr_maps/friends_sub-05_avgtsnr_coronal.png": {
+      "sha256": "49e8d10b2f057ac887a711aa0022645428a9771d9cc4130e639638e36cae0081",
+      "size_bytes": 285299
+    },
+    "figures/tsnr_maps/friends_sub-05_avgtsnr_sagittal.png": {
+      "sha256": "c4ea20d4472a4350f870aa2ad3589f5a691a75e2263eb659086d49442dd6c595",
+      "size_bytes": 313304
+    },
+    "figures/tsnr_maps/friends_sub-06_avgtsnr.png": {
+      "sha256": "1189c05a520fa8dc90d139b6519bfe7300d711e8e41a750a871d543fbac4c60d",
+      "size_bytes": 406760
+    },
+    "figures/tsnr_maps/friends_sub-06_avgtsnr_coronal.png": {
+      "sha256": "64e8982afa191c2055ce3e4939420b15ee5f2b8cd2e184dbdb531a33549f3e44",
+      "size_bytes": 288768
+    },
+    "figures/tsnr_maps/friends_sub-06_avgtsnr_sagittal.png": {
+      "sha256": "40532a86171a684fc50d6fd9374fee3cbf3693484392f89768e9e57f9c710139",
+      "size_bytes": 317303
+    },
+    "figures/tsnr_maps/gamepad_avgtsnr.png": {
+      "sha256": "1f64b85551beab81338d17143376c8288e0df43106cecf2c564a92231c7c67e5",
+      "size_bytes": 392640
+    },
+    "figures/tsnr_maps/gamepad_avgtsnr_coronal.png": {
+      "sha256": "9c2d82dd7097ec7a1379d1f3ac6acb0a13518b9ed3f1b51f9bb9eb205ffdf17c",
+      "size_bytes": 273890
+    },
+    "figures/tsnr_maps/gamepad_avgtsnr_sagittal.png": {
+      "sha256": "063a6743882b961f66449865267037192aa8be232a268d53f57480b8c72305d4",
+      "size_bytes": 298888
+    },
+    "figures/tsnr_maps/gamepad_coverage.png": {
+      "sha256": "b333249a9136b4e4280295d1021e93b3da6939754a23b301920f059fabe8f6da",
+      "size_bytes": 638266
+    },
+    "figures/tsnr_maps/gamepad_coverage_coronal.png": {
+      "sha256": "f732f101d4b3387b8f16c84d78b61a20d232cc58ecbe237cdb1091d0d5d65107",
+      "size_bytes": 452724
+    },
+    "figures/tsnr_maps/gamepad_coverage_sagittal.png": {
+      "sha256": "33e68ff3d2da4fc0e1cb12ff714a66954c7e1461a7d71e6c4ad7873c779c2f01",
+      "size_bytes": 496626
+    },
+    "figures/tsnr_maps/gamepad_coverage_thr10.png": {
+      "sha256": "e9d33d8a424476846f8a2dfacdfee9f862b9dddc91cd37e2c3a5ac8999915b54",
+      "size_bytes": 568216
+    },
+    "figures/tsnr_maps/gamepad_coverage_thr10_coronal.png": {
+      "sha256": "b7821a5bf408d08b00e392c24f0ec7cba99b8b09281112bada629e5d7a1d7b97",
+      "size_bytes": 401453
+    },
+    "figures/tsnr_maps/gamepad_coverage_thr10_sagittal.png": {
+      "sha256": "ba6961cdcbd8206d6c77b0bcf445c05962bf9aca62fb5d8ba7a6107c22723783",
+      "size_bytes": 442115
+    },
+    "figures/tsnr_maps/gamepad_sub-01_avgtsnr.png": {
+      "sha256": "f44d2c44797aef726fedfa49fa9661000be97a9a5f39b78fd18410e43574b6d0",
+      "size_bytes": 415206
+    },
+    "figures/tsnr_maps/gamepad_sub-01_avgtsnr_coronal.png": {
+      "sha256": "a6666299e084bd048959d3ae4143eb774dca574141d4d63cf1e2844f535c5b9d",
+      "size_bytes": 292832
+    },
+    "figures/tsnr_maps/gamepad_sub-01_avgtsnr_sagittal.png": {
+      "sha256": "a99c9ace4ac255cc706c040337ddbaac706e67a8e5dd001d5e4eae1e1259ce2b",
+      "size_bytes": 308281
+    },
+    "figures/tsnr_maps/gamepad_sub-02_avgtsnr.png": {
+      "sha256": "70fe0eb9e12ff5a0e9c8bb7076c20aafe7e44a55086920212591476535604cc4",
+      "size_bytes": 421326
+    },
+    "figures/tsnr_maps/gamepad_sub-02_avgtsnr_coronal.png": {
+      "sha256": "da97a16dfd99bb19e105b3d79c7459d786cc83b76cf0cce82a61f4522244da77",
+      "size_bytes": 277175
+    },
+    "figures/tsnr_maps/gamepad_sub-02_avgtsnr_sagittal.png": {
+      "sha256": "03ae77e47a0ad3a7aac5c8c1bc02829c30334829a42dec3c44ad026bc070136f",
+      "size_bytes": 295426
+    },
+    "figures/tsnr_maps/gamepad_sub-03_avgtsnr.png": {
+      "sha256": "8a29fbb1bb3ada7b9a60169874ad1ebdf29318a3ec67f181c1e03918eaa2df19",
+      "size_bytes": 405153
+    },
+    "figures/tsnr_maps/gamepad_sub-03_avgtsnr_coronal.png": {
+      "sha256": "813462140f71775ca0f61a2ed38388c58c8b1184ed5de788d44e1c57d6484901",
+      "size_bytes": 269201
+    },
+    "figures/tsnr_maps/gamepad_sub-03_avgtsnr_sagittal.png": {
+      "sha256": "162455bbd4b3ee72bceee26505f1980e3ca007c9f73123b2031172d882650131",
+      "size_bytes": 291877
+    },
+    "figures/tsnr_maps/gamepad_sub-06_avgtsnr.png": {
+      "sha256": "6e11ddf7377c9531bb8e7a67c2180a4532e6b8d75f1a01789a8801264508541a",
+      "size_bytes": 425909
+    },
+    "figures/tsnr_maps/gamepad_sub-06_avgtsnr_coronal.png": {
+      "sha256": "e11eb433b7b9e015cf5c0d6ba911dc6e58a012ab81b7cdf545649718a0c0f70b",
+      "size_bytes": 294717
+    },
+    "figures/tsnr_maps/gamepad_sub-06_avgtsnr_sagittal.png": {
+      "sha256": "d8670a9cd80ffffc7d886d8d20bc8c948e7edd6b844c8493df32969c5fe9931b",
+      "size_bytes": 319317
+    },
+    "figures/tsnr_maps/hcptrt_avgtsnr.png": {
+      "sha256": "aad4d62a09ba30fedf873aca3ac6b286e9217b9c8ed2d573a11c6d224e3a592e",
+      "size_bytes": 375910
+    },
+    "figures/tsnr_maps/hcptrt_avgtsnr_coronal.png": {
+      "sha256": "bd6e0bab084ceadebb1ab7e0752fb3db3effc64242f88181f50ff1650d6f670a",
+      "size_bytes": 258370
+    },
+    "figures/tsnr_maps/hcptrt_avgtsnr_sagittal.png": {
+      "sha256": "517c945c7f507fdb4899d524e7d233a0f03655895c3b071938804ee52fd65824",
+      "size_bytes": 291399
+    },
+    "figures/tsnr_maps/hcptrt_coverage.png": {
+      "sha256": "821bf6d5102b1211728d2c0c7f5fb7e9d4d20a85662171ea76094f57948857d1",
+      "size_bytes": 644580
+    },
+    "figures/tsnr_maps/hcptrt_coverage_coronal.png": {
+      "sha256": "9706dd259281b58788c944ee843d3399a267628c1ca5166ec89aa7d935b2616f",
+      "size_bytes": 455312
+    },
+    "figures/tsnr_maps/hcptrt_coverage_sagittal.png": {
+      "sha256": "0ca0328b052b919d7fc0ba20b1b1a91ccbbec350f6e99f4d6ee8080230d0b3a4",
+      "size_bytes": 501272
+    },
+    "figures/tsnr_maps/hcptrt_coverage_thr10.png": {
+      "sha256": "a64f62c3f9c08cf248daf40dbeda41fadacc71f62ad7aa9acb12f16ab1d788fe",
+      "size_bytes": 571563
+    },
+    "figures/tsnr_maps/hcptrt_coverage_thr10_coronal.png": {
+      "sha256": "c80502eca317968f575bdcc164e40a87641cd5e3426ffa757ca01f4b056e6e65",
+      "size_bytes": 404894
+    },
+    "figures/tsnr_maps/hcptrt_coverage_thr10_sagittal.png": {
+      "sha256": "5a92282fdbbf565b82c0956cfa1dbceea1fa20e43497b45c1e0d8e723c03e983",
+      "size_bytes": 444799
+    },
+    "figures/tsnr_maps/hcptrt_sub-01_avgtsnr.png": {
+      "sha256": "2eef2b30ec391be77952ddd6217dadc1af8f63e6c0af7a9093f0240a2944dc4b",
+      "size_bytes": 394509
+    },
+    "figures/tsnr_maps/hcptrt_sub-01_avgtsnr_coronal.png": {
+      "sha256": "c2c76886fdc4e3e2ed931ebdd823da7e4d377ec78a7588f31804b8922546feb4",
+      "size_bytes": 274916
+    },
+    "figures/tsnr_maps/hcptrt_sub-01_avgtsnr_sagittal.png": {
+      "sha256": "2559b75cb4362a6f303401c2ca9ad75ee2645e7d6546311bda4c9b469493db80",
+      "size_bytes": 301810
+    },
+    "figures/tsnr_maps/hcptrt_sub-02_avgtsnr.png": {
+      "sha256": "e1fafd3a0a1eec4227b365df7d789facd92d3527130dc9f43d750ce1985d66c2",
+      "size_bytes": 414218
+    },
+    "figures/tsnr_maps/hcptrt_sub-02_avgtsnr_coronal.png": {
+      "sha256": "dc507a824ef6c490e496f9d2d272f5196ed40133440fe49523370feb36d27d39",
+      "size_bytes": 265816
+    },
+    "figures/tsnr_maps/hcptrt_sub-02_avgtsnr_sagittal.png": {
+      "sha256": "b17f85b56714c25d38fa44428313d67088e81bb27ca62e2562ed9b4c42e2422b",
+      "size_bytes": 290760
+    },
+    "figures/tsnr_maps/hcptrt_sub-03_avgtsnr.png": {
+      "sha256": "374afbe70e177167b6b5150804309831382e1a61d2f2beaca4fe8271df164b11",
+      "size_bytes": 380288
+    },
+    "figures/tsnr_maps/hcptrt_sub-03_avgtsnr_coronal.png": {
+      "sha256": "c5ad34cbfe2f8a45c186f20b3548c83a791d8c2c6183e6337f68a035946f9253",
+      "size_bytes": 252572
+    },
+    "figures/tsnr_maps/hcptrt_sub-03_avgtsnr_sagittal.png": {
+      "sha256": "c3b5e325f2115272dccdbeaae135df826a1f9886a96fa95913233b2b97b4697d",
+      "size_bytes": 279718
+    },
+    "figures/tsnr_maps/hcptrt_sub-05_avgtsnr.png": {
+      "sha256": "9e50be2fa800ebb85a8cdaff061a2a886e384376d12c2addf74595148e7d40aa",
+      "size_bytes": 415088
+    },
+    "figures/tsnr_maps/hcptrt_sub-05_avgtsnr_coronal.png": {
+      "sha256": "d4d2b24f8076eec5e6c5e91d02c151996cc69cce8a248e8a72f89f00821ec09f",
+      "size_bytes": 269603
+    },
+    "figures/tsnr_maps/hcptrt_sub-05_avgtsnr_sagittal.png": {
+      "sha256": "f28f15f332ea56011d2a13feb704cc70075614c1769d840ba65dcc6c322536cc",
+      "size_bytes": 297784
+    },
+    "figures/tsnr_maps/hcptrt_sub-06_avgtsnr.png": {
+      "sha256": "6e232f0410a42d33129c99f452d380a41468eabc88b1608d27311508e0623421",
+      "size_bytes": 403933
+    },
+    "figures/tsnr_maps/hcptrt_sub-06_avgtsnr_coronal.png": {
+      "sha256": "7e95d488b4db18b976948b3557710d8f47a5ac05014314b497e2be36174901bf",
+      "size_bytes": 280523
+    },
+    "figures/tsnr_maps/hcptrt_sub-06_avgtsnr_sagittal.png": {
+      "sha256": "696ebfeeecfa9c911004c76b16ba6479d3b0ddf393b1ec5aceb32513470a2b2e",
+      "size_bytes": 308829
+    },
+    "figures/tsnr_maps/langlocalizer_avgtsnr.png": {
+      "sha256": "5e0da70bbd364634d7540528515ff3933f8042b6a14961b67ea7d973e8a4447c",
+      "size_bytes": 410501
+    },
+    "figures/tsnr_maps/langlocalizer_avgtsnr_coronal.png": {
+      "sha256": "9eaa027f47fd5f9c63f623ab9f9afd3dfab24da905b6c6c9d707d2d384aca8c5",
+      "size_bytes": 282406
+    },
+    "figures/tsnr_maps/langlocalizer_avgtsnr_sagittal.png": {
+      "sha256": "55bc838f36eb7fa59ba1a5eb3a268fe0f1e85e69eef15d46d9fe55f0d64c6b1c",
+      "size_bytes": 310547
+    },
+    "figures/tsnr_maps/langlocalizer_coverage.png": {
+      "sha256": "8df5a3b825eb960ae3f3cd189338b75aaf3315946ec7ae14cd0bedd61f775672",
+      "size_bytes": 661897
+    },
+    "figures/tsnr_maps/langlocalizer_coverage_coronal.png": {
+      "sha256": "13cb7fb7398c38213603f91f71937c93cfdcbf1461affd21457e9f515fd01665",
+      "size_bytes": 465203
+    },
+    "figures/tsnr_maps/langlocalizer_coverage_sagittal.png": {
+      "sha256": "599d05fcdd09b7ee64888919c66bd5f1dfb37bea4d1197b8fdcf91ced649bd72",
+      "size_bytes": 517868
+    },
+    "figures/tsnr_maps/langlocalizer_coverage_thr10.png": {
+      "sha256": "001b6c2b5d10cec9b5ad265cf6b7e4589f0e69d89f558a2c5ccc57c330c998e0",
+      "size_bytes": 582673
+    },
+    "figures/tsnr_maps/langlocalizer_coverage_thr10_coronal.png": {
+      "sha256": "adaa4d0cec2c0ec64c80da032a2c8430b602926e920cf503ad32b96659d668d1",
+      "size_bytes": 411760
+    },
+    "figures/tsnr_maps/langlocalizer_coverage_thr10_sagittal.png": {
+      "sha256": "254d794c02f343ef73fa12b2f4373b8c071a34060bc82ae77683eac259a1c32e",
+      "size_bytes": 453005
+    },
+    "figures/tsnr_maps/langlocalizer_sub-01_avgtsnr.png": {
+      "sha256": "1ea7d3b1d724b25138c0282f14d70f12cffc8358043bbe6269397c233de8d8e6",
+      "size_bytes": 427292
+    },
+    "figures/tsnr_maps/langlocalizer_sub-01_avgtsnr_coronal.png": {
+      "sha256": "f74e2172482589ceb3edb324a91a2b331eb7e447ba4db183041ec5352e2d3d37",
+      "size_bytes": 301529
+    },
+    "figures/tsnr_maps/langlocalizer_sub-01_avgtsnr_sagittal.png": {
+      "sha256": "4a9f04ce001bcb9b5c0889c2b0e9820089920c67819a0cc4b9e88e84c707cac0",
+      "size_bytes": 320780
+    },
+    "figures/tsnr_maps/langlocalizer_sub-02_avgtsnr.png": {
+      "sha256": "3f2c7ae42331790f6788d05883b53f7aa12e2c2eca67a829d13d9e19a494f92b",
+      "size_bytes": 433641
+    },
+    "figures/tsnr_maps/langlocalizer_sub-02_avgtsnr_coronal.png": {
+      "sha256": "591b0b2d27e08cf2a261d32c8605f918c99d3aca6c471ff784c6478cbca24193",
+      "size_bytes": 284876
+    },
+    "figures/tsnr_maps/langlocalizer_sub-02_avgtsnr_sagittal.png": {
+      "sha256": "12d43410bc22016436298e66317aa15f93c83514d4190ceb53732e2bfb7d6cfc",
+      "size_bytes": 304283
+    },
+    "figures/tsnr_maps/langlocalizer_sub-03_avgtsnr.png": {
+      "sha256": "a6af3bb9e69ed609589e90bd167512f73a8537f9aa34288a4da054045ff70d16",
+      "size_bytes": 422597
+    },
+    "figures/tsnr_maps/langlocalizer_sub-03_avgtsnr_coronal.png": {
+      "sha256": "983049e39f2902550b90bdbd752702b5cd3c8a1ad9e720a11c9a1aa0955db16f",
+      "size_bytes": 284102
+    },
+    "figures/tsnr_maps/langlocalizer_sub-03_avgtsnr_sagittal.png": {
+      "sha256": "8edcb032a3ac2ca174e598460bd1c05fefc4951600056b10352bcc3601dfe585",
+      "size_bytes": 310787
+    },
+    "figures/tsnr_maps/langlocalizer_sub-05_avgtsnr.png": {
+      "sha256": "521543415fed400959fbbbdee2f06968311939f0db7b38e45afe0aeb7db154d4",
+      "size_bytes": 442594
+    },
+    "figures/tsnr_maps/langlocalizer_sub-05_avgtsnr_coronal.png": {
+      "sha256": "afc1392d8353ccfac0084f2a9b450f5bde9b5af0889ceb7d838240c49f278278",
+      "size_bytes": 288215
+    },
+    "figures/tsnr_maps/langlocalizer_sub-05_avgtsnr_sagittal.png": {
+      "sha256": "7b789a86069da5b5d17d639085fc516a981fda30004fe72581d5c3c1e0fd3868",
+      "size_bytes": 315352
+    },
+    "figures/tsnr_maps/mario_avgtsnr.png": {
+      "sha256": "fcd677cebf7a7d5b560b32bc91f23059adffab54ffbb457e6b426aeca4982123",
+      "size_bytes": 376065
+    },
+    "figures/tsnr_maps/mario_avgtsnr_coronal.png": {
+      "sha256": "2d392d08684f24293452f9d0332f9022f696ffd1791e955aa02b40ff284f9de4",
+      "size_bytes": 260203
+    },
+    "figures/tsnr_maps/mario_avgtsnr_sagittal.png": {
+      "sha256": "076ead17be9d4ab2fea38ec8d4ef35e967d552ed46fb0a9fa8018e5a1ce2fb86",
+      "size_bytes": 291123
+    },
+    "figures/tsnr_maps/mario_coverage.png": {
+      "sha256": "885e28c7d2ae668e910a74009bce749adc635d4779c1cb2b7af902ba3b8390e7",
+      "size_bytes": 692947
+    },
+    "figures/tsnr_maps/mario_coverage_coronal.png": {
+      "sha256": "b2e4b9dc0e088bc84394f1b3b63df6b1b092ea6f44a908372e70b62e7d2dce81",
+      "size_bytes": 482351
+    },
+    "figures/tsnr_maps/mario_coverage_sagittal.png": {
+      "sha256": "35156d9de576b55787974965141b93040f2a82eaa242fb1f3396cdba5d5298ee",
+      "size_bytes": 541583
+    },
+    "figures/tsnr_maps/mario_coverage_thr10.png": {
+      "sha256": "876f4a9fd04a9d16cc58a614228cae2b3c1cd2561764eafc07c3867e3502d6ba",
+      "size_bytes": 584628
+    },
+    "figures/tsnr_maps/mario_coverage_thr10_coronal.png": {
+      "sha256": "5d148a61dfee6d808d7e29edc0a1e2d78313fc3119b1300bf8eb58dcda593897",
+      "size_bytes": 413554
+    },
+    "figures/tsnr_maps/mario_coverage_thr10_sagittal.png": {
+      "sha256": "2e21592c4ce4e49f8eb9e6b353c36bfb5969444feadcd6af7c7558d92d3a0999",
+      "size_bytes": 453804
+    },
+    "figures/tsnr_maps/mario_sub-01_avgtsnr.png": {
+      "sha256": "ca50133cd669e5bbb9b906580ea671cb781cbecd2ba9fce180504afd98b8ebe4",
+      "size_bytes": 401267
+    },
+    "figures/tsnr_maps/mario_sub-01_avgtsnr_coronal.png": {
+      "sha256": "c8fc9c32fec86118bdb450764716553827badcc17a2bec0c63be6124ca86ef86",
+      "size_bytes": 283178
+    },
+    "figures/tsnr_maps/mario_sub-01_avgtsnr_sagittal.png": {
+      "sha256": "87cc13977c4626fcaa41fa39a697bc9079a5632d855b1ac8742948e0619c37a7",
+      "size_bytes": 304585
+    },
+    "figures/tsnr_maps/mario_sub-02_avgtsnr.png": {
+      "sha256": "91b0050e080b25c223bdf417111bef0dfe6a07e7e7481a446aab2073e9948ed9",
+      "size_bytes": 404580
+    },
+    "figures/tsnr_maps/mario_sub-02_avgtsnr_coronal.png": {
+      "sha256": "a8095d56157983b803085e4442b9a964b6ddcf26f007adec27ae1589b452fdeb",
+      "size_bytes": 267077
+    },
+    "figures/tsnr_maps/mario_sub-02_avgtsnr_sagittal.png": {
+      "sha256": "e523b11d6f227d3c06a6cbe2221264c465834a5266d3c2435ea9a5f74cfd5db2",
+      "size_bytes": 288444
+    },
+    "figures/tsnr_maps/mario_sub-03_avgtsnr.png": {
+      "sha256": "27eff73b6c7125a8864b5236c3eb46ec337802dfbcff48a103767234a8b6c915",
+      "size_bytes": 397401
+    },
+    "figures/tsnr_maps/mario_sub-03_avgtsnr_coronal.png": {
+      "sha256": "d6b20beb69178d8d5d55b245862002a9c588b3cfa3de7179ff9135d3a87541ff",
+      "size_bytes": 268614
+    },
+    "figures/tsnr_maps/mario_sub-03_avgtsnr_sagittal.png": {
+      "sha256": "596c1272a8ac11658ae3e22ba7b1be6368852372302f9c5fceff10ff9af21eea",
+      "size_bytes": 298016
+    },
+    "figures/tsnr_maps/mario_sub-05_avgtsnr.png": {
+      "sha256": "ab3b8e3c974f6795dfae243fe99399e2419df4146f4988d0aa5f10816dc8d898",
+      "size_bytes": 417146
+    },
+    "figures/tsnr_maps/mario_sub-05_avgtsnr_coronal.png": {
+      "sha256": "d42993454f83e3847c53d8b1aefaabe81b90bdb5906637adcceb04ab036c6b37",
+      "size_bytes": 278595
+    },
+    "figures/tsnr_maps/mario_sub-05_avgtsnr_sagittal.png": {
+      "sha256": "52d5fbd6a048cd7a0665aa2d0b44b6f4b90e37cdf70f1611ebeae6fc64a72eda",
+      "size_bytes": 307514
+    },
+    "figures/tsnr_maps/mario_sub-06_avgtsnr.png": {
+      "sha256": "231f14f13e7e8bde21481be69e7b508de9c4e9906a9e70e3f97a37c48bd06d6f",
+      "size_bytes": 402246
+    },
+    "figures/tsnr_maps/mario_sub-06_avgtsnr_coronal.png": {
+      "sha256": "635fb4ae5e1a8c0c5ef3a9f3af46000540379211b2fb5751ac343d5eb27e2188",
+      "size_bytes": 278614
+    },
+    "figures/tsnr_maps/mario_sub-06_avgtsnr_sagittal.png": {
+      "sha256": "fd69cf7b010c8bbbc56a9a5b377a80fb545049c5cac7e96c9cc36782212d4b89",
+      "size_bytes": 308083
+    },
+    "figures/tsnr_maps/movie10_avgtsnr.png": {
+      "sha256": "7fc451c75e31f198feedc1a98c93c79ae95d89f7a843adc9c96da6cd1bf4624e",
+      "size_bytes": 387119
+    },
+    "figures/tsnr_maps/movie10_avgtsnr_coronal.png": {
+      "sha256": "b77f0d575d18143ad427ae59f26db5609168533b28635110026a6fe3952476e9",
+      "size_bytes": 263861
+    },
+    "figures/tsnr_maps/movie10_avgtsnr_sagittal.png": {
+      "sha256": "4783279b511ea0b64f3b781a82de7d290e6359b3a1f864eb65c07087e2f9d212",
+      "size_bytes": 294699
+    },
+    "figures/tsnr_maps/movie10_coverage.png": {
+      "sha256": "e378982e45df499505658f4fba95581aaaf3d3b74f07be348176ba1d29cb6b7d",
+      "size_bytes": 664733
+    },
+    "figures/tsnr_maps/movie10_coverage_coronal.png": {
+      "sha256": "90cd44f512384d9d13ccdccccaf37abf6b3442c9b70c8f32a1fd80affdb7a292",
+      "size_bytes": 466411
+    },
+    "figures/tsnr_maps/movie10_coverage_sagittal.png": {
+      "sha256": "8b670b39a38e2c1f9f3a3f78bfc1bb77487e66df4cf6f6cd1898275a89490523",
+      "size_bytes": 516484
+    },
+    "figures/tsnr_maps/movie10_coverage_thr10.png": {
+      "sha256": "34479c13adb5a4cdf0a0c6cd06de379ed21d3173a9ad9f8cf9d248f647f6e73e",
+      "size_bytes": 574698
+    },
+    "figures/tsnr_maps/movie10_coverage_thr10_coronal.png": {
+      "sha256": "30d2f07fb7144fa558a73f3f6acb3ff28cb8408917f5d3aefaa5657ba8a92ece",
+      "size_bytes": 407889
+    },
+    "figures/tsnr_maps/movie10_coverage_thr10_sagittal.png": {
+      "sha256": "c7845be8f2de1627f36f1bf441c0c96f2ecddef825b465fcd8fb1dc7790b2f4b",
+      "size_bytes": 448524
+    },
+    "figures/tsnr_maps/movie10_sub-01_avgtsnr.png": {
+      "sha256": "67831e8cfe9c143ae0f26268b95c1304c3d68070ff416aa0e968cfc16765b81c",
+      "size_bytes": 409985
+    },
+    "figures/tsnr_maps/movie10_sub-01_avgtsnr_coronal.png": {
+      "sha256": "317dc4c8ec7b7b6bd859f77602d4146b6171b9e3b8caef3309558ff03f97cdc7",
+      "size_bytes": 279348
+    },
+    "figures/tsnr_maps/movie10_sub-01_avgtsnr_sagittal.png": {
+      "sha256": "a4306b3bae5f05ab11ed26483cad826e8da228c9e066994bece9f24c15bd4985",
+      "size_bytes": 307008
+    },
+    "figures/tsnr_maps/movie10_sub-02_avgtsnr.png": {
+      "sha256": "70be11212002c8cac7ab591cd2f061ae80e853049a7c00a4c69aed3ad688613b",
+      "size_bytes": 417898
+    },
+    "figures/tsnr_maps/movie10_sub-02_avgtsnr_coronal.png": {
+      "sha256": "16e38964c317975afd572bd3899c87e44983577d2085b5390fe585d07825af3a",
+      "size_bytes": 265607
+    },
+    "figures/tsnr_maps/movie10_sub-02_avgtsnr_sagittal.png": {
+      "sha256": "052e6ac5539871c8493df83692c74a7db11aa6c453f7b9fe4802720fb8cb366e",
+      "size_bytes": 289441
+    },
+    "figures/tsnr_maps/movie10_sub-03_avgtsnr.png": {
+      "sha256": "81506fade3c49523fe092549afacb25eeee39b929b1873227248fe33f3596ab1",
+      "size_bytes": 405526
+    },
+    "figures/tsnr_maps/movie10_sub-03_avgtsnr_coronal.png": {
+      "sha256": "4a809303c49b88ce9cf3ba6c6c05f52b55d11d2666f8793e7c73d6f14590e772",
+      "size_bytes": 264827
+    },
+    "figures/tsnr_maps/movie10_sub-03_avgtsnr_sagittal.png": {
+      "sha256": "d71edf4d157b4f3ab777dac329a0a0457f0013968b3597d43c85ad1b11af50d0",
+      "size_bytes": 295115
+    },
+    "figures/tsnr_maps/movie10_sub-05_avgtsnr.png": {
+      "sha256": "fdba5dc1646bee4adceafee2ce1df78b18daae0c6c82e1ae6bc5010a780209e7",
+      "size_bytes": 423443
+    },
+    "figures/tsnr_maps/movie10_sub-05_avgtsnr_coronal.png": {
+      "sha256": "2b74b15eac344eec52dbf0b1bd8d4c90a4fb06a0383fadc5de4464987af4ce1f",
+      "size_bytes": 272586
+    },
+    "figures/tsnr_maps/movie10_sub-05_avgtsnr_sagittal.png": {
+      "sha256": "c51ff4cc18f1085b3ec44c59b4666aa88978424a58862a572b409fee15cb8acd",
+      "size_bytes": 302743
+    },
+    "figures/tsnr_maps/movie10_sub-06_avgtsnr.png": {
+      "sha256": "d24a6948c4d5175627851fc8446c8b883f0934d154d5fc12f80548299e7c9087",
+      "size_bytes": 414665
+    },
+    "figures/tsnr_maps/movie10_sub-06_avgtsnr_coronal.png": {
+      "sha256": "052e605515579de482bb8bcdc22efb60370887b33e58610f9b3848bdfc7e3071",
+      "size_bytes": 281837
+    },
+    "figures/tsnr_maps/movie10_sub-06_avgtsnr_sagittal.png": {
+      "sha256": "26e4cc72df4dec8cbe1d5bd4c46214d2c1a6363bf57569f8115620a7c5f8528c",
+      "size_bytes": 316889
+    },
+    "figures/tsnr_maps/mutemusic_avgtsnr.png": {
+      "sha256": "6e9929103b5d9cc99f90b3cde7832effaf21e20da28558ebe13016a6d38ce262",
+      "size_bytes": 395317
+    },
+    "figures/tsnr_maps/mutemusic_avgtsnr_coronal.png": {
+      "sha256": "1084df975ff41209fed6a3b947c06b38b0a01b07fcd3e47532f14c84ffdb6b81",
+      "size_bytes": 271692
+    },
+    "figures/tsnr_maps/mutemusic_avgtsnr_sagittal.png": {
+      "sha256": "3598cb6133289a2361809c134c6596d703d918bccd94c2e40245528297e5d05e",
+      "size_bytes": 303646
+    },
+    "figures/tsnr_maps/mutemusic_coverage.png": {
+      "sha256": "ffdfc22dae59a6be197f49a9129aebf6a2005390fb89ff483b5bff202f54eb01",
+      "size_bytes": 694149
+    },
+    "figures/tsnr_maps/mutemusic_coverage_coronal.png": {
+      "sha256": "52e6dda796bccaa4484c7eb84fd183a2ac535f31a94f6b11dbe773c3d6cf256e",
+      "size_bytes": 486575
+    },
+    "figures/tsnr_maps/mutemusic_coverage_sagittal.png": {
+      "sha256": "b65c6a8bda324e5e13375f3217943f6e6d767d8309296cdf42a8f80892d402e3",
+      "size_bytes": 542366
+    },
+    "figures/tsnr_maps/mutemusic_coverage_thr10.png": {
+      "sha256": "d0beb97ad9df5327c4462baad638497e123c74bb70e6c81953f25c3cea7930f0",
+      "size_bytes": 588483
+    },
+    "figures/tsnr_maps/mutemusic_coverage_thr10_coronal.png": {
+      "sha256": "28a3f3e6294fb88d085fb04572e32188744d989a95582115e268ef2c892b217b",
+      "size_bytes": 416146
+    },
+    "figures/tsnr_maps/mutemusic_coverage_thr10_sagittal.png": {
+      "sha256": "b75c10a4375435c329f71ffb18dd62d1e6ef5fee76b3d43196a3a77dd6020d10",
+      "size_bytes": 456038
+    },
+    "figures/tsnr_maps/mutemusic_sub-01_avgtsnr.png": {
+      "sha256": "061637354fde579e86bb543513b532c47ae6c6fcc1021eb846fbe7d75366302b",
+      "size_bytes": 410415
+    },
+    "figures/tsnr_maps/mutemusic_sub-01_avgtsnr_coronal.png": {
+      "sha256": "5b13043a3e99a7baf1f640f6cc47b42ebf810bee361cd5d380266b3b9c0ed297",
+      "size_bytes": 286286
+    },
+    "figures/tsnr_maps/mutemusic_sub-01_avgtsnr_sagittal.png": {
+      "sha256": "ef301e21ac19cb7ece4b6fcb8d7e62fb67ede1cd3f81856be05b50c2cd18dbea",
+      "size_bytes": 308294
+    },
+    "figures/tsnr_maps/mutemusic_sub-02_avgtsnr.png": {
+      "sha256": "7a3691ddaff4997172fd04bf81cfb5637e246d26c0e9bb4487c5aa112be50e72",
+      "size_bytes": 424441
+    },
+    "figures/tsnr_maps/mutemusic_sub-02_avgtsnr_coronal.png": {
+      "sha256": "99601280787af72d31adacb2a252931b441a003e6a79f9f5550a2e34fda05671",
+      "size_bytes": 278258
+    },
+    "figures/tsnr_maps/mutemusic_sub-02_avgtsnr_sagittal.png": {
+      "sha256": "7cb88b3bbadb5256f99558c9317b8a99ee53d18e1d68ee098b92d70fc108c687",
+      "size_bytes": 298783
+    },
+    "figures/tsnr_maps/mutemusic_sub-03_avgtsnr.png": {
+      "sha256": "dd297e41f2bce53bdba7983194f24ef9bc8a33b58521ce3131136ea30be22e63",
+      "size_bytes": 418702
+    },
+    "figures/tsnr_maps/mutemusic_sub-03_avgtsnr_coronal.png": {
+      "sha256": "5c0fc1ff2e0bf4a7ffa2f9d05706049abd88dea3d47da0972a5f2a653dc2d9d8",
+      "size_bytes": 278181
+    },
+    "figures/tsnr_maps/mutemusic_sub-03_avgtsnr_sagittal.png": {
+      "sha256": "0ba56a7657e656b20cb263bacea957378837e01206996b5ac74cc9dba1518fab",
+      "size_bytes": 310934
+    },
+    "figures/tsnr_maps/mutemusic_sub-05_avgtsnr.png": {
+      "sha256": "810cbd070f039d361566e60526c4e571cca2f15c345754f6639b6190a2189cd8",
+      "size_bytes": 432863
+    },
+    "figures/tsnr_maps/mutemusic_sub-05_avgtsnr_coronal.png": {
+      "sha256": "c25bd27a0f8cf93bda97b58dec6acba0b4ecd5e7b717bcd1a3b0a577d5ca8896",
+      "size_bytes": 282252
+    },
+    "figures/tsnr_maps/mutemusic_sub-05_avgtsnr_sagittal.png": {
+      "sha256": "f0dfbf8456826cc1b60a10f892f8f0f85bc1b17e5c0b8a845f1c3576b99fa3b6",
+      "size_bytes": 312128
+    },
+    "figures/tsnr_maps/mutemusic_sub-06_avgtsnr.png": {
+      "sha256": "6324320b9b4defa3002d302ae0807af45ad7b97583872f34600506343aa3b20d",
+      "size_bytes": 417447
+    },
+    "figures/tsnr_maps/mutemusic_sub-06_avgtsnr_coronal.png": {
+      "sha256": "1e73eeb3b99a8eb0cddf28958b1e1c13601ee34476b91baccad006173c8ef6e0",
+      "size_bytes": 290423
+    },
+    "figures/tsnr_maps/mutemusic_sub-06_avgtsnr_sagittal.png": {
+      "sha256": "d23983c727a61cef2216ee37798da0d3daad0ce31de31dd9b5995bdd2fc55a4d",
+      "size_bytes": 319712
+    },
+    "figures/tsnr_maps/narratives_avgtsnr.png": {
+      "sha256": "edcfaaa6d8c0555ea7e9e6b15fe574d07a180001cb35fea13f1c1a10a7ae1f5f",
+      "size_bytes": 384664
+    },
+    "figures/tsnr_maps/narratives_avgtsnr_coronal.png": {
+      "sha256": "596efbe52f6beb4878465b7952af1983e769ce11e5e49605a7b0a20c508253ab",
+      "size_bytes": 268941
+    },
+    "figures/tsnr_maps/narratives_avgtsnr_sagittal.png": {
+      "sha256": "abe19e0862a433885abc04e0b950d8b84cf29f56bd6448c259a889066f557058",
+      "size_bytes": 298501
+    },
+    "figures/tsnr_maps/narratives_coverage.png": {
+      "sha256": "ffcccfc5902e6283566677396f195797eb59638b9d506dffe180e22d61491611",
+      "size_bytes": 669431
+    },
+    "figures/tsnr_maps/narratives_coverage_coronal.png": {
+      "sha256": "6ffd99c2023cb6022244fbdb9de04f9ff26baaeed1d4267df095de2932ed644c",
+      "size_bytes": 468545
+    },
+    "figures/tsnr_maps/narratives_coverage_sagittal.png": {
+      "sha256": "a5452a417ae01a7dfb4423087d61ff8d26b867f8e54e2cc6ab8c335c77bcd3b1",
+      "size_bytes": 521040
+    },
+    "figures/tsnr_maps/narratives_coverage_thr10.png": {
+      "sha256": "b20aa4eb0823e7ebede7aca2a80b54e4406bec9ddd3fd3f599030efe9e82d810",
+      "size_bytes": 581298
+    },
+    "figures/tsnr_maps/narratives_coverage_thr10_coronal.png": {
+      "sha256": "b29fb5c65abf5bb833c3e81ec41ab76c03510c68b94c9f92a0a0960a4587d4c9",
+      "size_bytes": 411851
+    },
+    "figures/tsnr_maps/narratives_coverage_thr10_sagittal.png": {
+      "sha256": "58dc088bc540ec38e30f7ae1e70e3794a494194270e7a40c4c65d7cc97ab0d52",
+      "size_bytes": 452122
+    },
+    "figures/tsnr_maps/narratives_sub-01_avgtsnr.png": {
+      "sha256": "6e0535c1947e43a5e5eb8d7558f42e7e33c1960e7fca39cf886c6185243259a2",
+      "size_bytes": 408475
+    },
+    "figures/tsnr_maps/narratives_sub-01_avgtsnr_coronal.png": {
+      "sha256": "22ee75df31e9cba4494b053ad4b50b8ab67f82fbfe922d83bbf45561f1ce315f",
+      "size_bytes": 286125
+    },
+    "figures/tsnr_maps/narratives_sub-01_avgtsnr_sagittal.png": {
+      "sha256": "ea946cd0a187eadeb5d18d51f9489084e420d487bdf42412f5367ab7c5f9178f",
+      "size_bytes": 310035
+    },
+    "figures/tsnr_maps/narratives_sub-02_avgtsnr.png": {
+      "sha256": "aa2ab59ff8ab03897310248e54678d849922804aef0594369ddac6ab3b942ffa",
+      "size_bytes": 410295
+    },
+    "figures/tsnr_maps/narratives_sub-02_avgtsnr_coronal.png": {
+      "sha256": "504f19c1a59dd24a2472b580c623d560a1769af43b7b842320c31a600d002d36",
+      "size_bytes": 275242
+    },
+    "figures/tsnr_maps/narratives_sub-02_avgtsnr_sagittal.png": {
+      "sha256": "03762046d6d28b30182364eb3f1ce59636cb796a08e30b819032964d4bca9c90",
+      "size_bytes": 301018
+    },
+    "figures/tsnr_maps/narratives_sub-03_avgtsnr.png": {
+      "sha256": "f72e625b6a80b933654b5ba7ddddad7bb10507f9281982a12802edeffec68733",
+      "size_bytes": 408194
+    },
+    "figures/tsnr_maps/narratives_sub-03_avgtsnr_coronal.png": {
+      "sha256": "725a4714124320e9e776f3e0c10bcacc16f658356602526e71244d6a7b8b4581",
+      "size_bytes": 275327
+    },
+    "figures/tsnr_maps/narratives_sub-03_avgtsnr_sagittal.png": {
+      "sha256": "384799812d52b3bb80a9e9af01f4b4a4785df4eaec8621700c50ddc1e93ed461",
+      "size_bytes": 303754
+    },
+    "figures/tsnr_maps/narratives_sub-05_avgtsnr.png": {
+      "sha256": "f8eb65d8904b71f77245493c018bc7886d76c8029a374674e907a4d87335dfca",
+      "size_bytes": 419539
+    },
+    "figures/tsnr_maps/narratives_sub-05_avgtsnr_coronal.png": {
+      "sha256": "4ff595d41864ec33747ac24dbb4b5b34438bb9a3ddee469f05259e8f581327d9",
+      "size_bytes": 281891
+    },
+    "figures/tsnr_maps/narratives_sub-05_avgtsnr_sagittal.png": {
+      "sha256": "7afcb2838aaf29ba24be8ee2d6dd463d0afd2f55091b9e2ef015e6cf4615b644",
+      "size_bytes": 313644
+    },
+    "figures/tsnr_maps/narratives_sub-06_avgtsnr.png": {
+      "sha256": "c9a47e59f0171ce0dfd62473fade53ceac0dee3491988683f505b82917bc53e0",
+      "size_bytes": 409211
+    },
+    "figures/tsnr_maps/narratives_sub-06_avgtsnr_coronal.png": {
+      "sha256": "9eb31c888fa6c93532f0fb740eedf07828d9e7ac23c79ea1f747eb37f741aed7",
+      "size_bytes": 285369
+    },
+    "figures/tsnr_maps/narratives_sub-06_avgtsnr_sagittal.png": {
+      "sha256": "f09a5d47842e3b4e96fb01baca5169ccba164554159ee9c8a119a6772b22e186",
+      "size_bytes": 313963
     },
     "figures/tsnr_maps/retinotopy_avgtsnr.png": {
       "sha256": "5571870748be5ad220ad0a9a9d0d2fe2cbf68a082e610e2d3d0a615d97573f32",
@@ -364,8 +1108,8 @@
       "size_bytes": 307069
     },
     "qa_figure.png": {
-      "sha256": "ace96e76fd0e4ec38be67aaa38da8c8bd06b8e6571197e5b370bdb9495b0193a",
-      "size_bytes": 1946441
+      "sha256": "6918ba419a2c87473b3be1a95bcd8b87a3408323cf318b4654b63718b35f9336",
+      "size_bytes": 1977784
     },
     "qa_figure.svg": {
       "sha256": "99353ee333fd51d157221d13a37428f25c302b987b582d1bb921f58b1d7fb28f",
@@ -380,32 +1124,32 @@
       "size_bytes": 1
     },
     "tables/atlas_tsnr/floc.tsv": {
-      "sha256": "c324d1e076e7b591c99b5d0b3d528663426e2a61bfca9716ddcb451906cb61d6",
-      "size_bytes": 21853
+      "sha256": "9f384af0f9bee2c3ab06d9aebf6900b5ee75e322a728dcbcecbec6b6ff68ed17",
+      "size_bytes": 21850
     },
     "tables/atlas_tsnr/friends.tsv": {
-      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
-      "size_bytes": 1
+      "sha256": "97cd1cc65d98f75315e60bcbf756b42a7405110ccb39c46f376155f9f4b7b0e1",
+      "size_bytes": 935628
     },
     "tables/atlas_tsnr/gamepad.tsv": {
-      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
-      "size_bytes": 1
+      "sha256": "085f1d9d416046262f1437ee72384a2ecac70072f1fff213b9f1074457267d0d",
+      "size_bytes": 22772
     },
     "tables/atlas_tsnr/harrypotter.tsv": {
       "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
       "size_bytes": 1
     },
     "tables/atlas_tsnr/hcptrt.tsv": {
-      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
-      "size_bytes": 1
+      "sha256": "99014b33315cc6238de7e693636f92200426ca9250627eed7c3c2b78cb466ae8",
+      "size_bytes": 363596
     },
     "tables/atlas_tsnr/langlocalizer.tsv": {
-      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
-      "size_bytes": 1
+      "sha256": "b78ccc20dc9958b21fad3ae0c1cc0b9e3abb4700bfb3226b2a5059b8ce013b04",
+      "size_bytes": 35055
     },
     "tables/atlas_tsnr/mario.tsv": {
-      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
-      "size_bytes": 1
+      "sha256": "dce89f3fe5ff7daeadfe032b662205c1e0dd5273fd97cce3478b0ea665060ea3",
+      "size_bytes": 290216
     },
     "tables/atlas_tsnr/mario3.tsv": {
       "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
@@ -416,20 +1160,20 @@
       "size_bytes": 1
     },
     "tables/atlas_tsnr/movie10.tsv": {
-      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
-      "size_bytes": 1
+      "sha256": "e2629f686f921dcec4ad7d5be1b1e343fc74d4d31dc7fb3970a5d98c41a5d48b",
+      "size_bytes": 204072
     },
     "tables/atlas_tsnr/multfs.tsv": {
       "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
       "size_bytes": 1
     },
     "tables/atlas_tsnr/mutemusic.tsv": {
-      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
-      "size_bytes": 1
+      "sha256": "f28b34ccdcdc194f67bdfc1799b8f4c8dd8978bf9620ea611c543537271fb12d",
+      "size_bytes": 64922
     },
     "tables/atlas_tsnr/narratives.tsv": {
-      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
-      "size_bytes": 1
+      "sha256": "b4342d65a0de0568c9fac7a3db8f6d59b09e73dcffc67be125c3fb483d7e7237",
+      "size_bytes": 275399
     },
     "tables/atlas_tsnr/ood.tsv": {
       "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
@@ -440,16 +1184,16 @@
       "size_bytes": 1
     },
     "tables/atlas_tsnr/retinotopy.tsv": {
-      "sha256": "ab54b5dd97339ac01e79082c73ea4da9c64ac44afab6d346dadbbc8e5c5e2ba7",
-      "size_bytes": 44836
+      "sha256": "8ab5c6f965a47cae6163ce36e5598a69bfb571bc383e08de864a0757a4b847e3",
+      "size_bytes": 44852
     },
     "tables/atlas_tsnr/shinobi.tsv": {
       "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
       "size_bytes": 1
     },
     "tables/atlas_tsnr/things.tsv": {
-      "sha256": "03e6bf5584da23313197ffcb79f5ecca310be9638a523aa760ce94984b0737a1",
-      "size_bytes": 529201
+      "sha256": "a3add0a043cc12a1f728f9a1d6d9360b7439d858e98b7e2f39b945d3740932e3",
+      "size_bytes": 529181
     },
     "tables/atlas_tsnr/triplets.tsv": {
       "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
@@ -464,8 +1208,8 @@
       "size_bytes": 10125
     },
     "tables/friends.tsv": {
-      "sha256": "6a85717dd239fa7f097117b4e7b90c4cc9c3d711eb6a3404e569d20840b6ec03",
-      "size_bytes": 141536
+      "sha256": "5a2e31195068d5b6509a26c4891e6db42c243b78af6e19424922a354f50c9c8d",
+      "size_bytes": 465491
     },
     "tables/gamepad.tsv": {
       "sha256": "df154aa42dcf763198d405c1997ffc672358d81c0a70239ba8f8d676d00ccd11",
@@ -480,8 +1224,8 @@
       "size_bytes": 175959
     },
     "tables/langlocalizer.tsv": {
-      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
-      "size_bytes": 1
+      "sha256": "98098f01a7cd386acf33f3d31248d755f30a29643d550f7d1b55597448619591",
+      "size_bytes": 13825
     },
     "tables/mario.tsv": {
       "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
@@ -508,8 +1252,8 @@
       "size_bytes": 26455
     },
     "tables/narratives.tsv": {
-      "sha256": "3fb63dcc6b63b882d189e8b20c2db93347be14ff8435d37aa61bf8025d3e51da",
-      "size_bytes": 96112
+      "sha256": "82ea9836e6b1f6b072ea67e3c1aa2f0d86cf3755217bebf8bb0c91bf5a11fb79",
+      "size_bytes": 96471
     },
     "tables/ood.tsv": {
       "sha256": "b3ba8916e48fc47bd124eb2d66ec07eaf47df2696f9b00f0c6680243873bde19",
@@ -536,10 +1280,10 @@
       "size_bytes": 92911
     }
   },
-  "recorded_at": "2026-08-04T15:13:16+00:00",
+  "recorded_at": "2026-10-04T18:32:53+00:00",
   "repository": {
-    "branch": "main",
-    "commit": "251151ac6014e716af186c863b118ebce3352969",
+    "branch": "enable-annex-remotes",
+    "commit": "c61af453b8de20ac89fb1d16c56bd6735d69ca31",
     "dirty": true,
     "remote": "git@github.com:courtois-neuromod/cneuromod.all.qa_figures.git",
     "toplevel": "/home/pbellec/git/cneuromod.all.qa_figures"

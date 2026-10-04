@@ -9,8 +9,9 @@ computed or written by this module, and no NIfTI is persisted under
 ``output_data/``.
 
 Only a few datasets ship the upstream ``stat-avgtsnr`` map (floc, retinotopy,
-things at the time of writing); datasets with only run-level ``stat-tsnr``
-maps (hcptrt, friends, …) have no avgtsnr map to read.
+things, hcptrt at the time of writing). Datasets with only run-level
+``stat-tsnr`` maps (friends, …) have none to read, so the notebook falls back to
+averaging the run-level maps on disk per subject, in memory.
 """
 
 # The one space we work in: comparable across subjects and datasets (needed to

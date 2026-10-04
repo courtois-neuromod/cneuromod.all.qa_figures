@@ -169,10 +169,10 @@ The list below should match `invoke --list`.
 
 | Task                | Description                                                        |
 | ------------------- | ------------------------------------------------------------------ |
-| `fetch`             | Make `cneuromod.all` available, then retrieve all input files: MRIQC text (`*_bold.json`, `*_timeseries.tsv`), the per-subject avgtsnr and per-run tsnr MNI `.nii.gz`, the shared combined atlas, and the MNI152 template (`fetch-mni152`); records `source_data/MANIFEST.json`; narrow with `--dataset`/`--subject`/`--session` |
+| `fetch`             | Make `cneuromod.all` available, then retrieve all input files: MRIQC text (`*_bold.json`, `*_timeseries.tsv`), the per-subject avgtsnr and per-run tsnr MNI `.nii.gz`, the per-subject combined atlases, and the MNI152 template (`fetch-mni152`); records `source_data/MANIFEST.json`; narrow with `--dataset`/`--subject`/`--session` |
 | `fetch-mni152`      | Download (or reuse the cached) ICBM152 2009 MNI template + brain mask under `source_data/nilearn/`, used as the tSNR coverage montages' anatomical background/brain restriction |
 | `run-qc-measures`   | Extract per-run MRIQC metrics per dataset (`--dataset`) from files already fetched; skips datasets already done |
-| `run-atlas-tsnr`    | Extract per-run tSNR per region group (7 Yeo networks, cerebellum, 3 subcortical structures) against the shared MNI combined atlas, one table per dataset (`--dataset`) |
+| `run-atlas-tsnr`    | Extract per-run tSNR per region group (7 Yeo networks, cerebellum, 3 subcortical structures) within each subject's own MNI `res-func` combined atlas, one table per dataset (`--dataset`) |
 | `run-figure-layout` | Read each panel's placed size out of `output_data/qa_figure.svg` into `output_data/figures/panel_sizes.json`, so the notebooks render every panel at its true on-page size. Always re-runs |
 | `run-notebooks`     | Execute notebooks, saving QA figures to `output_data/figures/`     |
 | `export-figure`     | Render `output_data/qa_figure.svg` to `qa_figure.png` at 300 dpi with the Inkscape CLI. Skipped when the PNG is newer than the SVG and every panel it links; warns and exits 0 when Inkscape is not installed |
