@@ -86,7 +86,11 @@ subdatasets and `datalad get`-ing just those files, so a fresh clone is fully
 ready to `run` offline. Those avgtsnr maps are the **only** `*.nii.gz` it pulls;
 it never downloads run-level, `T1w`, or fMRIPrep content, and the whole
 superdataset is never pulled at once. The retrieval is tolerant — inaccessible
-(credentialed) content only warns.
+(credentialed) content only warns. After installing each subdataset, `fetch`
+also enables its S3 and public-HTTP special remotes (never the `sensitive`
+ones), which an older checkout may have left off; S3 downloads need your
+credentials (`AWS_ACCESS_KEY_ID`/`AWS_SECRET_ACCESS_KEY`), the public HTTP
+remote does not.
 
 `fetch` also downloads (or reuses the cached) ICBM152 2009 MNI template and
 whole-brain mask under `source_data/nilearn/`, used as the tSNR coverage

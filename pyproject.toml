@@ -4,7 +4,7 @@ version = "0.1.0"
 requires-python = ">=3.11,<3.13"
 dependencies = [
     "airoh>=0.5.0",
-    "datalad",
+    "datalad>=1.6.5",
     # git-annex >= 10 is required: cneuromod.all subdatasets are annex v10 format,
     # which an old system git-annex (e.g. Ubuntu's apt 8.x) refuses to fetch. This
     # PyPI package bundles a recent standalone binary so `uv sync` guarantees >= 10.
