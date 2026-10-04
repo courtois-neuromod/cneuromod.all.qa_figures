@@ -44,9 +44,13 @@ def _ensure_marker_submodule(cneuromod_dir, dataset, marker, strict=False):
     """
     from airoh.datalad import install_subdataset
 
-    install_subdataset(
-        f"{dataset}/{marker}", Path(cneuromod_dir).resolve(), strict=strict
-    )
+    from analysis.annex_remotes import enable_public_and_s3_remotes
+
+    root = Path(cneuromod_dir).resolve()
+    install_subdataset(f"{dataset}/{marker}", root, strict=strict)
+    # An older checkout may have its S3 / public-HTTP special remotes disabled,
+    # so `git annex get` would find no source for its content; enable them here.
+    enable_public_and_s3_remotes(root / dataset / marker, strict=strict)
 
 
 def _ensure_superdataset_available(c, source=None):

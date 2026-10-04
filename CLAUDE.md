@@ -306,6 +306,26 @@ compatibility). Linter: **ruff** (`uv run ruff check .`). No test framework.
   `analysis/prefetch.py`) rather than the per-`(dataset, marker)` loop above —
   same tolerant `install_subdataset`/`datalad_get` machinery, just called once
   for the whole pipeline instead of once per dataset.
+- **`fetch` enables each installed subdataset's S3 and public-HTTP special
+  remotes.** These remotes are mostly `autoenable=true` in `remote.log`, but git-annex only acts
+  on that at `git annex init` (install time), so a checkout installed before
+  the remotes existed — or one whose `git-annex` branch was merged forward
+  later — keeps them disabled, and `git annex get` reports content "not
+  available" without ever contacting S3. A fresh direct install autoenables
+  them, with or without credentials (verified). `datalad update --merge` does
+  *not* re-enable them on an installed checkout, but `git annex init` does
+  (both verified); why an older/nested install missed them is unconfirmed.
+  Enabling explicitly makes old and fresh checkouts behave alike. The `httpalso` remote (`conp-ria-storage-http`, public HTTPS
+  view of the CONP RIA store, no credentials) is what actually serves e.g.
+  `hcptrt/tsnr`, whose S3 bucket returns 403 for some accounts.
+  `_ensure_marker_submodule` therefore calls `enable_public_and_s3_remotes`
+  (`analysis/annex_remotes.py`) right after `install_subdataset`. Remotes are
+  chosen by **type**, only if `autoenable=true` (`S3` or `httpalso` in the `git-annex` branch's `remote.log`), not
+  name — naming is inconsistent (`s3unf.…hcptrt.mri` vs `unfs3.…hcptrt.tsnr`).
+  Anything named `sensitive` is never enabled, and RIA/SSH remotes are left
+  alone. Idempotent (skips already-enabled remotes) and tolerant (a remote that
+  cannot be enabled only warns, e.g. credentials unset). It edits the git-annex
+  state of the shared `cneuromod.all` checkout that `source_data/` symlinks to.
 - **Tolerant `datalad get`** (`airoh.datalad`): CNeuroMod data is only
   partly public and content lives on credentialed special remotes, so `datalad get`
   can partially fail (e.g. participants without a public-data agreement, or an
