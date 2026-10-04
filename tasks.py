@@ -127,10 +127,10 @@ def fetch(c, source=None, dataset=None, subject=None, session=None, skip_inacces
     offline: the MRIQC *_bold.json and *_timeseries.tsv text files, the
     per-subject stat-avgtsnr maps, and the per-run stat-tsnr maps. Separately,
     it installs the dataset-root-level anat/atlases subdataset and fetches the
-    one shared combined-atlas volume and its label TSV. Those MNI *.nii.gz maps
-    and that single atlas file are the only image content retrieved — never T1w,
+    per-subject res-func combined-atlas volumes and their label TSV. Those MNI
+    *.nii.gz maps and the atlas files are the only image content retrieved — never T1w,
     never fMRIPrep. Pass --dataset/--subject/--session to narrow the per-dataset
-    retrieval to a slice (the shared atlas fetch is unaffected). Tolerant of
+    retrieval to a slice (the atlas fetch is unaffected). Tolerant of
     partly-public data: inaccessible content only warns, never aborts — `run`
     then warns and skips for whatever is missing, since no run step ever fetches.
     Files that fail are remembered (source_data/.fetch_failures.json); by
@@ -213,8 +213,8 @@ def run_atlas_tsnr(c, dataset=None, smoke=False, strict=False):
     """
     Extract per-run, per-region tSNR for each dataset of cneuromod.all.
 
-    Resamples each functional run's MNI ``stat-tsnr`` statmap onto the shared
-    combined atlas (``anat/atlases``) and averages tSNR within each parcel.
+    Averages each functional run's MNI ``stat-tsnr`` statmap within each parcel of
+    its subject's ``res-func`` combined atlas (``anat/atlases``); no resampling.
     Reads only files already present on disk — retrieval is ``invoke fetch``'s
     job, so this step never calls ``datalad get``. Writes one tidy table per
     dataset to output_data/tables/atlas_tsnr/{dataset}.tsv. Datasets whose output

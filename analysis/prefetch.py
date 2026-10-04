@@ -14,8 +14,8 @@ never pulling:
 Passing a dataset/subject/session narrows this to that slice; with no filter it
 covers every dataset. Separately, and unconditionally (it is not nested under any
 one functional dataset), it also installs the dataset-root-level ``anat/atlases``
-subdataset and fetches the single shared combined-atlas volume + label TSV that
-``run-atlas-tsnr`` resamples every run's tSNR map onto. No other ``.nii.gz``
+subdataset and fetches the per-subject ``res-func`` combined-atlas volumes + label TSV that
+``run-atlas-tsnr`` averages each run's tSNR map within. No other ``.nii.gz``
 (T1w, fMRIPrep) is retrieved.
 """
 
@@ -125,13 +125,14 @@ def prefetch_slice(cneuromod_dir, datasets, subjects, sessions, ensure_submodule
 
 
 def prefetch_atlases(cneuromod_dir, ensure_submodule=None, skip_inaccessible=False):
-    """Install ``anat/atlases`` and fetch the shared combined-atlas volume + TSV.
+    """Install ``anat/atlases`` and fetch the combined-atlas volumes + TSV.
 
     ``anat/atlases`` sits at the cneuromod.all root, sibling to the per-dataset
     subdatasets, so it needs its own install/get call rather than fitting the
-    per-``(dataset, marker)`` loop in ``prefetch_slice``. It is a single file
-    shared by every subject/dataset (see ``analysis.atlas_labels``), so unlike
-    the rest of this module there is no subject/session slice to filter by —
+    per-``(dataset, marker)`` loop in ``prefetch_slice``. Its few files
+    (one ``res-func`` volume per subject plus a shared TSV; see
+    ``analysis.atlas_labels``) are not organised by dataset/session, so unlike
+    the rest of this module there is no slice to filter by —
     always fetched in full, unconditional on any ``--dataset``/``--subject``
     filter passed to ``invoke fetch``.
     """

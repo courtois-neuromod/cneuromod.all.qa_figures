@@ -35,12 +35,12 @@ compatibility). Linter: **ruff** (`uv run ruff check .`). No test framework.
   per-run `..._space-MNI152NLin2009cAsym_stat-tsnr_statmap.nii.gz` maps — so a
   fresh clone is fully ready to `run` offline. Separately, and unconditionally
   (it is not nested under any one functional dataset), `fetch` also installs the
-  dataset-root-level `anat/atlases` subdataset and fetches the single shared
-  combined-atlas volume + label TSV (see the atlas-tSNR bullet below). These
-  MNI `.nii.gz` maps and the one shared atlas file are the **only** image
+  dataset-root-level `anat/atlases` subdataset and fetches the per-subject
+  `res-func` combined-atlas volumes + label TSV (see the atlas-tSNR bullet below). These
+  MNI `.nii.gz` maps and the atlas files are the **only** image
   content it pulls (never `T1w` or fMRIPrep content).
   `fetch --dataset/--subject/--session` (each a comma-separated list) narrows the
-  per-dataset retrieval to a chosen slice (the shared atlas fetch is unaffected,
+  per-dataset retrieval to a chosen slice (the atlas fetch is unaffected,
   since it is not per-dataset); with no filter it covers every dataset — see
   `analysis/prefetch.py`. The retrieval is tolerant (inaccessible content only
   warns).
@@ -94,8 +94,9 @@ compatibility). Linter: **ruff** (`uv run ruff check .`). No test framework.
     `run-*` task — there is nothing to compute-and-persist, so it lives entirely
     in the notebook). It reads the **upstream per-subject `stat-avgtsnr` map**
     each `{dataset}/tsnr` derivative ships directly from
-    `source_data/cneuromod.all/{dataset}/tsnr/` (never recomputed from run-level
-    maps, never copied into `output_data/`) and averages subjects **in memory**
+    `source_data/cneuromod.all/{dataset}/tsnr/` (never copied into `output_data/`;
+    recomputed from run-level maps only as the in-memory fallback described
+    under "Run-level fallback" below) and averages subjects **in memory**
     for the dataset-level panel (resampled to a common grid via
     `nilearn.image.resample_to_img`, `np.nanmean`) — nothing is written except
     the rendered PNG montages. A **grand-average panel**
@@ -143,27 +144,36 @@ compatibility). Linter: **ruff** (`uv run ruff check .`). No test framework.
       what best exposes ventral/orbitofrontal and brainstem dropout along the
       anterior-posterior axis; coronal complements it with the medial-lateral
       view of the same dropout regions — axial alone can miss both.
-    - **Light v1 — only datasets that ship an upstream `stat-avgtsnr`** (floc,
-      retinotopy, things, hcptrt at the time of writing). Datasets with only
-      run-level `stat-tsnr` maps (friends, …) are **skipped with a warning** in
-      the notebook: computing their subject-average from run-level maps means
-      fetching many full-res `.nii.gz` (a large footprint), deliberately
-      deferred to a future step. Inclusion is fully programmatic (any dataset
-      whose `tsnr` derivative has files matching `SUBJECT_AVG_GLOB`), so a
-      dataset newly shipping avgtsnr maps upstream (e.g. hcptrt, which added
-      them 2026-07-28) is picked up automatically once `invoke fetch` advances
-      that marker's pin — see the incremental-fetch `update_subdataset` bullet
-      above — with no notebook/analysis code change needed.
+    - **Upstream `stat-avgtsnr` first, run-level fallback second.** A dataset
+      that ships the upstream per-subject `stat-avgtsnr` (floc, retinotopy,
+      things, hcptrt at the time of writing) uses it. A dataset with only
+      run-level `stat-tsnr` maps (friends, …) used to be skipped; it now
+      **falls back to a per-subject mean of whichever run maps are on disk**,
+      computed in memory with a running sum/count (never stacking every run;
+      nothing persisted). Its panels are titled "(run-level)", per-subject ones
+      add "(mean of N runs)", and the notebook prints how many of the tree's run
+      maps were present — the result is **only as complete as the last
+      `invoke fetch`**, so a partly-fetched dataset gives an average over fewer
+      runs (and a subject with none is skipped), with a warning. The upstream
+      average is preferred whenever present because it is authoritative and
+      cheap; the run-level mean is an approximation of it (its exact upstream
+      definition is not verified) and costs real notebook time (it reads every
+      present run map, ~1.4k for friends). Inclusion is programmatic (any
+      dataset whose `tsnr` derivative has present files matching
+      `SUBJECT_AVG_GLOB` or `RUN_TSNR_GLOB`), so a dataset newly shipping
+      avgtsnr maps upstream (e.g. hcptrt, 2026-07-28) switches to them
+      automatically once `invoke fetch` advances that marker's pin — see the
+      incremental-fetch `update_subdataset` bullet above.
     - **Scoped `.nii.gz` exception (fetched in `fetch`, read in the notebook).**
       The avgtsnr maps, the per-run tsnr maps `run-atlas-tsnr` reads, and the
-      one shared combined atlas are the *only* image content the pipeline
+      per-subject combined atlases are the *only* image content the pipeline
       pulls, and that pull lives in `fetch`/`analysis/prefetch.py` — the
       notebooks only read what is present. `fetch` globs and `datalad get`s
       `sub-*_space-MNI152NLin2009cAsym_stat-avgtsnr_statmap.nii.gz` (one small
       map per subject, `SUBJECT_AVG_GLOB` in `analysis/tsnr_maps.py`), the
       per-run `..._space-MNI152NLin2009cAsym_stat-tsnr_statmap.nii.gz` maps
-      (`RUN_TSNR_GLOB` in `analysis/atlas_tsnr.py`), and the shared atlas
-      volume + TSV (`ATLAS_GLOB` in `analysis/atlas_labels.py`) — never
+      (`RUN_TSNR_GLOB` in `analysis/atlas_tsnr.py`), and the
+      per-subject atlas volumes + TSV (`ATLAS_GLOB` in `analysis/atlas_labels.py`) — never
       `T1w`, never fMRIPrep. Do not widen these globs without cause.
     - **Requires git-annex ≥ 10.20230126** on `PATH` (the cneuromod.all
       subdatasets are annex v10 format). `fetch` is where fresh annexed content
@@ -265,23 +275,24 @@ compatibility). Linter: **ruff** (`uv run ruff check .`). No test framework.
     Unlike `tsnr_maps`'s "light v1" subset, this step runs on **every**
     dataset with a `tsnr` subdataset from day one, because it computes its
     own per-run mean rather than depending on an upstream avgtsnr map.
-    - **Native T1w space does not ship a combined atlas — this step is
-      MNI-space.** The original design assumed `anat/atlases` shipped one
-      per-subject native-T1w cortex+subcortex+cerebellum parcellation, so
-      parcel means could be computed in each subject's own anatomy.
-      Inspecting the real, installed subdataset (2026-07-30) found that
-      native T1w only has a plain Schaefer2018 cortical parcellation per
-      subject — no subcortex, no cerebellum. What *does* exist is one
-      **shared, group-template MNI152NLin2009cAsym** combined atlas (same
-      file for every subject): `tpl-MNI152NLin2009cAsym_res-01_atlas-
+    - **Per-subject MNI `res-func` atlases — no resampling.** `anat/atlases`
+      has no native-T1w combined atlas (T1w only has plain Schaefer cortex),
+      but ships, for sub-01..sub-06, one MNI152NLin2009cAsym combined atlas
+      each: `tpl-MNI152NLin2009cAsym_sub-0N_res-func_atlas-
       Schaefer2018TianS3NettekovenAsym_desc-
-      1000Parcels7Networks50Subcort128Cereb_dseg.nii.gz` + a sibling label
-      TSV — Schaefer2018 1000-parcel/7-network cortex (labels 1–1000), Tian
-      S3 (Melbourne) subcortex (1001–1050), Nettekoven cerebellar cortex
-      (1051–1178), globally unique label IDs. The step therefore reads the
-      MNI (not T1w) per-run `stat-tsnr` statmaps and resamples each one
-      (nearest-neighbor) onto this single shared atlas's grid — loaded once
-      per pipeline run, not once per subject — via `scipy.ndimage.mean`.
+      1000Parcels7Networks50Subcort128Cereb_dseg.nii.gz`, plus one shared label
+      TSV — Schaefer2018 1000-parcel/7-network cortex (1–1000), Tian S3
+      subcortex (1001–1050), Nettekoven cerebellum (1051–1178). Inspected
+      2026-10-04: exactly the runs' grid (97×115×97, same affine as the
+      `stat-tsnr` maps), same label IDs as the 1 mm `res-01` template atlas,
+      subject-specific masks (~141k labelled voxels for sub-01 vs 165k in the
+      template; consistent with a grey-matter mask, not confirmed upstream).
+      The step reads the MNI per-run `stat-tsnr` maps and averages them within
+      the run's subject's atlas via `scipy.ndimage.mean`, with no resampling
+      (a shape/affine mismatch skips the run, or raises in strict mode; a
+      subject without an atlas file warns and is skipped). This replaced an
+      earlier resample-every-run-to-the-1-mm-template design (~1.2 s/run, 30+
+      min for `friends`). Subjects outside sub-01..06 have no atlas.
       `analysis/atlas_labels.py` owns the label scheme (`classify_region`:
       Schaefer name → `cortex_<YeoNetwork>`, `Cereb-*` → `cerebellum`,
       Tian S3 prefix → `subcortex_<PUT|THA|CAU>`, everything else — e.g.
@@ -331,7 +342,7 @@ compatibility). Linter: **ruff** (`uv run ruff check .`). No test framework.
   can partially fail (e.g. participants without a public-data agreement, or an
   environment without the right auth). Used only by `fetch`/`prefetch` (never by a
   `run-*` step): it fetches the small files the pipeline needs (MRIQC text, the
-  scoped avgtsnr/per-run-tsnr `.nii.gz`, and the shared atlas), never raises, retries once over HTTPS, and lets the
+  scoped avgtsnr/per-run-tsnr `.nii.gz`, and the per-subject atlases), never raises, retries once over HTTPS, and lets the
   gather proceed with whatever content is reachable.
 - **`fetch` is incremental — it skips what it already knows about.** A repeat
   `invoke fetch` (the normal way to pick up new upstream assets) must not

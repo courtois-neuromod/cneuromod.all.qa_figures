@@ -19,7 +19,7 @@ Once the pipeline is run, this folder contains:
   (`cortex_<Network>`), `cerebellum`, and the three Tian S3 subcortical
   structures (`subcortex_<PUT|THA|CAU>`).
 
-  tSNR is computed per atlas parcel from the per-run MNI `stat-tsnr` statmaps,
+  tSNR is computed per atlas parcel from the per-run MNI `stat-tsnr` statmaps (within each subject's own `res-func` atlas),
   then averaged within each group before writing — the per-parcel values are
   not persisted (they made a single dataset's table 72 MB, and no figure shows
   an individual parcel). `n_parcels` is the number of parcels that actually

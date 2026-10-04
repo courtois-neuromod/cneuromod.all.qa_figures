@@ -14,8 +14,8 @@ at once — the superdataset is large. `invoke fetch` installs each dataset's
 `mriqc` and `tsnr` subdatasets, plus the dataset-root-level `anat/atlases`, and
 `datalad get`s only what the pipeline reads: the MRIQC text files
 (`*_bold.json`, `*_timeseries.tsv`), the per-subject `stat-avgtsnr` maps, the
-per-run `stat-tsnr` maps, and the one shared combined-atlas volume with its
-label TSV. Those MNI maps and that atlas are the only image content pulled — T1w
+per-run `stat-tsnr` maps, and the per-subject `res-func` combined-atlas volumes with
+their label TSV. Those MNI maps and the atlases are the only image content pulled — T1w
 and the large fMRIPrep/bids content are never fetched.
 
 📝 **Retrieval happens in `fetch` only.** No `run-*` step calls `datalad get`, so
